@@ -41,9 +41,13 @@ int create_new_file(const char *filename)
     return 0;
 }
 
-int open_file(const char *filename)
+
+int open_image(const char *filename)
 {
-    // Placeholder function to simulate opening a file
-    std::cout << "Opening file: " << filename << std::endl;
-    return 1; // Assume success
+    if (!verify_file_existence(filename)) {
+        ErrorClass::displayError("File does not exist: " + std::string(filename));
+        return 84;
+    }
+    ImageClass::displayImage(filename);
+    return 0;
 }

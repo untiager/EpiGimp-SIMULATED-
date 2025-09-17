@@ -6,5 +6,6 @@
 
 int verify_file_existence(const char *filename);
 int create_new_file(const char *filename);
+int open_image(const char *filename);
 
 #endif // OPEN_SAVE_HPP

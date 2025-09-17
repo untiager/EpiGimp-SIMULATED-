@@ -19,6 +19,14 @@ int basic_tests(int ac, char **av)
 
 int main_loop(int ac, char **av)
 {
+    init_window();
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+        DrawText("Welcome to EpiGimp!", 190, 200, 20, LIGHTGRAY);
+        EndDrawing();
+    }
+    CloseWindow();
     return 0;
 }
 
