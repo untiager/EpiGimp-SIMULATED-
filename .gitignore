@@ -1,2 +1,11 @@
 *.png
 *.jpeg
+*.jpg
+*.bmp
+
+// Ignore build files
+/build/
+/dist/
+*.o
+*.exe
+*.out
