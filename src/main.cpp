@@ -1,26 +1,30 @@
 //Main.cpp
 
-#include "../include/basics.hpp"
+#include "../include/Basics.hpp"
 
-int test_raylib()
+int basic_tests(int ac, char **av)
 {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
-    InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
-
-    SetTargetFPS(60);
-
-    while (!WindowShouldClose()) {
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
-        DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
-        EndDrawing();
+    if (ac < 2) {
+        create_new_file("png/new_image.png");
+        return 0;
     }
-    CloseWindow();
+    const char *filePath = av[1];
+    if (!verify_file_existence(filePath)) {
+        ErrorClass::displayError("File does not exist: " + std::string(filePath));
+        return 84;
+    }
+    ImageClass::displayImage(filePath);
     return 0;
 }
 
-int main()
+int main_loop(int ac, char **av)
 {
-    return test_raylib();
+    return 0;
+}
+
+int main(int ac, char **av)
+{
+    basic_tests(ac, av);
+    main_loop(ac, av);
+    return 0;
 }

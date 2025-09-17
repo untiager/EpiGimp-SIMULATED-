@@ -12,7 +12,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Source files
-file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
+file(GLOB SOURCES 
+                ${CMAKE_SOURCE_DIR}/src/*.cpp
+                ${CMAKE_SOURCE_DIR}/src/*/*.cpp)
 
 # Add executable
 add_executable(EpiGimp ${SOURCES})
