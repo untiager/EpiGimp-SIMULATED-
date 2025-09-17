@@ -5,3 +5,6 @@
 #include <map>
 #include <algorithm>
 #include <cmath>
+
+//raylib includes
+#include "raylib.h"
