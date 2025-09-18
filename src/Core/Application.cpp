@@ -104,8 +104,26 @@ void Application::update(float deltaTime)
     inputHandler_->update();
     handleEvents();
     
-    if (toolbar_) toolbar_->update(deltaTime);
-    if (canvas_) canvas_->update(deltaTime);
+    // Handle file dialogs
+    auto simpleFileManager = static_cast<SimpleFileManager*>(fileManager_.get());
+    
+    // Check for open dialog result
+    auto openResult = simpleFileManager->updateOpenDialog();
+    if (openResult) {
+        canvas_->loadImage(*openResult);
+    }
+    
+    // Check for save dialog result  
+    auto saveResult = simpleFileManager->updateSaveDialog();
+    if (saveResult) {
+        canvas_->saveImage(*saveResult);
+    }
+    
+    // Only update other components if no dialog is showing
+    if (!simpleFileManager->isShowingDialog()) {
+        if (toolbar_) toolbar_->update(deltaTime);
+        if (canvas_) canvas_->update(deltaTime);
+    }
 }
     
 void Application::draw()
@@ -123,6 +141,11 @@ void Application::draw()
         : "Ready - Load an image to get started";
     
     DrawText(statusText.c_str(), 10, statusY + 5, 14, BLACK);
+    
+    // Draw file dialogs on top of everything
+    auto simpleFileManager = static_cast<SimpleFileManager*>(fileManager_.get());
+    simpleFileManager->updateOpenDialog();
+    simpleFileManager->updateSaveDialog();
 }
 
 void Application::handleEvents()
@@ -192,12 +215,7 @@ void Application::createComponents()
 
 void Application::onLoadImageRequest()
 {
-    const auto filePath = fileManager_->showOpenDialog("Images (*.png *.jpg *.bmp)");
-    if (filePath) {
-        canvas_->loadImage(*filePath);
-    } else {
-        errorHandler_->handleError("No image found to load");
-    }
+    fileManager_->showOpenDialog("Images (*.png *.jpg *.bmp)");
 }
 
 void Application::onImageSaveRequest(const ImageSaveRequestEvent& event)
@@ -207,15 +225,8 @@ void Application::onImageSaveRequest(const ImageSaveRequestEvent& event)
         return;
     }
     
-    auto filePath = event.filePath;
-    if (filePath.empty()) {
-        const auto dialogResult = fileManager_->showSaveDialog("Images (*.png)", "output.png");
-        if (!dialogResult)
-            return;
-        filePath = *dialogResult;
-    }
-    
-    canvas_->saveImage(filePath);
+    // Show save dialog - actual saving will happen in update loop
+    fileManager_->showSaveDialog("Images (*.png)", "output.png");
 }
 
 void Application::onError(const ErrorEvent& event)

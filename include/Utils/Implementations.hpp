@@ -9,42 +9,102 @@
 #include "raylib.h"
 #include "../Core/Interfaces.hpp"
 #include "../Core/EventSystem.hpp"
+#include "FileBrowser.hpp"
 
 namespace EpiGimp {
 
 // Simple file manager implementation
 class SimpleFileManager : public IFileManager {
 private:
-    std::string lastOpenPath_;
-    std::string lastSavePath_;
+    std::unique_ptr<FileBrowser> openBrowser_;
+    std::unique_ptr<FileBrowser> saveBrowser_;
+    bool showingOpenDialog_;
+    bool showingSaveDialog_;
     
 public:
+    SimpleFileManager() 
+        : showingOpenDialog_(false)
+        , showingSaveDialog_(false) 
+    {
+        openBrowser_ = std::make_unique<FileBrowser>();
+        saveBrowser_ = std::make_unique<FileBrowser>();
+    }
+    
     std::optional<std::string> showOpenDialog(const std::string& filter = "") override {
-        // Simplified implementation - in a real app, use native file dialogs
-        // For now, check some common locations
-        std::vector<std::string> commonPaths = {
-            "/home/untiager/delivery/tek3/my_GIMP/png/test.png",
-            "test.png",
-            "../png/test.png",
-            "../../png/test.png"
-        };
+        showingOpenDialog_ = true;
+        openBrowser_->reset();
+        return std::nullopt; // Will be handled in update loop
+    }
+    
+    std::optional<std::string> showSaveDialog(const std::string& filter = "", 
+                                            const std::string& defaultName = "") override {
+        showingSaveDialog_ = true;
+        saveBrowser_->reset();
+        return std::nullopt; // Will be handled in update loop
+    }
+    
+    // New methods for rendering the dialogs
+    std::optional<std::string> updateOpenDialog() {
+        if (!showingOpenDialog_) return std::nullopt;
         
-        for (const auto& path : commonPaths) {
-            if (fileExists(path)) {
-                lastOpenPath_ = path;
-                return path;
-            }
+        float screenWidth = (float)GetScreenWidth();
+        float screenHeight = (float)GetScreenHeight();
+        float dialogWidth = screenWidth * 0.8f;
+        float dialogHeight = screenHeight * 0.8f;
+        float x = (screenWidth - dialogWidth) / 2;
+        float y = (screenHeight - dialogHeight) / 2;
+        
+        // Semi-transparent background
+        DrawRectangle(0, 0, (int)screenWidth, (int)screenHeight, ColorAlpha(BLACK, 0.7f));
+        
+        bool result = openBrowser_->renderOpenDialog(x, y, dialogWidth, dialogHeight);
+        
+        if (result) {
+            showingOpenDialog_ = false;
+            return openBrowser_->getSelectedFile();
+        }
+        
+        // Check for ESC key to cancel
+        if (IsKeyPressed(KEY_ESCAPE)) {
+            showingOpenDialog_ = false;
+            return std::nullopt;
         }
         
         return std::nullopt;
     }
     
-    std::optional<std::string> showSaveDialog(const std::string& filter = "", 
-                                            const std::string& defaultName = "") override {
-        const std::string savePath = "/home/untiager/delivery/tek3/my_GIMP/png/output.png";
-        createDirectories(std::filesystem::path(savePath).parent_path().string());
-        lastSavePath_ = savePath;
-        return savePath;
+    std::optional<std::string> updateSaveDialog() {
+        if (!showingSaveDialog_) return std::nullopt;
+        
+        float screenWidth = (float)GetScreenWidth();
+        float screenHeight = (float)GetScreenHeight();
+        float dialogWidth = screenWidth * 0.8f;
+        float dialogHeight = screenHeight * 0.8f;
+        float x = (screenWidth - dialogWidth) / 2;
+        float y = (screenHeight - dialogHeight) / 2;
+        
+        // Semi-transparent background
+        DrawRectangle(0, 0, (int)screenWidth, (int)screenHeight, ColorAlpha(BLACK, 0.7f));
+        
+        bool result = saveBrowser_->renderSaveDialog(x, y, dialogWidth, dialogHeight);
+        
+        if (result) {
+            showingSaveDialog_ = false;
+            std::string filename = saveBrowser_->getSaveFileName();
+            return filename.empty() ? std::nullopt : std::make_optional(filename);
+        }
+        
+        // Check for ESC key to cancel
+        if (IsKeyPressed(KEY_ESCAPE)) {
+            showingSaveDialog_ = false;
+            return std::nullopt;
+        }
+        
+        return std::nullopt;
+    }
+    
+    bool isShowingDialog() const {
+        return showingOpenDialog_ || showingSaveDialog_;
     }
     
     bool fileExists(const std::string& path) const override {
