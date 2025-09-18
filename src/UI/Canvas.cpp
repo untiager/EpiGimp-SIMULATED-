@@ -18,7 +18,7 @@ Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher)
               << bounds.width << ", " << bounds.height << std::endl;
 }
 
-void Canvas::update(float deltaTime)
+void Canvas::update(float /*deltaTime*/)
 {
     handleInput();
 }

@@ -11,7 +11,11 @@ namespace FileDialogs {
 std::string execCommand(const char* cmd) {
     char buffer[128];
     std::string result = "";
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    
+    // Use a simple FILE* with custom deleter to avoid template attribute warnings
+    auto pipeDeleter = [](FILE* f) { if (f) pclose(f); };
+    std::unique_ptr<FILE, decltype(pipeDeleter)> pipe(popen(cmd, "r"), pipeDeleter);
+    
     if (!pipe) {
         throw std::runtime_error("popen() failed!");
     }

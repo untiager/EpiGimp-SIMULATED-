@@ -218,7 +218,7 @@ void Application::onLoadImageRequest()
     fileManager_->showOpenDialog("Images (*.png *.jpg *.bmp)");
 }
 
-void Application::onImageSaveRequest(const ImageSaveRequestEvent& event)
+void Application::onImageSaveRequest(const ImageSaveRequestEvent& /*event*/)
 {
     if (!canvas_->hasImage()) {
         errorHandler_->handleError("No image to save");

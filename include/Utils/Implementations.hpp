@@ -30,14 +30,14 @@ public:
         saveBrowser_ = std::make_unique<FileBrowser>();
     }
     
-    std::optional<std::string> showOpenDialog(const std::string& filter = "") override {
+    std::optional<std::string> showOpenDialog(const std::string& /*filter*/ = "") override {
         showingOpenDialog_ = true;
         openBrowser_->reset();
         return std::nullopt; // Will be handled in update loop
     }
     
-    std::optional<std::string> showSaveDialog(const std::string& filter = "", 
-                                            const std::string& defaultName = "") override {
+    std::optional<std::string> showSaveDialog(const std::string& /*filter*/ = "", 
+                                            const std::string& /*defaultName*/ = "") override {
         showingSaveDialog_ = true;
         saveBrowser_->reset();
         return std::nullopt; // Will be handled in update loop

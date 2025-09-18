@@ -18,7 +18,7 @@ Toolbar::Toolbar(Rectangle bounds, EventDispatcher* dispatcher)
               << bounds.width << ", " << bounds.height << std::endl;
 }
 
-void Toolbar::update(float deltaTime)
+void Toolbar::update(float /*deltaTime*/)
 {
     for (auto& button : buttons_) {
         updateButton(*button);
