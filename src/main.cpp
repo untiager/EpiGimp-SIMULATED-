@@ -1,46 +1,42 @@
-//Main.cpp
+//Main.cpp - Modern C++ architecture
 
-#include "../include/Basics.hpp"
+#include <iostream>
+#include <exception>
+#include <string>
+#include "../include/Core/Application.hpp"
 
-//Main.cpp
-
-#include "../include/Basics.hpp"
-
-int basic_tests(int ac, char **av)
-{
-    if (ac < 2) {
-        // If no arguments, start the paint interface
-        std::cout << "Starting paint interface..." << std::endl;
-        PaintInterfaceClass::initialize(1920, 1080);
-        PaintInterfaceClass::run();
-        return 0;
+int main(int argc, char** argv) try {
+    using namespace EpiGimp;
+    
+    AppConfig config;
+    config.windowWidth = 1920;
+    config.windowHeight = 1080;
+    config.windowTitle = "EpiGimp - Paint Interface";
+    config.targetFPS = 60;
+    
+    if (argc >= 2) {
+        config.initialImagePath = argv[1];
+        std::cout << "Starting with initial image: " << config.initialImagePath << std::endl;
+    } else {
+        std::cout << "Starting without initial image" << std::endl;
     }
-    const char *filePath = av[1];
-    if (!verify_file_existence(filePath)) {
-        ErrorClass::displayError("File does not exist: " + std::string(filePath));
-        return 84;
+    
+    Application app(config);
+    
+    if (!app.initialize()) {
+        std::cerr << "Failed to initialize application" << std::endl;
+        return 1;
     }
     
-    // Start paint interface and load the specified image
-    std::cout << "Starting paint interface with image: " << filePath << std::endl;
-    PaintInterfaceClass::initialize(1920, 1080);
+    app.run();
     
-    // Load the image into the canvas
-    CanvasClass::loadImage(filePath);
+    std::cout << "Application exited normally" << std::endl;
+    return 0;
     
-    PaintInterfaceClass::run();
-    return 0;
-}
-
-int main_loop(int ac, char **av)
-{
-    // This function is no longer needed as we use PaintInterfaceClass::run()
-    // But keeping it for backward compatibility
-    return 0;
-}
-
-int main(int ac, char **av)
-{
-    basic_tests(ac, av);
-    return 0;
+} catch (const std::exception& e) {
+    std::cerr << "Unhandled exception: " << e.what() << std::endl;
+    return 1;
+} catch (...) {
+    std::cerr << "Unknown exception occurred" << std::endl;
+    return 1;
 }
