@@ -12,10 +12,22 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Source files
-file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
+file(GLOB SOURCES 
+                ${CMAKE_SOURCE_DIR}/src/*.cpp
+                ${CMAKE_SOURCE_DIR}/src/*/*.cpp)
 
 # Add executable
 add_executable(EpiGimp ${SOURCES})
 
-# Link with raylib and math library
+# Enable warnings
+target_compile_options(EpiGimp PRIVATE 
+    -Wall -Wextra -Wpedantic
+    $<$<CONFIG:Debug>:-g -O0>
+    $<$<CONFIG:Release>:-O3 -DNDEBUG>
+)
+
+# Link with raylib and required libraries
 target_link_libraries(EpiGimp PRIVATE raylib m)
+
+# Print sources
+message(STATUS "Sources: ${SOURCES}")

@@ -1,26 +1,42 @@
-//Main.cpp
+//Main.cpp - Modern C++ architecture
 
-#include "../include/basics.hpp"
+#include <iostream>
+#include <exception>
+#include <string>
+#include "../include/Core/Application.hpp"
 
-int test_raylib()
-{
-    const int screenWidth = 800;
-    const int screenHeight = 450;
-    InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
-
-    SetTargetFPS(60);
-
-    while (!WindowShouldClose()) {
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
-        DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
-        EndDrawing();
+int main(int argc, char** argv) try {
+    using namespace EpiGimp;
+    
+    AppConfig config;
+    config.windowWidth = 1920;
+    config.windowHeight = 1080;
+    config.windowTitle = "EpiGimp - Paint Interface";
+    config.targetFPS = 60;
+    
+    if (argc >= 2) {
+        config.initialImagePath = argv[1];
+        std::cout << "Starting with initial image: " << config.initialImagePath << std::endl;
+    } else {
+        std::cout << "Starting without initial image" << std::endl;
     }
-    CloseWindow();
+    
+    Application app(config);
+    
+    if (!app.initialize()) {
+        std::cerr << "Failed to initialize application" << std::endl;
+        return 1;
+    }
+    
+    app.run();
+    
+    std::cout << "Application exited normally" << std::endl;
     return 0;
-}
-
-int main()
-{
-    return test_raylib();
+    
+} catch (const std::exception& e) {
+    std::cerr << "Unhandled exception: " << e.what() << std::endl;
+    return 1;
+} catch (...) {
+    std::cerr << "Unknown exception occurred" << std::endl;
+    return 1;
 }
