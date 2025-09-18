@@ -127,10 +127,24 @@ bool FileBrowser::hasValidExtension(const std::string& filename) const {
     return false;
 }
 
-// Simple button helper
+// Simple button helper with hover support
 bool drawButton(Rectangle bounds, const char* text, bool isSelected = false) {
-    Color bgColor = isSelected ? LIGHTGRAY : GRAY;
-    Color textColor = isSelected ? BLACK : WHITE;
+    Vector2 mousePos = GetMousePosition();
+    bool isHovered = CheckCollisionPointRec(mousePos, bounds);
+    
+    Color bgColor;
+    Color textColor;
+    
+    if (isSelected) {
+        bgColor = SKYBLUE;
+        textColor = WHITE;
+    } else if (isHovered) {
+        bgColor = LIGHTGRAY;
+        textColor = BLACK;
+    } else {
+        bgColor = GRAY;
+        textColor = WHITE;
+    }
     
     DrawRectangleRec(bounds, bgColor);
     DrawRectangleLinesEx(bounds, 1, DARKGRAY);
@@ -143,8 +157,7 @@ bool drawButton(Rectangle bounds, const char* text, bool isSelected = false) {
     
     DrawText(text, (int)textPos.x, (int)textPos.y, 14, textColor);
     
-    Vector2 mousePos = GetMousePosition();
-    return CheckCollisionPointRec(mousePos, bounds) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+    return isHovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
 
 bool FileBrowser::renderOpenDialog(float x, float y, float width, float height) {
@@ -178,12 +191,7 @@ bool FileBrowser::renderOpenDialog(float x, float y, float width, float height) 
         
         bool isSelected = (selectedIndex_ == i);
         
-        // Highlight selected item
-        if (isSelected) {
-            DrawRectangleRec(itemRect, SKYBLUE);
-        }
-        
-        // Draw item
+        // Draw item with proper selection and hover
         std::string displayText = entries_[i].isDirectory ? 
             "[DIR] " + entries_[i].name : entries_[i].name;
             
@@ -246,10 +254,11 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
     float listY = y + 65;
     int visibleItems = (int)(listHeight / itemHeight);
     
-    for (int i = 0; i < (int)entries_.size() && i < visibleItems; i++) {
+    int dirIndex = 0; // Track directory position separately
+    for (int i = 0; i < (int)entries_.size() && dirIndex < visibleItems; i++) {
         if (!entries_[i].isDirectory) continue; // Only show directories in save dialog
         
-        Rectangle itemRect = {x + padding, listY + (i * itemHeight / 2), width - 2*padding, itemHeight - 2};
+        Rectangle itemRect = {x + padding, listY + (dirIndex * itemHeight), width - 2*padding, itemHeight - 2};
         
         std::string displayText = "[DIR] " + entries_[i].name;
         
@@ -260,6 +269,8 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
                 enterDirectory(entries_[i].name);
             }
         }
+        
+        dirIndex++; // Increment directory counter
     }
     
     // Filename input (simple text display for now)
