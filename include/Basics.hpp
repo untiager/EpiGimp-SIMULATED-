@@ -18,3 +18,6 @@
 //classes
 #include "Class/ErrorClass.hpp"
 #include "Class/ImageClass.hpp"
+#include "Class/ToolbarClass.hpp"
+#include "Class/CanvasClass.hpp"
+#include "Class/PaintInterfaceClass.hpp"
