@@ -24,7 +24,7 @@ private:
     int selectedIndex_;
     bool showHidden_;
     std::string inputBuffer_;
-    bool cancelled_;  // Track if dialog was cancelled
+    bool cancelled_;
     
     // Click delay mechanism to prevent accidental double-clicks after navigation
     double lastNavigationTime_;
