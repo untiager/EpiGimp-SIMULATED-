@@ -16,6 +16,7 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - ✅ Modern C++ architecture with RAII resource management
 - ✅ Clean paint interface with toolbar and canvas
 - ✅ **Crayon Drawing Tool** - Draw directly on images with smooth strokes
+- ✅ **Color Selector Palette** - 16 color swatches for drawing customization
 - ✅ Safe in-application file browser (no system crashes!)
 - ✅ Load Image functionality (PNG, JPG, BMP, TGA formats)
 - ✅ Save Image functionality with auto-extension and format conversion
@@ -26,6 +27,7 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - ✅ Robust error handling and user feedback system
 
 **Recent Updates**:
+- 🆕 **Color Selector Palette** - Interactive color selection with 16 predefined colors
 - 🆕 **Crayon Drawing Tool** - Full drawing functionality with persistent layer system
 - 🆕 **Enhanced File Dialogs** - Cancel buttons work properly, ESC key handling
 - 🆕 **Auto File Extensions** - Prevents crashes from missing extensions, auto-adds .png
@@ -33,8 +35,8 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - 🆕 **Bug Fixes** - Fixed image flipping, backspace double-deletion, click delays
 
 **Upcoming Features**:
-- 🚧 Additional drawing tools (brush sizes, colors, eraser)
-- 🚧 Color palette and picker
+- 🚧 Additional drawing tools (brush sizes, eraser)
+- 🚧 Custom color picker (beyond preset palette)
 - 🚧 Layers support
 - 🚧 Filters and effects
 - 🚧 Undo/Redo system
@@ -46,7 +48,8 @@ EpiGimp follows modern C++ best practices with a clean, modular architecture:
 ### Core Components
 - **Application**: Main orchestrator managing all components
 - **Canvas**: Image display and manipulation area with RAII resource management
-- **Toolbar**: UI toolbar with extensible button system
+- **Toolbar**: UI toolbar with extensible button system and integrated color palette
+- **ColorPalette**: Interactive color selection component with 16 predefined colors
 - **FileBrowser**: Safe in-application file navigation (no dangerous system calls)
 
 ### Key Design Patterns
@@ -124,6 +127,7 @@ sudo make install  # Installs to /usr/local/bin
 - **Load Image**: Click "Load Image" button or use `Ctrl+O`
 - **Save Image**: Click "Save Image" button or use `Ctrl+S`
 - **Crayon Tool**: Click "Crayon" button, then click and drag to draw on images
+- **Color Selection**: Click any color swatch in the toolbar to change drawing color
 - **Navigation**: 
   - Pan: Click and drag with middle mouse button or arrow keys
   - Zoom: Mouse wheel over image area
@@ -131,11 +135,16 @@ sudo make install  # Installs to /usr/local/bin
 - **Exit**: `Escape` key (only when no dialogs are open) or close window
 
 ### Drawing Features
-- **Crayon Tool**: Red drawing tool for freehand sketching
+- **Crayon Tool**: Freehand drawing tool with customizable colors
   - Activate by clicking the "Crayon" button in the toolbar
   - Draw with left mouse button click and drag
   - Drawings are automatically saved with the image
   - Smooth line interpolation between mouse movements
+- **Color Palette**: Interactive color selection system
+  - 16 predefined colors: Black, White, Red, Green, Blue, Yellow, Orange, Purple, Brown, Pink, Dark Gray, Maroon, Dark Green, Dark Blue, Navy, Magenta
+  - Visual feedback: Selected colors have white borders, hovered colors have gray borders
+  - Real-time color switching while drawing
+  - Default color is black
 
 ### File Operations
 - **Auto-Extension**: Missing file extensions are automatically added (.png default)
