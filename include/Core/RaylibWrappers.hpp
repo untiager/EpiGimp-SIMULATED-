@@ -5,6 +5,9 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <filesystem>
+#include <algorithm>
+#include <vector>
 #include "raylib.h"
 
 namespace EpiGimp {
@@ -111,8 +114,46 @@ public:
     }
 
     bool exportToFile(const std::string& path) const {
+        std::string actualPath;
+        return exportToFile(path, actualPath);
+    }
+    
+    bool exportToFile(const std::string& path, std::string& actualPath) const {
         if (!isValid()) return false;
-        return ExportImage(*image_, path.c_str());
+        
+        // Validate and potentially fix file extension
+        actualPath = validateAndFixExtension(path);
+        if (actualPath.empty()) {
+            return false; // Invalid extension and couldn't fix
+        }
+        
+        return ExportImage(*image_, actualPath.c_str());
+    }
+
+private:
+    std::string validateAndFixExtension(const std::string& path) const {
+        std::filesystem::path filePath(path);
+        std::string extension = filePath.extension().string();
+        
+        // Convert to lowercase for comparison
+        std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+        
+        // Supported extensions by Raylib's ExportImage
+        std::vector<std::string> supportedExts = {".png", ".bmp", ".tga", ".jpg", ".jpeg"};
+        
+        // Check if extension is already valid
+        if (std::find(supportedExts.begin(), supportedExts.end(), extension) != supportedExts.end()) {
+            return path; // Extension is valid, return as-is
+        }
+        
+        // If no extension or invalid extension, add .png as default
+        if (extension.empty()) {
+            return path + ".png";
+        }
+        
+        // Invalid extension - replace with .png
+        std::string newPath = filePath.replace_extension(".png").string();
+        return newPath;
     }
 };
 

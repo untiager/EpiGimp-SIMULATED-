@@ -303,6 +303,11 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
     
     DrawText(inputBuffer_.c_str(), (int)(inputRect.x + 5), (int)(inputRect.y + 8), 14, BLACK);
     
+    // Help text about supported formats
+    float helpY = inputY + 35;
+    std::string helpText = "Supported formats: .png, .jpg, .jpeg, .bmp, .tga (auto-adds .png if missing)";
+    DrawText(helpText.c_str(), (int)(x + padding), (int)(helpY), 12, DARKGRAY);
+    
     // Control buttons
     float buttonY = y + height - 40;
     Rectangle saveBtn = {x + padding, buttonY, 80, buttonHeight};

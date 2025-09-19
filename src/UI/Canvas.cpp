@@ -71,11 +71,18 @@ bool Canvas::saveImage(const std::string& filePath)
         return false;
     }
     
-    const bool success = imageRes->exportToFile(filePath);
-    eventDispatcher_->emit<ImageSavedEvent>(filePath, success);
+    std::string actualPath;
+    const bool success = imageRes->exportToFile(filePath, actualPath);
+    
+    // Inform user if filename was auto-corrected
+    if (success && actualPath != filePath) {
+        std::cout << "Note: File extension was auto-corrected to: " << actualPath << std::endl;
+    }
+    
+    eventDispatcher_->emit<ImageSavedEvent>(actualPath, success);
     
     if (success) {
-        std::cout << "Image saved successfully: " << filePath << std::endl;
+        std::cout << "Image saved successfully: " << actualPath << std::endl;
     } else {
         eventDispatcher_->emit<ErrorEvent>("Failed to save image: " + filePath);
     }
