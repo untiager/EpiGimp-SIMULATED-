@@ -72,33 +72,38 @@ bool Canvas::saveImage(const std::string& filePath)
     
     // If we have drawings, composite them with the original image
     if (drawingLayer_ && drawingLayer_->isValid()) {
-        // Create a composite render texture
-        const int width = (*currentTexture_)->width;
-        const int height = (*currentTexture_)->height;
-        RenderTextureResource compositeTexture(width, height);
-        
-        compositeTexture.beginDrawing();
-        ClearBackground(WHITE);
-        
-        // Draw original image
-        const Rectangle sourceRect = {0, 0, static_cast<float>(width), static_cast<float>(height)};
-        DrawTexturePro(**currentTexture_, sourceRect, sourceRect, Vector2{0, 0}, 0.0f, WHITE);
-        
-        // Draw the drawing layer on top
-        const Rectangle drawingSourceRect = {0, 0, static_cast<float>(width), -static_cast<float>(height)};
-        DrawTexturePro((**drawingLayer_).texture, drawingSourceRect, sourceRect, Vector2{0, 0}, 0.0f, WHITE);
-        
-        compositeTexture.endDrawing();
-        
-        // Convert composite to regular texture and save
-        auto compositeImage = ImageResource::fromTexture(compositeTexture->texture);
-        if (!compositeImage) {
-            eventDispatcher_->emit<ErrorEvent>("Failed to create composite image");
+        // Get original image
+        auto originalImage = ImageResource::fromTexture(**currentTexture_);
+        if (!originalImage) {
+            eventDispatcher_->emit<ErrorEvent>("Failed to create image from texture");
             return false;
         }
         
+        // Get drawing layer as image (this handles the Y-flip automatically)
+        auto drawingImage = ImageResource::fromTexture((**drawingLayer_).texture);
+        if (!drawingImage) {
+            eventDispatcher_->emit<ErrorEvent>("Failed to create drawing image");
+            return false;
+        }
+        
+        // Create a new image and composite them
+        Image composite = GenImageColor(originalImage->get()->width, originalImage->get()->height, WHITE);
+        
+        // Draw original image onto composite
+        ImageDraw(&composite, *originalImage->get(), 
+                 Rectangle{0, 0, static_cast<float>(originalImage->get()->width), static_cast<float>(originalImage->get()->height)},
+                 Rectangle{0, 0, static_cast<float>(composite.width), static_cast<float>(composite.height)}, WHITE);
+        
+        // Draw the drawing layer on top
+        ImageDraw(&composite, *drawingImage->get(),
+                 Rectangle{0, 0, static_cast<float>(drawingImage->get()->width), static_cast<float>(drawingImage->get()->height)},
+                 Rectangle{0, 0, static_cast<float>(composite.width), static_cast<float>(composite.height)}, WHITE);
+        
+        // Create ImageResource from the composite
+        ImageResource compositeRes(composite);
+        
         std::string actualPath;
-        const bool success = compositeImage->exportToFile(filePath, actualPath);
+        const bool success = compositeRes.exportToFile(filePath, actualPath);
         
         // Inform user if filename was auto-corrected
         if (success && actualPath != filePath) {
