@@ -138,7 +138,8 @@ Toolbar::Toolbar(Rectangle bounds, EventDispatcher* dispatcher)
     }
     
     // Create color palette on the right side of the toolbar
-    const float paletteWidth = 400; // Space for 16 colors in 2 rows
+    // Calculate optimal width: 8 colors per row * (swatch_size + margin) + padding
+    const float paletteWidth = 8 * (20 + 2) + 2 * 5; // 8 colors per row + padding = 186 pixels
     const float paletteHeight = bounds.height - 10; // Leave some padding
     const float paletteX = bounds.x + bounds.width - paletteWidth - 10; // Right side with margin
     const float paletteY = bounds.y + 5; // Small top margin

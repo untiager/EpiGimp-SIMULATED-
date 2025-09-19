@@ -24,9 +24,9 @@ private:
         ColorSwatch(Rectangle rect, Color c) : bounds(rect), color(c) {}
     };
 
-    static constexpr int SWATCH_SIZE = 25;
-    static constexpr int SWATCH_MARGIN = 3;
-    static constexpr int PALETTE_PADDING = 10;
+    static constexpr int SWATCH_SIZE = 20;
+    static constexpr int SWATCH_MARGIN = 2;
+    static constexpr int PALETTE_PADDING = 5;
 
     Rectangle bounds_;
     std::vector<std::unique_ptr<ColorSwatch>> swatches_;
