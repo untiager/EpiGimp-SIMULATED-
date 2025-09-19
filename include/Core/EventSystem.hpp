@@ -8,6 +8,7 @@
 #include <memory>
 #include <typeindex>
 #include <any>
+#include <string>
 
 namespace EpiGimp {
 

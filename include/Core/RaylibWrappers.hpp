@@ -107,54 +107,12 @@ public:
     explicit operator bool() const { return isValid(); }
 
     // Utility methods
-    void resize(int width, int height) {
-        if (isValid()) {
-            ImageResize(getMutable(), width, height);
-        }
-    }
-
-    bool exportToFile(const std::string& path) const {
-        std::string actualPath;
-        return exportToFile(path, actualPath);
-    }
-    
-    bool exportToFile(const std::string& path, std::string& actualPath) const {
-        if (!isValid()) return false;
-        
-        // Validate and potentially fix file extension
-        actualPath = validateAndFixExtension(path);
-        if (actualPath.empty()) {
-            return false; // Invalid extension and couldn't fix
-        }
-        
-        return ExportImage(*image_, actualPath.c_str());
-    }
+    void resize(int width, int height);
+    bool exportToFile(const std::string& path) const;
+    bool exportToFile(const std::string& path, std::string& actualPath) const;
 
 private:
-    std::string validateAndFixExtension(const std::string& path) const {
-        std::filesystem::path filePath(path);
-        std::string extension = filePath.extension().string();
-        
-        // Convert to lowercase for comparison
-        std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-        
-        // Supported extensions by Raylib's ExportImage
-        std::vector<std::string> supportedExts = {".png", ".bmp", ".tga", ".jpg", ".jpeg"};
-        
-        // Check if extension is already valid
-        if (std::find(supportedExts.begin(), supportedExts.end(), extension) != supportedExts.end()) {
-            return path; // Extension is valid, return as-is
-        }
-        
-        // If no extension or invalid extension, add .png as default
-        if (extension.empty()) {
-            return path + ".png";
-        }
-        
-        // Invalid extension - replace with .png
-        std::string newPath = filePath.replace_extension(".png").string();
-        return newPath;
-    }
+    std::string validateAndFixExtension(const std::string& path) const;
 };
 
 // RAII wrapper for raylib Window
@@ -163,20 +121,8 @@ private:
     bool initialized_;
 
 public:
-    WindowResource(int width, int height, const std::string& title) 
-        : initialized_(false) {
-        InitWindow(width, height, title.c_str());
-        if (IsWindowReady()) {
-            initialized_ = true;
-            SetTargetFPS(60);
-        }
-    }
-
-    ~WindowResource() {
-        if (initialized_) {
-            CloseWindow();
-        }
-    }
+    WindowResource(int width, int height, const std::string& title);
+    ~WindowResource();
 
     // Non-copyable and non-moveable
     WindowResource(const WindowResource&) = delete;
@@ -188,9 +134,9 @@ public:
     explicit operator bool() const { return initialized_; }
 
     // Window operations
-    bool shouldClose() const { return WindowShouldClose(); }
-    int getWidth() const { return GetScreenWidth(); }
-    int getHeight() const { return GetScreenHeight(); }
+    bool shouldClose() const;
+    int getWidth() const;
+    int getHeight() const;
 };
 
 // RAII wrapper for raylib RenderTexture2D
@@ -200,14 +146,7 @@ private:
 
 public:
     RenderTextureResource() : renderTexture_(nullptr, [](RenderTexture2D*){}) {}
-    
-    explicit RenderTextureResource(int width, int height) 
-        : renderTexture_(new RenderTexture2D(LoadRenderTexture(width, height)), [](RenderTexture2D* rt) {
-            if (rt && rt->id > 0) {
-                UnloadRenderTexture(*rt);
-            }
-            delete rt;
-        }) {}
+    explicit RenderTextureResource(int width, int height);
 
     // Non-copyable but moveable
     RenderTextureResource(const RenderTextureResource&) = delete;
@@ -224,25 +163,9 @@ public:
     bool isValid() const { return renderTexture_ && renderTexture_->id > 0; }
     explicit operator bool() const { return isValid(); }
 
-    void beginDrawing() const {
-        if (isValid()) {
-            BeginTextureMode(*renderTexture_);
-        }
-    }
-
-    void endDrawing() const {
-        if (isValid()) {
-            EndTextureMode();
-        }
-    }
-    
-    void clear(Color color = BLANK) const {
-        if (isValid()) {
-            beginDrawing();
-            ClearBackground(color);
-            endDrawing();
-        }
-    }
+    void beginDrawing() const;
+    void endDrawing() const;
+    void clear(Color color = BLANK) const;
 };
 
 } // namespace EpiGimp
