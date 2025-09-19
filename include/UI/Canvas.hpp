@@ -16,10 +16,16 @@ class Canvas : public ICanvas {
 private:
     Rectangle bounds_;
     std::optional<TextureResource> currentTexture_;
+    std::optional<RenderTextureResource> drawingLayer_;  // Persistent drawing layer
     std::string currentImagePath_;
     float zoomLevel_;
     Vector2 panOffset_;
     EventDispatcher* eventDispatcher_;
+    
+    // Drawing state
+    DrawingTool currentTool_;
+    bool isDrawing_;
+    Vector2 lastMousePos_;
     
     static constexpr float MIN_ZOOM = 0.1f;
     static constexpr float MAX_ZOOM = 5.0f;
@@ -49,13 +55,17 @@ public:
     float getZoom() const override { return zoomLevel_; }
     void setPan(Vector2 offset) override;
     Vector2 getPan() const override { return panOffset_; }
+    void setDrawingTool(DrawingTool tool) override;
 
 private:
     void handleInput();
     void handleZoom();
     void handlePanning();
+    void handleDrawing();  // New method for drawing input
     void drawImage() const;
     void drawPlaceholder() const;
+    void initializeDrawingLayer();
+    void drawStroke(Vector2 from, Vector2 to);
     Rectangle calculateImageDestRect() const;
     Vector2 getImageCenter() const;
     std::optional<TextureResource> createTextureFromFile(const std::string& filePath);

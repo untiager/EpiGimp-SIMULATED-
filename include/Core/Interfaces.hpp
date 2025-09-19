@@ -13,6 +13,12 @@ namespace EpiGimp {
 class TextureResource;
 class ImageResource;
 
+// Drawing tools enum
+enum class DrawingTool {
+    None,       // No drawing tool selected
+    Crayon      // Crayon/brush tool for freehand drawing
+};
+
 // Interface for UI components
 class IUIComponent {
 public:
@@ -41,6 +47,7 @@ public:
     virtual float getZoom() const = 0;
     virtual void setPan(Vector2 offset) = 0;
     virtual Vector2 getPan() const = 0;
+    virtual void setDrawingTool(DrawingTool tool) = 0;
 };
 
 // Interface for file operations

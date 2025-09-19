@@ -11,6 +11,9 @@
 
 namespace EpiGimp {
 
+// Forward declarations
+enum class DrawingTool;
+
 // Base event class
 class Event {
 public:
@@ -41,9 +44,8 @@ class LoadImageRequestEvent : public Event {};
 
 class ToolSelectedEvent : public Event {
 public:
-    enum class ToolType { BRUSH, ERASER, LINE, RECTANGLE, CIRCLE };
-    ToolType toolType;
-    explicit ToolSelectedEvent(ToolType type) : toolType(type) {}
+    DrawingTool toolType;
+    explicit ToolSelectedEvent(DrawingTool type) : toolType(type) {}
 };
 
 class ErrorEvent : public Event {

@@ -7,7 +7,8 @@
 namespace EpiGimp {
 
 Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher)
-    : bounds_(bounds), zoomLevel_(1.0f), panOffset_{0, 0}, eventDispatcher_(dispatcher)
+    : bounds_(bounds), zoomLevel_(1.0f), panOffset_{0, 0}, eventDispatcher_(dispatcher),
+      currentTool_(DrawingTool::None), isDrawing_(false), lastMousePos_{0, 0}
 {
     
     if (!dispatcher)
@@ -21,6 +22,7 @@ Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher)
 void Canvas::update(float /*deltaTime*/)
 {
     handleInput();
+    handleDrawing();
 }
 
 void Canvas::draw() const
@@ -52,6 +54,9 @@ void Canvas::loadImage(const std::string& filePath)
     currentImagePath_ = filePath;
     resetViewTransform();
     
+    // Initialize drawing layer for the new image
+    initializeDrawingLayer();
+    
     eventDispatcher_->emit<ImageLoadedEvent>(filePath);
     std::cout << "Image loaded successfully: " << filePath << std::endl;
 }
@@ -65,6 +70,53 @@ bool Canvas::saveImage(const std::string& filePath)
     
     std::filesystem::create_directories(std::filesystem::path(filePath).parent_path());
     
+    // If we have drawings, composite them with the original image
+    if (drawingLayer_ && drawingLayer_->isValid()) {
+        // Create a composite render texture
+        const int width = (*currentTexture_)->width;
+        const int height = (*currentTexture_)->height;
+        RenderTextureResource compositeTexture(width, height);
+        
+        compositeTexture.beginDrawing();
+        ClearBackground(WHITE);
+        
+        // Draw original image
+        const Rectangle sourceRect = {0, 0, static_cast<float>(width), static_cast<float>(height)};
+        DrawTexturePro(**currentTexture_, sourceRect, sourceRect, Vector2{0, 0}, 0.0f, WHITE);
+        
+        // Draw the drawing layer on top
+        const Rectangle drawingSourceRect = {0, 0, static_cast<float>(width), -static_cast<float>(height)};
+        DrawTexturePro((**drawingLayer_).texture, drawingSourceRect, sourceRect, Vector2{0, 0}, 0.0f, WHITE);
+        
+        compositeTexture.endDrawing();
+        
+        // Convert composite to regular texture and save
+        auto compositeImage = ImageResource::fromTexture(compositeTexture->texture);
+        if (!compositeImage) {
+            eventDispatcher_->emit<ErrorEvent>("Failed to create composite image");
+            return false;
+        }
+        
+        std::string actualPath;
+        const bool success = compositeImage->exportToFile(filePath, actualPath);
+        
+        // Inform user if filename was auto-corrected
+        if (success && actualPath != filePath) {
+            std::cout << "Note: File extension was auto-corrected to: " << actualPath << std::endl;
+        }
+        
+        eventDispatcher_->emit<ImageSavedEvent>(actualPath, success);
+        
+        if (success) {
+            std::cout << "Image saved successfully with drawings: " << actualPath << std::endl;
+        } else {
+            eventDispatcher_->emit<ErrorEvent>("Failed to save image: " + filePath);
+        }
+        
+        return success;
+    }
+    
+    // No drawings, save original image
     auto imageRes = ImageResource::fromTexture(**currentTexture_);
     if (!imageRes) {
         eventDispatcher_->emit<ErrorEvent>("Failed to create image from texture");
@@ -137,6 +189,36 @@ void Canvas::handlePanning()
     if (IsKeyDown(KEY_DOWN)) panOffset_.y -= PAN_SPEED;
 }
 
+void Canvas::handleDrawing()
+{
+    if (currentTool_ == DrawingTool::None || !hasImage()) {
+        isDrawing_ = false;
+        return;
+    }
+    
+    const Vector2 mousePos = GetMousePosition();
+    const bool mouseInBounds = CheckCollisionPointRec(mousePos, bounds_);
+    
+    if (currentTool_ == DrawingTool::Crayon && mouseInBounds) {
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            isDrawing_ = true;
+            lastMousePos_ = mousePos;
+            std::cout << "Started drawing at: " << mousePos.x << ", " << mousePos.y << std::endl;
+        }
+        
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && isDrawing_) {
+            // Draw line from last position to current position
+            drawStroke(lastMousePos_, mousePos);
+            lastMousePos_ = mousePos;
+        }
+        
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            isDrawing_ = false;
+            std::cout << "Finished drawing stroke" << std::endl;
+        }
+    }
+}
+
 void Canvas::drawImage() const
 {
     if (!hasImage()) return;
@@ -146,6 +228,13 @@ void Canvas::drawImage() const
                                         static_cast<float>((*currentTexture_)->height)};
     
     DrawTexturePro(**currentTexture_, sourceRect, destRect, Vector2{0, 0}, 0.0f, WHITE);
+    
+    // Draw the drawing layer on top of the image
+    if (drawingLayer_ && drawingLayer_->isValid()) {
+        const Rectangle drawingSourceRect = {0, 0, static_cast<float>((**drawingLayer_).texture.width), 
+                                           -static_cast<float>((**drawingLayer_).texture.height)}; // Flip Y for render texture
+        DrawTexturePro((**drawingLayer_).texture, drawingSourceRect, destRect, Vector2{0, 0}, 0.0f, WHITE);
+    }
 }
 
 void Canvas::drawPlaceholder() const
@@ -208,6 +297,52 @@ void Canvas::resetViewTransform()
 {
     zoomLevel_ = 1.0f;
     panOffset_ = Vector2{0, 0};
+}
+
+void Canvas::setDrawingTool(DrawingTool tool)
+{
+    currentTool_ = tool;
+    std::cout << "Canvas drawing tool set to: " << static_cast<int>(tool) << std::endl;
+}
+
+void Canvas::initializeDrawingLayer()
+{
+    if (hasImage() && currentTexture_) {
+        const int width = (*currentTexture_)->width;
+        const int height = (*currentTexture_)->height;
+        drawingLayer_ = RenderTextureResource(width, height);
+        
+        // Clear the drawing layer to transparent
+        drawingLayer_->clear(BLANK);
+        
+        std::cout << "Drawing layer initialized: " << width << "x" << height << std::endl;
+    }
+}
+
+void Canvas::drawStroke(Vector2 from, Vector2 to)
+{
+    if (!drawingLayer_ || !drawingLayer_->isValid()) {
+        return;
+    }
+    
+    // Convert screen coordinates to image coordinates
+    const Rectangle imageRect = calculateImageDestRect();
+    
+    // Transform screen coordinates to image texture coordinates
+    const Vector2 imageFrom = {
+        (from.x - imageRect.x) / imageRect.width * (*currentTexture_)->width,
+        (from.y - imageRect.y) / imageRect.height * (*currentTexture_)->height
+    };
+    
+    const Vector2 imageTo = {
+        (to.x - imageRect.x) / imageRect.width * (*currentTexture_)->width,
+        (to.y - imageRect.y) / imageRect.height * (*currentTexture_)->height
+    };
+    
+    // Draw to the render texture
+    drawingLayer_->beginDrawing();
+    DrawLineEx(imageFrom, imageTo, 3.0f, RED); // TODO: Make brush size and color configurable
+    drawingLayer_->endDrawing();
 }
 
 } // namespace EpiGimp

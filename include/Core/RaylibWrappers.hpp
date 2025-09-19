@@ -193,6 +193,58 @@ public:
     int getHeight() const { return GetScreenHeight(); }
 };
 
+// RAII wrapper for raylib RenderTexture2D
+class RenderTextureResource {
+private:
+    std::unique_ptr<RenderTexture2D, void(*)(RenderTexture2D*)> renderTexture_;
+
+public:
+    RenderTextureResource() : renderTexture_(nullptr, [](RenderTexture2D*){}) {}
+    
+    explicit RenderTextureResource(int width, int height) 
+        : renderTexture_(new RenderTexture2D(LoadRenderTexture(width, height)), [](RenderTexture2D* rt) {
+            if (rt && rt->id > 0) {
+                UnloadRenderTexture(*rt);
+            }
+            delete rt;
+        }) {}
+
+    // Non-copyable but moveable
+    RenderTextureResource(const RenderTextureResource&) = delete;
+    RenderTextureResource& operator=(const RenderTextureResource&) = delete;
+    
+    RenderTextureResource(RenderTextureResource&&) = default;
+    RenderTextureResource& operator=(RenderTextureResource&&) = default;
+
+    const RenderTexture2D* get() const { return renderTexture_.get(); }
+    RenderTexture2D* getMutable() { return renderTexture_.get(); }
+    const RenderTexture2D& operator*() const { return *renderTexture_; }
+    const RenderTexture2D* operator->() const { return renderTexture_.get(); }
+    
+    bool isValid() const { return renderTexture_ && renderTexture_->id > 0; }
+    explicit operator bool() const { return isValid(); }
+
+    void beginDrawing() const {
+        if (isValid()) {
+            BeginTextureMode(*renderTexture_);
+        }
+    }
+
+    void endDrawing() const {
+        if (isValid()) {
+            EndTextureMode();
+        }
+    }
+    
+    void clear(Color color = BLANK) const {
+        if (isValid()) {
+            beginDrawing();
+            ClearBackground(color);
+            endDrawing();
+        }
+    }
+};
+
 } // namespace EpiGimp
 
 #endif // RAYLIB_WRAPPERS_HPP

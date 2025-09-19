@@ -34,6 +34,7 @@ private:
     AppConfig config_;
     bool running_;
     bool initialized_;
+    DrawingTool currentTool_;  // Current drawing tool
 
 public:
     explicit Application(AppConfig config = AppConfig{});
@@ -69,6 +70,7 @@ private:
     void onLoadImageRequest();
     void onImageSaveRequest(const ImageSaveRequestEvent& event);
     void onError(const ErrorEvent& event);
+    void onToolSelected(const ToolSelectedEvent& event);
 };
 
 } // namespace EpiGimp

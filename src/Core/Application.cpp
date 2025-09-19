@@ -9,7 +9,7 @@
 namespace EpiGimp {
 
 Application::Application(AppConfig config) 
-    : config_(std::move(config)), running_(false), initialized_(false)
+    : config_(std::move(config)), running_(false), initialized_(false), currentTool_(DrawingTool::None)
     {
     
     eventDispatcher_ = std::make_unique<EventDispatcher>();
@@ -189,6 +189,15 @@ void Application::setupEventHandlers()
         std::cout << "Image saved event: " << event.filePath 
                   << " (success: " << event.success << ")" << std::endl;
     });
+    
+    eventDispatcher_->subscribe<ToolSelectedEvent>([this](const ToolSelectedEvent& event) {
+        onToolSelected(event);
+    });
+    
+    // Subscribe to tool selection events
+    eventDispatcher_->subscribe<ToolSelectedEvent>([this](const ToolSelectedEvent& event) {
+        onToolSelected(event);
+    });
 }
 
 void Application::createComponents()
@@ -204,6 +213,10 @@ void Application::createComponents()
     
     toolbar_->addButton("Save Image", [this]() {
         eventDispatcher_->emit<ImageSaveRequestEvent>("");
+    });
+    
+    toolbar_->addButton("Crayon", [this]() {
+        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Crayon);
     });
     
     // Create canvas (below toolbar)
@@ -234,6 +247,19 @@ void Application::onImageSaveRequest(const ImageSaveRequestEvent& /*event*/)
 void Application::onError(const ErrorEvent& event)
 {
     errorHandler_->handleError(event.message);
+}
+
+void Application::onToolSelected(const ToolSelectedEvent& event)
+{
+    currentTool_ = event.toolType;
+    std::cout << "Tool selected: " << static_cast<int>(currentTool_) << std::endl;
+    
+    // Pass the tool selection to the canvas
+    if (canvas_) {
+        // We'll need to cast to access the setDrawingTool method
+        auto* canvas = static_cast<Canvas*>(canvas_.get());
+        canvas->setDrawingTool(currentTool_);
+    }
 }
 
 } // namespace EpiGimp
