@@ -9,17 +9,14 @@
 
 namespace EpiGimp {
 
-// Forward declarations
 class TextureResource;
 class ImageResource;
 
-// Drawing tools enum
 enum class DrawingTool {
-    None,       // No drawing tool selected
-    Crayon      // Crayon/brush tool for freehand drawing
+    None,
+    Crayon
 };
 
-// Interface for UI components
 class IUIComponent {
 public:
     virtual ~IUIComponent() = default;
@@ -28,7 +25,6 @@ public:
     virtual Rectangle getBounds() const = 0;
 };
 
-// Interface for the toolbar
 class IToolbar : public IUIComponent {
 public:
     virtual ~IToolbar() = default;
@@ -36,7 +32,6 @@ public:
     virtual int getHeight() const = 0;
 };
 
-// Interface for the canvas
 class ICanvas : public IUIComponent {
 public:
     virtual ~ICanvas() = default;
@@ -50,7 +45,6 @@ public:
     virtual void setDrawingTool(DrawingTool tool) = 0;
 };
 
-// Interface for file operations
 class IFileManager {
 public:
     virtual ~IFileManager() = default;
@@ -61,7 +55,6 @@ public:
     virtual bool createDirectories(const std::string& path) const = 0;
 };
 
-// Interface for error handling
 class IErrorHandler {
 public:
     virtual ~IErrorHandler() = default;
@@ -70,7 +63,6 @@ public:
     virtual void handleInfo(const std::string& message) = 0;
 };
 
-// Interface for input handling
 class IInputHandler {
 public:
     virtual ~IInputHandler() = default;
