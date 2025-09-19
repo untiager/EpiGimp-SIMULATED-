@@ -30,9 +30,14 @@ private:
     double lastNavigationTime_;
     static constexpr double NAVIGATION_DELAY = 0.3; // 300ms delay
     
+    // Backspace debouncing to prevent double deletion
+    double lastBackspaceTime_;
+    static constexpr double BACKSPACE_DELAY = 0.1; // 100ms delay
+    
     void loadDirectory();
     bool hasValidExtension(const std::string& filename) const;
     bool canProcessClicks() const;
+    bool canProcessBackspace() const;
     
 public:
     FileBrowser();

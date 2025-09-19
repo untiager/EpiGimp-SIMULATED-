@@ -7,7 +7,7 @@
 namespace EpiGimp {
 
 FileBrowser::FileBrowser() 
-    : selectedIndex_(-1), showHidden_(false), cancelled_(false), lastNavigationTime_(0.0) {
+    : selectedIndex_(-1), showHidden_(false), cancelled_(false), lastNavigationTime_(0.0), lastBackspaceTime_(0.0) {
     currentPath_ = std::filesystem::current_path().string();
     setSupportedExtensions({".png", ".jpg", ".jpeg", ".bmp", ".tga"});
     loadDirectory();
@@ -128,6 +128,11 @@ bool FileBrowser::hasValidExtension(const std::string& filename) const {
 bool FileBrowser::canProcessClicks() const {
     double currentTime = GetTime();
     return (currentTime - lastNavigationTime_) > NAVIGATION_DELAY;
+}
+
+bool FileBrowser::canProcessBackspace() const {
+    double currentTime = GetTime();
+    return (currentTime - lastBackspaceTime_) > BACKSPACE_DELAY;
 }
 
 // Simple button helper with hover support
@@ -297,8 +302,9 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
     }
     
     // Handle backspace
-    if (IsKeyPressed(KEY_BACKSPACE) && !inputBuffer_.empty()) {
+    if (IsKeyPressed(KEY_BACKSPACE) && !inputBuffer_.empty() && canProcessBackspace()) {
         inputBuffer_.pop_back();
+        lastBackspaceTime_ = GetTime();
     }
     
     DrawText(inputBuffer_.c_str(), (int)(inputRect.x + 5), (int)(inputRect.y + 8), 14, BLACK);
@@ -351,6 +357,7 @@ void FileBrowser::reset() {
     selectedIndex_ = -1;
     inputBuffer_.clear();
     cancelled_ = false;
+    lastBackspaceTime_ = 0.0;
     setPath(std::filesystem::current_path().string());
 }
 
