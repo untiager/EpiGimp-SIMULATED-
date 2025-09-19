@@ -15,15 +15,25 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 **Core Features Implemented**:
 - ✅ Modern C++ architecture with RAII resource management
 - ✅ Clean paint interface with toolbar and canvas
+- ✅ **Crayon Drawing Tool** - Draw directly on images with smooth strokes
 - ✅ Safe in-application file browser (no system crashes!)
-- ✅ Load Image functionality (PNG, JPG, BMP, GIF, TGA, TIFF)
-- ✅ Save Image functionality with custom filename/location
+- ✅ Load Image functionality (PNG, JPG, BMP, TGA formats)
+- ✅ Save Image functionality with auto-extension and format conversion
+- ✅ **Persistent Drawing Layer** - Drawings save permanently with images
 - ✅ Zoom and pan controls for image navigation
 - ✅ Event-driven architecture for easy extensibility
 - ✅ Zero compiler warnings (clean production code)
+- ✅ Robust error handling and user feedback system
+
+**Recent Updates**:
+- 🆕 **Crayon Drawing Tool** - Full drawing functionality with persistent layer system
+- 🆕 **Enhanced File Dialogs** - Cancel buttons work properly, ESC key handling
+- 🆕 **Auto File Extensions** - Prevents crashes from missing extensions, auto-adds .png
+- 🆕 **Format Conversion** - Save images in different formats than loaded
+- 🆕 **Bug Fixes** - Fixed image flipping, backspace double-deletion, click delays
 
 **Upcoming Features**:
-- 🚧 Basic drawing tools (brush, pencil, eraser)
+- 🚧 Additional drawing tools (brush sizes, colors, eraser)
 - 🚧 Color palette and picker
 - 🚧 Layers support
 - 🚧 Filters and effects
@@ -113,17 +123,34 @@ sudo make install  # Installs to /usr/local/bin
 ### Basic Controls
 - **Load Image**: Click "Load Image" button or use `Ctrl+O`
 - **Save Image**: Click "Save Image" button or use `Ctrl+S`
+- **Crayon Tool**: Click "Crayon" button, then click and drag to draw on images
 - **Navigation**: 
-  - Pan: Click and drag image
-  - Zoom: Mouse wheel or `+`/`-` keys
-  - Reset view: `Ctrl+0`
-- **Exit**: `Escape` key or close window
+  - Pan: Click and drag with middle mouse button or arrow keys
+  - Zoom: Mouse wheel over image area
+  - Reset view: Happens automatically when loading new images
+- **Exit**: `Escape` key (only when no dialogs are open) or close window
+
+### Drawing Features
+- **Crayon Tool**: Red drawing tool for freehand sketching
+  - Activate by clicking the "Crayon" button in the toolbar
+  - Draw with left mouse button click and drag
+  - Drawings are automatically saved with the image
+  - Smooth line interpolation between mouse movements
+
+### File Operations
+- **Auto-Extension**: Missing file extensions are automatically added (.png default)
+- **Format Conversion**: Load PNG and save as JPG, or any supported format combination
+- **Safe Validation**: Prevents crashes from invalid filenames or extensions
+- **Support**: PNG, JPG, JPEG, BMP, TGA formats
 
 ### File Browser
 - Navigate directories by clicking folder icons
 - Use ".." to go up one directory level
 - Hover over items for visual feedback
-- ESC cancels any dialog
+- **Cancel buttons and ESC key work properly** in both open and save dialogs
+- **Anti-double-click protection** prevents accidental navigation
+- **Text input improvements** - Backspace works correctly, no double character deletion
+- Supported formats clearly shown: ".png, .jpg, .jpeg, .bmp, .tga (auto-adds .png if missing)"
 
 ### Command Line
 ```bash
@@ -160,35 +187,55 @@ EpiGimp/
 
 ## 🧪 Testing
 
-Currently, testing is done manually. Automated testing framework coming soon!
-
 ### Manual Testing
 ```bash
 # Build and run
 make && ./EpiGimp
 
-# Test with sample image
+# Test basic functionality
 ./EpiGimp png/test.png
 
-# Test file operations
-# 1. Click Load Image, navigate and select a file
-# 2. Click Save Image, choose location and filename
-# 3. Verify image loads and saves correctly
+# Complete feature testing workflow:
+# 1. Load Image: Click "Load Image", navigate and select a file
+# 2. Drawing: Click "Crayon", draw on the image with left mouse button
+# 3. Save Image: Click "Save Image", choose location and filename
+# 4. Verify: Drawings are saved permanently with the image
+# 5. Format conversion: Load PNG, save as JPG to test conversion
+# 6. Edge cases: Try saving without extension (should auto-add .png)
 ```
+
+### Quality Assurance Verified
+- ✅ **No crashes** from missing file extensions
+- ✅ **Image orientation** preserved correctly when saving
+- ✅ **Drawing persistence** - strokes saved permanently with images
+- ✅ **Cancel buttons** work in both open and save dialogs
+- ✅ **Text input** - Single character deletion with backspace
+- ✅ **File format conversion** - Load one format, save as another
+- ✅ **Memory management** - No leaks with RAII pattern
 
 ## 🐛 Known Issues
 
-- File browser currently shows all directories in save mode (directories are for navigation only)
-- No drawing tools yet - this is a planned feature
-- Window resizing not fully optimized
+**Current Limitations**:
+- Drawing tool limited to red crayon (color picker coming soon)
+- Single brush size (configurable brushes planned)
+- No undo/redo yet (major feature in development)
+
+**Fixed Issues** ✅:
+- ~~File browser directories overlap in save mode~~ → Fixed
+- ~~Image flipping after saving with drawings~~ → Fixed  
+- ~~Double character deletion with backspace~~ → Fixed
+- ~~Cancel buttons not working in dialogs~~ → Fixed
+- ~~Application crash from missing file extensions~~ → Fixed
 
 ## 📈 Performance
 
-EpiGimp is designed for performance:
-- **Memory**: Automatic resource cleanup prevents memory leaks
-- **Rendering**: Hardware-accelerated via Raylib/OpenGL
-- **Loading**: Efficient image loading with proper scaling
-- **UI**: 60 FPS responsive interface
+EpiGimp is designed for performance and stability:
+- **Memory**: Automatic resource cleanup prevents memory leaks (RAII pattern)
+- **Rendering**: Hardware-accelerated via Raylib/OpenGL with efficient render textures
+- **Drawing**: Persistent drawing layer with optimized coordinate transformations
+- **Loading**: Efficient image loading with proper scaling and format support
+- **UI**: 60 FPS responsive interface with smooth drawing and navigation
+- **File I/O**: Safe file operations with comprehensive error handling
 
 ## 🤝 How to Contribute
 
@@ -235,22 +282,24 @@ We welcome contributions from developers of all skill levels! Here's how you can
 ### 🎯 Areas We Need Help
 
 #### 🔴 High Priority
-- **Drawing Tools**: Implement brush, pencil, eraser tools
-- **Color System**: Color picker and palette implementation
-- **Unit Tests**: Add automated testing framework
-- **Documentation**: Code documentation and tutorials
+- **Enhanced Drawing Tools**: Configurable brush sizes and colors
+- **Color System**: Color picker and palette implementation  
+- **Undo/Redo**: Command pattern implementation for drawing operations
+- **Unit Tests**: Automated testing framework for drawing and file operations
 
 #### 🟡 Medium Priority
-- **Layers**: Layer management system
-- **Filters**: Basic image filters (blur, sharpen, etc.)
-- **Undo/Redo**: Command pattern implementation
-- **Cross-platform**: Windows and macOS support
+- **Layers**: Layer management system for complex compositions
+- **Filters**: Basic image filters (blur, sharpen, brightness/contrast)
+- **Drawing Tools**: Eraser, different brush types, shapes
+- **Cross-platform**: Windows and macOS support testing
 
 #### 🟢 Good First Issues
-- **UI Improvements**: Better button styles, icons
-- **File Format Support**: Add more image formats
-- **Keyboard Shortcuts**: Implement more hotkeys
-- **Settings**: Configuration file support
+- **UI Improvements**: Better button styles, icons, tooltips
+- **File Format Support**: Add WEBP, TIFF, or other formats
+- **Keyboard Shortcuts**: Implement more hotkeys and accessibility
+- **Settings**: Configuration file support for user preferences
+- **Drawing Enhancements**: Add more colors, brush patterns, or effects
+- **Documentation**: Improve code comments and user guides
 
 ### 🔄 Development Workflow
 
