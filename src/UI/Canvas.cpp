@@ -86,6 +86,9 @@ bool Canvas::saveImage(const std::string& filePath)
             return false;
         }
         
+        // Flip the drawing image vertically to correct the render texture flip
+        ImageFlipVertical(drawingImage->getMutable());
+        
         // Create a new image and composite them
         Image composite = GenImageColor(originalImage->get()->width, originalImage->get()->height, WHITE);
         
