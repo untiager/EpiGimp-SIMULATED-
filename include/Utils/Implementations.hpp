@@ -1,6 +1,6 @@
-//Concrete implementations of utility interfaces
-#ifndef CONCRETE_IMPLEMENTATIONS_HPP
-#define CONCRETE_IMPLEMENTATIONS_HPP
+// Implementations of utility interfaces
+#ifndef IMPLEMENTATIONS_HPP
+#define IMPLEMENTATIONS_HPP
 
 #include <iostream>
 #include <filesystem>
@@ -13,7 +13,7 @@
 
 namespace EpiGimp {
 
-// Simple file manager implementation
+// file manager implementation
 class SimpleFileManager : public IFileManager {
 private:
     std::unique_ptr<FileBrowser> openBrowser_;
@@ -180,4 +180,4 @@ public:
 
 } // namespace EpiGimp
 
-#endif // CONCRETE_IMPLEMENTATIONS_HPP
+#endif // IMPLEMENTATIONS_HPP
