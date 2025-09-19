@@ -26,6 +26,7 @@ private:
     DrawingTool currentTool_;
     bool isDrawing_;
     Vector2 lastMousePos_;
+    Color drawingColor_; // Current drawing color
     
     static constexpr float MIN_ZOOM = 0.1f;
     static constexpr float MAX_ZOOM = 5.0f;
@@ -66,6 +67,7 @@ private:
     void drawPlaceholder() const;
     void initializeDrawingLayer();
     void drawStroke(Vector2 from, Vector2 to);
+    void onColorChanged(const ColorChangedEvent& event); // Handle color change events
     Rectangle calculateImageDestRect() const;
     Vector2 getImageCenter() const;
     std::optional<TextureResource> createTextureFromFile(const std::string& filePath);

@@ -12,6 +12,40 @@
 
 namespace EpiGimp {
 
+// Color palette component for selecting drawing colors
+class ColorPalette {
+private:
+    struct ColorSwatch {
+        Rectangle bounds;
+        Color color;
+        bool isSelected = false;
+        bool isHovered = false;
+        
+        ColorSwatch(Rectangle rect, Color c) : bounds(rect), color(c) {}
+    };
+
+    static constexpr int SWATCH_SIZE = 25;
+    static constexpr int SWATCH_MARGIN = 3;
+    static constexpr int PALETTE_PADDING = 10;
+
+    Rectangle bounds_;
+    std::vector<std::unique_ptr<ColorSwatch>> swatches_;
+    EventDispatcher* eventDispatcher_;
+    Color selectedColor_;
+    int selectedIndex_;
+
+    void initializePalette();
+
+public:
+    explicit ColorPalette(Rectangle bounds, EventDispatcher* dispatcher);
+    
+    void update(float deltaTime);
+    void draw() const;
+    Rectangle getBounds() const { return bounds_; }
+    Color getSelectedColor() const { return selectedColor_; }
+    void setSelectedColor(Color color);
+};
+
 class Toolbar : public IToolbar {
 private:
     struct Button {
@@ -38,6 +72,7 @@ private:
     Rectangle bounds_;
     std::vector<std::unique_ptr<Button>> buttons_;
     EventDispatcher* eventDispatcher_;
+    std::unique_ptr<ColorPalette> colorPalette_;
     
 public:
     explicit Toolbar(Rectangle bounds, EventDispatcher* dispatcher);

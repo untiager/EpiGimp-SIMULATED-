@@ -8,11 +8,17 @@ namespace EpiGimp {
 
 Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher)
     : bounds_(bounds), zoomLevel_(1.0f), panOffset_{0, 0}, eventDispatcher_(dispatcher),
-      currentTool_(DrawingTool::None), isDrawing_(false), lastMousePos_{0, 0}
+      currentTool_(DrawingTool::None), isDrawing_(false), lastMousePos_{0, 0}, 
+      drawingColor_(BLACK) // Initialize with black color
 {
     
     if (!dispatcher)
         throw std::invalid_argument("EventDispatcher cannot be null");
+    
+    // Subscribe to color change events
+    dispatcher->subscribe<ColorChangedEvent>([this](const ColorChangedEvent& event) {
+        onColorChanged(event);
+    });
     
     std::cout << "Canvas initialized with bounds: " 
               << bounds.x << ", " << bounds.y << ", " 
@@ -349,8 +355,18 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
     
     // Draw to the render texture
     drawingLayer_->beginDrawing();
-    DrawLineEx(imageFrom, imageTo, 3.0f, RED); // TODO: Make brush size and color configurable
+    DrawLineEx(imageFrom, imageTo, 3.0f, drawingColor_); // Use selected drawing color
     drawingLayer_->endDrawing();
+}
+
+void Canvas::onColorChanged(const ColorChangedEvent& event)
+{
+    drawingColor_ = event.selectedColor;
+    std::cout << "Canvas: Drawing color changed to RGB(" 
+              << static_cast<int>(drawingColor_.r) << ", "
+              << static_cast<int>(drawingColor_.g) << ", "
+              << static_cast<int>(drawingColor_.b) << ", "
+              << static_cast<int>(drawingColor_.a) << ")" << std::endl;
 }
 
 } // namespace EpiGimp

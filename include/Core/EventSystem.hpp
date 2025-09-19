@@ -48,6 +48,12 @@ public:
     explicit ToolSelectedEvent(DrawingTool type) : toolType(type) {}
 };
 
+class ColorChangedEvent : public Event {
+public:
+    Color selectedColor;
+    explicit ColorChangedEvent(Color color) : selectedColor(color) {}
+};
+
 class ErrorEvent : public Event {
 public:
     std::string message;
