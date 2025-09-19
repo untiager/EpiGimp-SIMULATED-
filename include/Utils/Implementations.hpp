@@ -25,7 +25,7 @@ private:
     
 public:
     SimpleFileManager();
-    ~SimpleFileManager(); // Need implementation in .cpp file for unique_ptr with forward declaration
+    ~SimpleFileManager();
     
     std::optional<std::string> showOpenDialog(const std::string& filter = "") override;
     std::optional<std::string> showSaveDialog(const std::string& filter = "", 
