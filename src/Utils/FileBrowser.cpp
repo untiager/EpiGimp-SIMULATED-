@@ -11,6 +11,7 @@ FileBrowser::FileBrowser()
     , selectedIndex_(-1)
     , showHidden_(false)
     , inputBuffer_("")
+    , lastNavigationTime_(0.0)
 {
     // Default supported image extensions
     supportedExtensions_ = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".tiff"};
@@ -22,6 +23,7 @@ void FileBrowser::setPath(const std::string& path) {
     if (std::filesystem::exists(path) && std::filesystem::is_directory(path)) {
         currentPath_ = path;
         selectedIndex_ = -1;
+        lastNavigationTime_ = GetTime(); // Set delay after navigation
         loadDirectory();
     }
 }
@@ -29,12 +31,14 @@ void FileBrowser::setPath(const std::string& path) {
 void FileBrowser::goUp() {
     std::filesystem::path currentDir(currentPath_);
     if (currentDir.has_parent_path()) {
+        lastNavigationTime_ = GetTime(); // Set delay after navigation
         setPath(currentDir.parent_path().string());
     }
 }
 
 void FileBrowser::enterDirectory(const std::string& dirname) {
     std::filesystem::path newPath = std::filesystem::path(currentPath_) / dirname;
+    lastNavigationTime_ = GetTime(); // Set delay after navigation
     setPath(newPath.string());
 }
 
@@ -127,6 +131,11 @@ bool FileBrowser::hasValidExtension(const std::string& filename) const {
     return false;
 }
 
+bool FileBrowser::canProcessClicks() const {
+    double currentTime = GetTime();
+    return (currentTime - lastNavigationTime_) > NAVIGATION_DELAY;
+}
+
 // Simple button helper with hover support
 bool drawButton(Rectangle bounds, const char* text, bool isSelected = false) {
     Vector2 mousePos = GetMousePosition();
@@ -177,7 +186,7 @@ bool FileBrowser::renderOpenDialog(float x, float y, float width, float height) 
     
     // Up button
     Rectangle upButton = {x + width - 80, y + 30, 70, 25};
-    if (drawButton(upButton, "Up")) {
+    if (drawButton(upButton, "Up") && canProcessClicks()) {
         goUp();
     }
     
@@ -195,7 +204,7 @@ bool FileBrowser::renderOpenDialog(float x, float y, float width, float height) 
         std::string displayText = entries_[i].isDirectory ? 
             "[DIR] " + entries_[i].name : entries_[i].name;
             
-        if (drawButton(itemRect, displayText.c_str(), isSelected)) {
+        if (drawButton(itemRect, displayText.c_str(), isSelected) && canProcessClicks()) {
             if (entries_[i].isDirectory) {
                 if (entries_[i].name == "..") {
                     goUp();
@@ -245,7 +254,7 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
     
     // Up button
     Rectangle upButton = {x + width - 80, y + 30, 70, 25};
-    if (drawButton(upButton, "Up")) {
+    if (drawButton(upButton, "Up") && canProcessClicks()) {
         goUp();
     }
     
@@ -262,7 +271,7 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
         
         std::string displayText = "[DIR] " + entries_[i].name;
         
-        if (drawButton(itemRect, displayText.c_str())) {
+        if (drawButton(itemRect, displayText.c_str()) && canProcessClicks()) {
             if (entries_[i].name == "..") {
                 goUp();
             } else {

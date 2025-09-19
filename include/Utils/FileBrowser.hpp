@@ -25,8 +25,13 @@ private:
     bool showHidden_;
     std::string inputBuffer_;
     
+    // Click delay mechanism to prevent accidental double-clicks after navigation
+    double lastNavigationTime_;
+    static constexpr double NAVIGATION_DELAY = 0.3; // 300ms delay
+    
     void loadDirectory();
     bool hasValidExtension(const std::string& filename) const;
+    bool canProcessClicks() const;
     
 public:
     FileBrowser();
