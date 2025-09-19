@@ -24,6 +24,7 @@ private:
     int selectedIndex_;
     bool showHidden_;
     std::string inputBuffer_;
+    bool cancelled_;  // Track if dialog was cancelled
     
     // Click delay mechanism to prevent accidental double-clicks after navigation
     double lastNavigationTime_;
@@ -57,6 +58,7 @@ public:
     // State
     void reset();
     bool isValidSelection() const;
+    bool wasCancelled() const;
 };
 
 } // namespace EpiGimp

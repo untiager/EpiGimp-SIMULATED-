@@ -48,8 +48,8 @@ std::optional<std::string> SimpleFileManager::updateOpenDialog() {
         return openBrowser_->getSelectedFile();
     }
     
-    // Check for ESC key to cancel
-    if (IsKeyPressed(KEY_ESCAPE)) {
+    // Check if dialog was cancelled (Cancel button or ESC key)
+    if (openBrowser_->wasCancelled()) {
         showingOpenDialog_ = false;
         return std::nullopt;
     }
@@ -78,8 +78,8 @@ std::optional<std::string> SimpleFileManager::updateSaveDialog() {
         return filename.empty() ? std::nullopt : std::make_optional(filename);
     }
     
-    // Check for ESC key to cancel
-    if (IsKeyPressed(KEY_ESCAPE)) {
+    // Check if dialog was cancelled (Cancel button or ESC key)
+    if (saveBrowser_->wasCancelled()) {
         showingSaveDialog_ = false;
         return std::nullopt;
     }

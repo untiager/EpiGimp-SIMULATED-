@@ -159,7 +159,9 @@ void Application::handleEvents()
         }
     }
     
-    if (inputHandler_->isKeyPressed(KEY_ESCAPE)) {
+    // Only exit on ESC if no dialogs are showing
+    auto simpleFileManager = static_cast<SimpleFileManager*>(fileManager_.get());
+    if (inputHandler_->isKeyPressed(KEY_ESCAPE) && !simpleFileManager->isShowingDialog()) {
         running_ = false;
     }
 }

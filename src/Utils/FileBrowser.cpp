@@ -7,15 +7,9 @@
 namespace EpiGimp {
 
 FileBrowser::FileBrowser() 
-    : currentPath_(std::filesystem::current_path().string())
-    , selectedIndex_(-1)
-    , showHidden_(false)
-    , inputBuffer_("")
-    , lastNavigationTime_(0.0)
-{
-    // Default supported image extensions
-    supportedExtensions_ = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".tiff"};
-    inputBuffer_.resize(256); // Pre-allocate buffer for filename input
+    : selectedIndex_(-1), showHidden_(false), cancelled_(false), lastNavigationTime_(0.0) {
+    currentPath_ = std::filesystem::current_path().string();
+    setSupportedExtensions({".png", ".jpg", ".jpeg", ".bmp", ".tga"});
     loadDirectory();
 }
 
@@ -226,14 +220,17 @@ bool FileBrowser::renderOpenDialog(float x, float y, float width, float height) 
     bool cancelClicked = drawButton(cancelBtn, "Cancel");
     
     if (openClicked && isValidSelection()) {
+        cancelled_ = false;
         return true; // File selected
     }
     
     if (cancelClicked || IsKeyPressed(KEY_ESCAPE)) {
         selectedIndex_ = -1;
+        cancelled_ = true;
         return false; // Cancelled
     }
     
+    cancelled_ = false;
     return false; // Continue showing dialog
 }
 
@@ -315,14 +312,17 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
     bool cancelClicked = drawButton(cancelBtn, "Cancel");
     
     if (saveClicked && !inputBuffer_.empty()) {
+        cancelled_ = false;
         return true; // Save with filename
     }
     
     if (cancelClicked || IsKeyPressed(KEY_ESCAPE)) {
         inputBuffer_.clear();
+        cancelled_ = true;
         return false; // Cancelled
     }
     
+    cancelled_ = false;
     return false; // Continue showing dialog
 }
 
@@ -345,12 +345,17 @@ std::string FileBrowser::getSaveFileName() const {
 void FileBrowser::reset() {
     selectedIndex_ = -1;
     inputBuffer_.clear();
+    cancelled_ = false;
     setPath(std::filesystem::current_path().string());
 }
 
 bool FileBrowser::isValidSelection() const {
     return selectedIndex_ >= 0 && selectedIndex_ < (int)entries_.size() && 
            !entries_[selectedIndex_].isDirectory;
+}
+
+bool FileBrowser::wasCancelled() const {
+    return cancelled_;
 }
 
 } // namespace EpiGimp
