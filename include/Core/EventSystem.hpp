@@ -11,7 +11,6 @@
 
 namespace EpiGimp {
 
-// Forward declarations
 enum class DrawingTool;
 
 // Base event class
