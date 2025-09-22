@@ -52,8 +52,8 @@ void FileBrowser::loadDirectory() {
             size_t size = 0;
             
             if (!isDir) {
-                // For files, check if it's a supported type
-                if (!hasValidExtension(filename)) {
+                // For files, check if it's a supported type (unless showing all files)
+                if (!supportedExtensions_.empty() && !hasValidExtension(filename)) {
                     continue;
                 }
                 
