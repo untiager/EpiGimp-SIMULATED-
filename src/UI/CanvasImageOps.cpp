@@ -32,7 +32,22 @@ bool Canvas::saveImage(const std::string& filePath)
         return false;
     }
     
-    std::filesystem::create_directories(std::filesystem::path(filePath).parent_path());
+    // Validate the file path
+    if (filePath.empty()) {
+        eventDispatcher_->emit<ErrorEvent>("Invalid file path");
+        return false;
+    }
+    
+    // Create parent directories only if they don't exist and path is valid
+    try {
+        std::filesystem::path parentPath = std::filesystem::path(filePath).parent_path();
+        if (!parentPath.empty() && !std::filesystem::exists(parentPath)) {
+            std::filesystem::create_directories(parentPath);
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Failed to create directories: " << e.what() << std::endl;
+        // Continue anyway - the save operation might still work
+    }
     
     // If we have drawings, composite them with the original image
     if (drawingLayer_ && drawingLayer_->isValid()) {
