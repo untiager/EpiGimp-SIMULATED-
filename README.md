@@ -218,55 +218,55 @@ sudo make install  # Installs to /usr/local/bin
 
 ```
 EpiGimp/
-├── CMakeLists.txt          # Build configuration
-├── README.md               # This file
-├── src/                    # Source code (modular architecture)
-│   ├── main.cpp           # Application entry point
-│   ├── Core/              # Core application logic (split for maintainability)
-│   │   ├── ApplicationCore.cpp     # Initialization and lifecycle (101 lines)
-│   │   ├── ApplicationLoop.cpp     # Update/draw loops (74 lines)
-│   │   ├── ApplicationEvents.cpp   # Event handling with undo/redo (104 lines)
-│   │   └── RaylibWrappers.cpp      # Graphics abstraction
-│   ├── Commands/          # Command pattern implementation for undo/redo
-│   │   ├── HistoryManager.cpp      # Undo/redo stack management (153 lines)
-│   │   ├── DrawCommand.cpp         # Drawing operation commands (108 lines)
-│   │   └── ClearCommand.cpp        # Canvas clearing commands
-│   ├── UI/                # User interface components (modular split)
-│   │   ├── CanvasCore.cpp         # Core canvas functionality (176 lines)
-│   │   ├── CanvasImageOps.cpp     # Image loading/saving (160 lines)
-│   │   ├── CanvasInput.cpp        # Input handling (38 lines)
-│   │   ├── CanvasDrawing.cpp      # Drawing operations with history (117 lines)
-│   │   ├── ToolbarCore.cpp        # Core toolbar functionality (66 lines)
-│   │   ├── ToolbarColors.cpp      # Color palette (131 lines)
-│   │   └── ToolbarButtons.cpp     # Button management (56 lines)
-│   └── Utils/             # Utility classes (split for focus)
-│       ├── FileBrowserCore.cpp    # Core file operations (85 lines)
-│       ├── FileBrowserNavigation.cpp # Directory navigation
-│       ├── FileBrowserDialogs.cpp # Dialog rendering
+├── CMakeLists.txt                     # Build configuration
+├── README.md                          # This file
+├── src/                               # Source code (modular architecture)
+│   ├── main.cpp                       # Application entry point
+│   ├── Core/                          # Core application logic (split for maintainability)
+│   │   ├── ApplicationCore.cpp        # Initialization and lifecycle (101 lines)
+│   │   ├── ApplicationLoop.cpp        # Update/draw loops (74 lines)
+│   │   ├── ApplicationEvents.cpp      # Event handling with undo/redo (104 lines)
+│   │   └── RaylibWrappers.cpp         # Graphics abstraction
+│   ├── Commands/                      # Command pattern implementation for undo/redo
+│   │   ├── HistoryManager.cpp         # Undo/redo stack management (153 lines)
+│   │   ├── DrawCommand.cpp            # Drawing operation commands (108 lines)
+│   │   └── ClearCommand.cpp           # Canvas clearing commands
+│   ├── UI/                            # User interface components (modular split)
+│   │   ├── CanvasCore.cpp             # Core canvas functionality (176 lines)
+│   │   ├── CanvasImageOps.cpp         # Image loading/saving (160 lines)
+│   │   ├── CanvasInput.cpp            # Input handling (38 lines)
+│   │   ├── CanvasDrawing.cpp          # Drawing operations with history (117 lines)
+│   │   ├── ToolbarCore.cpp            # Core toolbar functionality (66 lines)
+│   │   ├── ToolbarColors.cpp          # Color palette (131 lines)
+│   │   └── ToolbarButtons.cpp         # Button management (56 lines)
+│   └── Utils/                         # Utility classes (split for focus)
+│       ├── FileBrowserCore.cpp        # Core file operations (85 lines)
+│       ├── FileBrowserNavigation.cpp  # Directory navigation
+│       ├── FileBrowserDialogs.cpp     # Dialog rendering
 │       ├── ConsoleErrorHandler.cpp
 │       ├── FileDialogs.cpp
 │       ├── RaylibInputHandler.cpp
 │       └── SimpleFileManager.cpp
-├── include/               # Header files (interface definitions)
-│   ├── Core/              # Core interfaces and classes
-│   │   ├── ICommand.hpp           # Command pattern interface (38 lines)
-│   │   └── HistoryManager.hpp     # History management (80 lines)
-│   ├── Commands/          # Command system headers
-│   │   ├── DrawCommand.hpp        # Drawing commands (65 lines)
-│   │   └── ClearCommand.hpp       # Clear commands
-│   ├── UI/                # UI component headers
-│   └── Utils/             # Utility headers
-├── tests/                 # Unit test suite (Google Test)
-│   ├── README.md                  # Comprehensive testing guide
+├── include/                           # Header files (interface definitions)
+│   ├── Core/                          # Core interfaces and classes
+│   │   ├── ICommand.hpp               # Command pattern interface (38 lines)
+│   │   └── HistoryManager.hpp         # History management (80 lines)
+│   ├── Commands/                      # Command system headers
+│   │   ├── DrawCommand.hpp            # Drawing commands (65 lines)
+│   │   └── ClearCommand.hpp           # Clear commands
+│   ├── UI/                            # UI component headers
+│   └── Utils/                         # Utility headers
+├── tests/                             # Unit test suite (Google Test)
+│   ├── README.md                      # Comprehensive testing guide
 │   ├── test_history_comprehensive.cpp # HistoryManager tests (12 tests)
-│   ├── test_canvas_utils.cpp      # Graphics utilities tests (11 tests)  
-│   ├── test_file_utils.cpp        # File operations tests (11 tests)
-│   ├── test_simple.cpp            # Basic utility tests (8 tests)
-│   ├── test_history.cpp           # Basic history tests (1 test)
-│   └── test_basic.cpp             # Raylib integration tests (disabled)
-├── build/                 # Build output (generated)
-├── TEST_SUMMARY.md        # Detailed test coverage analysis
-└── png/                   # Test images
+│   ├── test_canvas_utils.cpp          # Graphics utilities tests (11 tests)  
+│   ├── test_file_utils.cpp            # File operations tests (11 tests)
+│   ├── test_simple.cpp                # Basic utility tests (8 tests)
+│   ├── test_history.cpp               # Basic history tests (1 test)
+│   └── test_basic.cpp                 # Raylib integration tests (disabled)
+├── build/                             # Build output (generated)
+├── TEST_SUMMARY.md                    # Detailed test coverage analysis
+└── png/                               # Test images
     └── test.png
 ```
 
