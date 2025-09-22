@@ -130,28 +130,38 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
         goUp();
     }
     
-    // Directory list (only directories and for reference)
+    // Directory and file list (show both for context in save dialog)
     float itemHeight = 25;
     float listY = y + 65;
     int visibleItems = (int)(listHeight / itemHeight);
     
-    int dirIndex = 0; // Track directory position separately
-    for (int i = 0; i < (int)entries_.size() && dirIndex < visibleItems; i++) {
-        if (!entries_[i].isDirectory) continue; // Only show directories in save dialog
+    for (int i = 0; i < (int)entries_.size() && i < visibleItems; i++) {
+        Rectangle itemRect = {x + padding, listY + (i * itemHeight), width - 2*padding, itemHeight - 2};
         
-        Rectangle itemRect = {x + padding, listY + (dirIndex * itemHeight), width - 2*padding, itemHeight - 2};
+        std::string displayText;
+        Color textColor = BLACK;
         
-        std::string displayText = "[DIR] " + entries_[i].name;
+        if (entries_[i].isDirectory) {
+            displayText = "[DIR] " + entries_[i].name;
+            textColor = BLUE; // Highlight directories
+        } else {
+            displayText = entries_[i].name;
+            textColor = DARKGRAY; // Files shown for reference only
+        }
         
-        if (drawButton(itemRect, displayText.c_str()) && canProcessClicks()) {
+        // Only directories are clickable in save dialog
+        if (entries_[i].isDirectory && drawButton(itemRect, displayText.c_str()) && canProcessClicks()) {
             if (entries_[i].name == "..") {
                 goUp();
             } else {
                 enterDirectory(entries_[i].name);
             }
+        } else if (!entries_[i].isDirectory) {
+            // Draw files as non-clickable for reference
+            DrawRectangleRec(itemRect, LIGHTGRAY);
+            DrawRectangleLinesEx(itemRect, 1, GRAY);
+            DrawText(displayText.c_str(), (int)(itemRect.x + 5), (int)(itemRect.y + 5), 14, textColor);
         }
-        
-        dirIndex++; // Increment directory counter
     }
     
     // Filename input (simple text display for now)

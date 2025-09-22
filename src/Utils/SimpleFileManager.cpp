@@ -25,6 +25,7 @@ std::optional<std::string> SimpleFileManager::showSaveDialog(const std::string& 
                                         const std::string& /*defaultName*/) {
     showingSaveDialog_ = true;
     saveBrowser_->reset();
+    saveBrowser_->setShowAllFiles(true); // Show all files for context in save dialog
     return std::nullopt; // Will be handled in update loop
 }
 
@@ -74,6 +75,7 @@ std::optional<std::string> SimpleFileManager::updateSaveDialog() {
     
     if (result) {
         showingSaveDialog_ = false;
+        saveBrowser_->setShowAllFiles(false); // Restore normal filtering
         std::string filename = saveBrowser_->getSaveFileName();
         return filename.empty() ? std::nullopt : std::make_optional(filename);
     }
@@ -81,6 +83,7 @@ std::optional<std::string> SimpleFileManager::updateSaveDialog() {
     // Check if dialog was cancelled (Cancel button or ESC key)
     if (saveBrowser_->wasCancelled()) {
         showingSaveDialog_ = false;
+        saveBrowser_->setShowAllFiles(false); // Restore normal filtering
         return std::nullopt;
     }
     

@@ -21,6 +21,7 @@ private:
     std::string currentPath_;
     std::vector<FileEntry> entries_;
     std::vector<std::string> supportedExtensions_;
+    std::vector<std::string> tempExtensions_; // Temporary storage for extension filtering
     int selectedIndex_;
     bool showHidden_;
     std::string inputBuffer_;
@@ -51,6 +52,7 @@ public:
     // File filtering
     void setSupportedExtensions(const std::vector<std::string>& extensions);
     void setShowHidden(bool show);
+    void setShowAllFiles(bool showAll); // Temporarily show all files for save dialog
     
     // UI rendering
     bool renderOpenDialog(float x, float y, float width, float height);

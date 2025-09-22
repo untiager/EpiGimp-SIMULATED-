@@ -17,6 +17,19 @@ void FileBrowser::setSupportedExtensions(const std::vector<std::string>& extensi
     supportedExtensions_ = extensions;
 }
 
+void FileBrowser::setShowAllFiles(bool showAll) {
+    if (showAll) {
+        // Temporarily clear extensions to show all files
+        tempExtensions_ = supportedExtensions_;
+        supportedExtensions_.clear();
+        loadDirectory(); // Reload to show all files
+    } else {
+        // Restore original extensions
+        supportedExtensions_ = tempExtensions_;
+        loadDirectory(); // Reload with filtering
+    }
+}
+
 void FileBrowser::setShowHidden(bool show) {
     showHidden_ = show;
 }
@@ -59,12 +72,15 @@ std::optional<std::string> FileBrowser::getSelectedFile() const {
 }
 
 std::string FileBrowser::getSaveFileName() const {
-    // Return the current filename being typed for save operations
-    std::string result = saveFileName_;
-    if (result.empty()) {
-        result = "untitled";
+    // Return the full path for save operations
+    std::string filename = saveFileName_;
+    if (filename.empty()) {
+        filename = "untitled";
     }
-    return result;
+    
+    // Construct full path: currentPath + "/" + filename
+    std::filesystem::path fullPath = std::filesystem::path(currentPath_) / filename;
+    return fullPath.string();
 }
 
 void FileBrowser::reset() {
