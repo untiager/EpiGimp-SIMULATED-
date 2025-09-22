@@ -115,7 +115,12 @@ Image Canvas::copyDrawingLayer() const
     }
     
     // Get the texture from the drawing layer and convert to image
-    return LoadImageFromTexture((**drawingLayer_).texture);
+    Image image = LoadImageFromTexture((**drawingLayer_).texture);
+    
+    // RenderTexture images need to be flipped vertically due to coordinate system differences
+    ImageFlipVertical(&image);
+    
+    return image;
 }
 
 bool Canvas::restoreDrawingLayer(const Image& image)
@@ -143,8 +148,7 @@ bool Canvas::restoreDrawingLayer(const Image& image)
         Texture2D tempTexture = LoadTextureFromImage(image);
         
         drawingLayer_->beginDrawing();
-        // The drawing layer uses Y-down coordinates, so we don't need to flip here
-        // The flip happens during rendering to screen
+        // The image is already correctly oriented from copyDrawingLayer, so draw it normally
         DrawTexture(tempTexture, 0, 0, WHITE);
         drawingLayer_->endDrawing();
         
