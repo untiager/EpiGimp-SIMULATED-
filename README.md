@@ -407,8 +407,6 @@ We welcome contributions from developers of all skill levels! Here's how you can
 
 ### 📝 Contribution Guidelines
 
-### 📝 Contribution Guidelines
-
 #### Code Style
 - **Language**: Modern C++17 features encouraged
 - **Formatting**: Follow existing code style (4 spaces, no tabs)
