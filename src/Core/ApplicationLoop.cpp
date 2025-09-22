@@ -62,9 +62,9 @@ void Application::handleEvents()
             onLoadImageRequest();
         } else if (inputHandler_->isKeyPressed(KEY_S)) {
             eventDispatcher_->emit<ImageSaveRequestEvent>("");
-        } else if (inputHandler_->isKeyPressed(KEY_Z)) {
-            // Undo operation (Ctrl+Z)
-            std::cout << "Ctrl+Z detected!" << std::endl;
+        } else if (inputHandler_->isKeyPressed(KEY_W)) {
+            // Undo operation (Ctrl+W for AZERTY keyboards)
+            std::cout << "Ctrl+W detected!" << std::endl;
             std::cout << "Attempting undo... (History has " << historyManager_->getUndoCount() << " items)" << std::endl;
             if (historyManager_->undo()) {
                 std::cout << "Undo successful: " << historyManager_->getNextRedoDescription() << std::endl;

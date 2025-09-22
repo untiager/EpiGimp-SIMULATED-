@@ -37,10 +37,10 @@ bool HistoryManager::executeCommand(CommandPtr command) {
     return true;
 }
 
-bool HistoryManager::undo() {
-    if (!canUndo()) {
+bool HistoryManager::undo()
+{
+    if (!canUndo())
         return false;
-    }
     
     // Get the command from the top of the undo stack
     auto command = std::move(undoStack_.top());
