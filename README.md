@@ -18,7 +18,7 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - ✅ Clean paint interface with toolbar and canvas
 - ✅ **Crayon Drawing Tool** - Draw directly on images with smooth strokes
 - ✅ **Color Selector Palette** - 16 color swatches for drawing customization
-- ✅ **Undo/Redo System** - Full history support with keyboard shortcuts (Ctrl+W/Ctrl+Y)
+- ✅ **Undo/Redo System** - Full history support with keyboard shortcuts (Ctrl+Z/Ctrl+Y)
 - ✅ Safe in-application file browser (no system crashes!)
 - ✅ Load Image functionality (PNG, JPG, BMP, TGA formats)
 - ✅ Save Image functionality with auto-extension and format conversion
@@ -157,7 +157,7 @@ sudo make install  # Installs to /usr/local/bin
 ### Basic Controls
 - **Load Image**: Click "Load Image" button or use `Ctrl+O`
 - **Save Image**: Click "Save Image" button or use `Ctrl+S`
-- **Undo**: `Ctrl+W` (optimized for AZERTY keyboards)
+- **Undo**: `Ctrl+Z` (optimized for AZERTY keyboards)
 - **Redo**: `Ctrl+Y`
 - **Crayon Tool**: Click "Crayon" button, then click and drag to draw on images
 - **Color Selection**: Click any color swatch in the toolbar to change drawing color
@@ -183,7 +183,7 @@ sudo make install  # Installs to /usr/local/bin
 - **Full History Management**: Up to 50 operations stored in memory
 - **Command Pattern Implementation**: Each drawing stroke is a reversible command
 - **Keyboard Shortcuts**: 
-  - `Ctrl+W`: Undo last operation (AZERTY keyboard optimized)
+  - `Ctrl+Z`: Undo last operation (AZERTY keyboard optimized)
   - `Ctrl+Y`: Redo previously undone operation
 - **State Preservation**: Exact drawing states captured before and after each operation
 - **Memory Efficient**: Automatic cleanup of old history entries
@@ -292,7 +292,7 @@ make && ./EpiGimp
 # Complete feature testing workflow:
 # 1. Load Image: Click "Load Image", navigate and select a file
 # 2. Drawing: Click "Crayon", draw multiple strokes on the image
-# 3. Undo/Redo: Test Ctrl+W (undo) and Ctrl+Y (redo) operations
+# 3. Undo/Redo: Test Ctrl+Z (undo) and Ctrl+Y (redo) operations
 # 4. Save Image: Click "Save Image", choose location and filename
 # 5. Verify: Drawings and undo/redo states work correctly
 # 6. Format conversion: Load PNG, save as JPG to test conversion
