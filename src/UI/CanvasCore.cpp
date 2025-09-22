@@ -4,10 +4,10 @@
 
 namespace EpiGimp {
 
-Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher)
+Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* historyManager)
     : bounds_(bounds), zoomLevel_(1.0f), panOffset_{0, 0}, eventDispatcher_(dispatcher),
-      currentTool_(DrawingTool::None), isDrawing_(false), lastMousePos_{0, 0}, 
-      drawingColor_(BLACK) // Initialize with black color
+      historyManager_(historyManager), currentTool_(DrawingTool::None), isDrawing_(false), 
+      lastMousePos_{0, 0}, drawingColor_(BLACK) // Initialize with black color
 {
     
     if (!dispatcher)
@@ -100,6 +100,74 @@ Rectangle Canvas::calculateImageDestRect() const
 Vector2 Canvas::getImageCenter() const
 {
     return Vector2{bounds_.x + bounds_.width / 2, bounds_.y + bounds_.height / 2};
+}
+
+bool Canvas::hasDrawingLayer() const
+{
+    return drawingLayer_ && drawingLayer_->isValid();
+}
+
+Image Canvas::copyDrawingLayer() const
+{
+    if (!hasDrawingLayer()) {
+        // Return an empty image if no drawing layer exists
+        return GenImageColor(1, 1, BLANK);
+    }
+    
+    // Get the texture from the drawing layer and convert to image
+    return LoadImageFromTexture((**drawingLayer_).texture);
+}
+
+bool Canvas::restoreDrawingLayer(const Image& image)
+{
+    if (!hasImage()) {
+        std::cerr << "Canvas: Cannot restore drawing layer without a base image" << std::endl;
+        return false;
+    }
+    
+    try {
+        // If drawing layer doesn't exist, initialize it
+        if (!hasDrawingLayer()) {
+            initializeDrawingLayer();
+        }
+        
+        if (!hasDrawingLayer()) {
+            std::cerr << "Canvas: Failed to initialize drawing layer for restoration" << std::endl;
+            return false;
+        }
+        
+        // Clear the current drawing layer
+        drawingLayer_->clear(BLANK);
+        
+        // Create a temporary texture from the image and draw it to the drawing layer
+        Texture2D tempTexture = LoadTextureFromImage(image);
+        
+        drawingLayer_->beginDrawing();
+        // The drawing layer uses Y-down coordinates, so we don't need to flip here
+        // The flip happens during rendering to screen
+        DrawTexture(tempTexture, 0, 0, WHITE);
+        drawingLayer_->endDrawing();
+        
+        UnloadTexture(tempTexture);
+        
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Canvas: Exception during drawing layer restoration: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+void Canvas::clearDrawingLayer()
+{
+    if (!hasDrawingLayer()) {
+        std::cout << "Canvas: No drawing layer to clear" << std::endl;
+        return;
+    }
+    
+    // Clear the drawing layer to transparent
+    drawingLayer_->clear(BLANK);
+    std::cout << "Canvas: Drawing layer cleared" << std::endl;
 }
 
 } // namespace EpiGimp

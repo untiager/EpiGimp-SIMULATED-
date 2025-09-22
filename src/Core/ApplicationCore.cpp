@@ -39,6 +39,7 @@ bool Application::initialize()
         errorHandler_ = std::make_unique<ConsoleErrorHandler>(eventDispatcher_.get());
         fileManager_ = std::make_unique<SimpleFileManager>();
         inputHandler_ = std::make_unique<RaylibInputHandler>();
+        historyManager_ = std::make_unique<HistoryManager>(50); // Support up to 50 undo levels
 
         // Create UI components
         createComponents();

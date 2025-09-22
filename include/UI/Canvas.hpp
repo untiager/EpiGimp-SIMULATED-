@@ -12,6 +12,9 @@
 
 namespace EpiGimp {
 
+// Forward declaration
+class HistoryManager;
+
 class Canvas : public ICanvas {
 private:
     Rectangle bounds_;
@@ -21,6 +24,7 @@ private:
     float zoomLevel_;
     Vector2 panOffset_;
     EventDispatcher* eventDispatcher_;
+    HistoryManager* historyManager_;  // For undo/redo functionality
     
     // Drawing state
     DrawingTool currentTool_;
@@ -34,7 +38,7 @@ private:
     static constexpr float PAN_SPEED = 2.0f;
 
 public:
-    explicit Canvas(Rectangle bounds, EventDispatcher* dispatcher);
+    explicit Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* historyManager = nullptr);
     ~Canvas() override = default;
 
     // Non-copyable but moveable
@@ -57,6 +61,13 @@ public:
     void setPan(Vector2 offset) override;
     Vector2 getPan() const override { return panOffset_; }
     void setDrawingTool(DrawingTool tool) override;
+    
+    // History/Command support
+    bool hasDrawingLayer() const;
+    Image copyDrawingLayer() const;
+    bool restoreDrawingLayer(const Image& image);
+    void clearDrawingLayer();  // Clear the drawing layer
+    void initializeDrawingLayer(); // Initialize drawing layer (for history support)
 
 private:
     void handleInput();
@@ -65,7 +76,6 @@ private:
     void handleDrawing();  // New method for drawing input
     void drawImage() const;
     void drawPlaceholder() const;
-    void initializeDrawingLayer();
     void drawStroke(Vector2 from, Vector2 to);
     void onColorChanged(const ColorChangedEvent& event); // Handle color change events
     Rectangle calculateImageDestRect() const;

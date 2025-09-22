@@ -57,11 +57,29 @@ void Application::draw()
 void Application::handleEvents()
 {
     // Handle keyboard shortcuts
-    if (inputHandler_->isKeyDown(KEY_LEFT_CONTROL)) {
+    if (inputHandler_->isKeyDown(KEY_LEFT_CONTROL) || inputHandler_->isKeyDown(KEY_RIGHT_CONTROL)) {
         if (inputHandler_->isKeyPressed(KEY_O)) {
             onLoadImageRequest();
         } else if (inputHandler_->isKeyPressed(KEY_S)) {
             eventDispatcher_->emit<ImageSaveRequestEvent>("");
+        } else if (inputHandler_->isKeyPressed(KEY_Z)) {
+            // Undo operation (Ctrl+Z)
+            std::cout << "Ctrl+Z detected!" << std::endl;
+            std::cout << "Attempting undo... (History has " << historyManager_->getUndoCount() << " items)" << std::endl;
+            if (historyManager_->undo()) {
+                std::cout << "Undo successful: " << historyManager_->getNextRedoDescription() << std::endl;
+            } else {
+                std::cout << "Nothing to undo" << std::endl;
+            }
+        } else if (inputHandler_->isKeyPressed(KEY_Y)) {
+            // Redo operation (Ctrl+Y)
+            std::cout << "Ctrl+Y detected!" << std::endl;
+            std::cout << "Attempting redo... (History has " << historyManager_->getRedoCount() << " items)" << std::endl;
+            if (historyManager_->redo()) {
+                std::cout << "Redo successful: " << historyManager_->getNextUndoDescription() << std::endl;
+            } else {
+                std::cout << "Nothing to redo" << std::endl;
+            }
         }
     }
     

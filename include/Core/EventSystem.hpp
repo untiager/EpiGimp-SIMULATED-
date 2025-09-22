@@ -42,6 +42,8 @@ public:
 
 class LoadImageRequestEvent : public Event {};
 
+class ClearCanvasRequestEvent : public Event {};
+
 class ToolSelectedEvent : public Event {
 public:
     DrawingTool toolType;

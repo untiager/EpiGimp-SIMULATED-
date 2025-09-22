@@ -8,6 +8,7 @@
 #include "RaylibWrappers.hpp"
 #include "EventSystem.hpp"
 #include "Interfaces.hpp"
+#include "HistoryManager.hpp"
 
 namespace EpiGimp {
 
@@ -30,6 +31,7 @@ private:
     std::unique_ptr<IFileManager> fileManager_;
     std::unique_ptr<IErrorHandler> errorHandler_;
     std::unique_ptr<IInputHandler> inputHandler_;
+    std::unique_ptr<HistoryManager> historyManager_;
     
     AppConfig config_;
     bool running_;
@@ -58,6 +60,7 @@ public:
     IFileManager& getFileManager() { return *fileManager_; }
     IErrorHandler& getErrorHandler() { return *errorHandler_; }
     IInputHandler& getInputHandler() { return *inputHandler_; }
+    HistoryManager& getHistoryManager() { return *historyManager_; }
 
 private:
     void update(float deltaTime);
@@ -71,6 +74,7 @@ private:
     void onImageSaveRequest(const ImageSaveRequestEvent& event);
     void onError(const ErrorEvent& event);
     void onToolSelected(const ToolSelectedEvent& event);
+    void onClearCanvasRequest();
 };
 
 } // namespace EpiGimp

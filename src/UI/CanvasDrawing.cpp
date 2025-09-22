@@ -1,5 +1,7 @@
 //Canvas drawing operations functionality
 #include "../../include/UI/Canvas.hpp"
+#include "../../include/Commands/DrawCommand.hpp"
+#include "../../include/Core/HistoryManager.hpp"
 #include <iostream>
 
 namespace EpiGimp {
@@ -58,14 +60,22 @@ void Canvas::handleDrawing()
     
     static bool isDrawing = false;
     static Vector2 lastMousePos = {0, 0};
+    static std::unique_ptr<DrawCommand> currentDrawCommand = nullptr;
     
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         if (currentTool_ != DrawingTool::None) {
             isDrawing = true;
             lastMousePos = mousePos;
+            
             // Only initialize drawing layer if it doesn't exist yet
             if (!drawingLayer_ || !drawingLayer_->isValid()) {
                 initializeDrawingLayer();
+            }
+            
+            // Create a new draw command if history manager is available
+            if (historyManager_) {
+                currentDrawCommand = createDrawCommand(this, "Draw stroke");
+                std::cout << "Started drawing stroke, captured before state" << std::endl;
             }
         }
     }
@@ -78,6 +88,18 @@ void Canvas::handleDrawing()
     }
     
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        if (isDrawing && currentDrawCommand && historyManager_) {
+            // Capture the after state and execute the command
+            currentDrawCommand->captureAfterState();
+            
+            if (historyManager_->executeCommand(std::move(currentDrawCommand))) {
+                std::cout << "Drawing stroke completed and added to history" << std::endl;
+            } else {
+                std::cout << "Failed to add drawing stroke to history" << std::endl;
+            }
+            
+            currentDrawCommand = nullptr;
+        }
         isDrawing = false;
     }
 }

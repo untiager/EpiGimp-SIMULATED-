@@ -1,7 +1,9 @@
 //Application event handling and component creation
 #include "../../include/Core/Application.hpp"
-#include "../../include/UI/Toolbar.hpp" 
+#include "../../include/UI/Toolbar.hpp"
 #include "../../include/UI/Canvas.hpp"
+#include "../../include/Utils/Implementations.hpp"
+#include "../../include/Commands/ClearCommand.hpp"
 #include <iostream>
 
 namespace EpiGimp {
@@ -34,6 +36,10 @@ void Application::setupEventHandlers()
         onToolSelected(event);
     });
     
+    eventDispatcher_->subscribe<ClearCanvasRequestEvent>([this](const ClearCanvasRequestEvent&) {
+        onClearCanvasRequest();
+    });
+    
     // Subscribe to tool selection events
     eventDispatcher_->subscribe<ToolSelectedEvent>([this](const ToolSelectedEvent& event) {
         onToolSelected(event);
@@ -59,13 +65,17 @@ void Application::createComponents()
         eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Crayon);
     });
     
+    toolbar_->addButton("Clear", [this]() {
+        eventDispatcher_->emit<ClearCanvasRequestEvent>();
+    });
+    
     // Create canvas (below toolbar)
     const Rectangle canvasBounds = {
         0, static_cast<float>(toolbar_->getHeight()), 
         static_cast<float>(config_.windowWidth), 
         static_cast<float>(config_.windowHeight - toolbar_->getHeight() - 25) // Leave space for status bar
     };
-    canvas_ = std::make_unique<Canvas>(canvasBounds, eventDispatcher_.get());
+    canvas_ = std::make_unique<Canvas>(canvasBounds, eventDispatcher_.get(), historyManager_.get());
 }
 
 void Application::onLoadImageRequest()
@@ -99,6 +109,30 @@ void Application::onToolSelected(const ToolSelectedEvent& event)
         // We'll need to cast to access the setDrawingTool method
         auto* canvas = static_cast<Canvas*>(canvas_.get());
         canvas->setDrawingTool(currentTool_);
+    }
+}
+
+void Application::onClearCanvasRequest()
+{
+    if (!canvas_ || !historyManager_) {
+        std::cout << "Cannot clear canvas: missing canvas or history manager" << std::endl;
+        return;
+    }
+    
+    // Cast to access Canvas methods
+    auto* canvas = static_cast<Canvas*>(canvas_.get());
+    
+    if (!canvas->hasDrawingLayer()) {
+        std::cout << "No drawing layer to clear" << std::endl;
+        return;
+    }
+    
+    // Create and execute a clear command
+    auto clearCommand = createClearCommand(canvas);
+    if (historyManager_->executeCommand(std::move(clearCommand))) {
+        std::cout << "Drawing layer cleared and added to history" << std::endl;
+    } else {
+        std::cout << "Failed to clear drawing layer" << std::endl;
     }
 }
 
