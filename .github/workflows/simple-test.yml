@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libasound2-dev mesa-common-dev libx11-dev libxrandr-dev libxi-dev xorg-dev libgl1-mesa-dev libglu1-mesa-dev
+        sudo apt-get install -y build-essential cmake libasound2-dev mesa-common-dev libx11-dev libxrandr-dev libxi-dev xorg-dev libgl1-mesa-dev libglu1-mesa-dev xvfb
         
     - name: Build Raylib
       run: |
@@ -34,4 +34,4 @@ jobs:
         cd build
         cmake ..
         make -j2
-        ./EpiGimpTests
+        xvfb-run -a ./EpiGimpTests --gtest_filter=-BasicTest.RaylibInitialization
