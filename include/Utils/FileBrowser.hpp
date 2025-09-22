@@ -24,15 +24,16 @@ private:
     int selectedIndex_;
     bool showHidden_;
     std::string inputBuffer_;
+    std::string saveFileName_;  // Store the filename for save operations
     bool cancelled_;
     
     // Click delay mechanism to prevent accidental double-clicks after navigation
     double lastNavigationTime_;
-    static constexpr double NAVIGATION_DELAY = 0.3; // 300ms delay
+    static constexpr double CLICK_DELAY_THRESHOLD = 0.3; // 300ms delay
     
     // Backspace debouncing to prevent double deletion
     double lastBackspaceTime_;
-    static constexpr double BACKSPACE_DELAY = 0.1; // 100ms delay
+    static constexpr double BACKSPACE_DELAY_THRESHOLD = 0.1; // 100ms delay
     
     void loadDirectory();
     bool hasValidExtension(const std::string& filename) const;
