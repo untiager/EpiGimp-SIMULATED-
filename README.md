@@ -7,11 +7,10 @@
 
 A modern, lightweight paint application built with C++17 and Raylib. EpiGimp provides a clean, intuitive interface for basic image editing operations with a focus on performance and extensibility.
 
-![EpiGimp Screenshot](docs/screenshot.png)
 
 ## 🎯 Project Status
 
-**Current Version**: 1.0.0 (Active Development)
+**Current Version**: 0.5.0 (Active Development)
 
 **Core Features Implemented**:
 - ✅ Modern C++ architecture with RAII resource management
