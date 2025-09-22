@@ -17,6 +17,7 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - ✅ Clean paint interface with toolbar and canvas
 - ✅ **Crayon Drawing Tool** - Draw directly on images with smooth strokes
 - ✅ **Color Selector Palette** - 16 color swatches for drawing customization
+- ✅ **Undo/Redo System** - Full history support with keyboard shortcuts (Ctrl+W/Ctrl+Y)
 - ✅ Safe in-application file browser (no system crashes!)
 - ✅ Load Image functionality (PNG, JPG, BMP, TGA formats)
 - ✅ Save Image functionality with auto-extension and format conversion
@@ -27,6 +28,11 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - ✅ Robust error handling and user feedback system
 
 **Recent Updates**:
+- 🆕 **Undo/Redo History System** - Complete command pattern implementation with 50-level history
+- 🆕 **AZERTY Keyboard Support** - Undo/Redo shortcuts optimized for international keyboards
+- 🆕 **Coordinate System Fixes** - Resolved drawing orientation issues in undo/redo operations
+- 🆕 **Save Dialog Bug Fixes** - Fixed crashes and improved file path handling
+- 🆕 **Drawing Persistence** - Fixed issues where strokes were lost during canvas operations
 - 🆕 **Code Refactoring** - Split large files into focused components for better maintainability
 - 🆕 **Improved Architecture** - Modular file structure with logical separation of concerns
 - 🆕 **Color Selector Palette** - Interactive color selection with 16 predefined colors
@@ -34,14 +40,12 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - 🆕 **Enhanced File Dialogs** - Cancel buttons work properly, ESC key handling
 - 🆕 **Auto File Extensions** - Prevents crashes from missing extensions, auto-adds .png
 - 🆕 **Format Conversion** - Save images in different formats than loaded
-- 🆕 **Bug Fixes** - Fixed image flipping, backspace double-deletion, click delays
 
 **Upcoming Features**:
 - 🚧 Additional drawing tools (brush sizes, eraser)
 - 🚧 Custom color picker (beyond preset palette)
 - 🚧 Layers support
 - 🚧 Filters and effects
-- 🚧 Undo/Redo system
 
 ## 🛠️ Technical Architecture
 
@@ -53,6 +57,8 @@ EpiGimp follows modern C++ best practices with a clean, modular architecture:
 - **Toolbar**: UI toolbar with extensible button system and integrated color palette (split into Core, Colors, and Buttons modules)
 - **ColorPalette**: Interactive color selection component with 16 predefined colors
 - **FileBrowser**: Safe in-application file navigation (split into Core, Navigation, and Dialogs modules)
+- **Command System**: Complete undo/redo history management with command pattern implementation
+- **HistoryManager**: Manages undo/redo operations with 50-level history stack
 
 ### Modular Architecture Benefits
 - **Maintainable**: Each file focuses on a specific aspect of functionality (<200 lines each)
@@ -71,6 +77,7 @@ EpiGimp follows modern C++ best practices with a clean, modular architecture:
 - **Event System**: Type-safe event handling for component communication
 - **Interface-Based Design**: Abstract interfaces for testability and modularity
 - **Dependency Injection**: Clean separation of concerns
+- **Command Pattern**: Complete undo/redo system with reversible operations
 - **Modular File Structure**: Each source file under 200 lines for maintainability
 - **Single Responsibility**: Each module handles one specific aspect of functionality
 
@@ -142,6 +149,8 @@ sudo make install  # Installs to /usr/local/bin
 ### Basic Controls
 - **Load Image**: Click "Load Image" button or use `Ctrl+O`
 - **Save Image**: Click "Save Image" button or use `Ctrl+S`
+- **Undo**: `Ctrl+W` (optimized for AZERTY keyboards)
+- **Redo**: `Ctrl+Y`
 - **Crayon Tool**: Click "Crayon" button, then click and drag to draw on images
 - **Color Selection**: Click any color swatch in the toolbar to change drawing color
 - **Navigation**: 
@@ -161,6 +170,17 @@ sudo make install  # Installs to /usr/local/bin
   - Visual feedback: Selected colors have white borders, hovered colors have gray borders
   - Real-time color switching while drawing
   - Default color is black
+
+### Undo/Redo System
+- **Full History Management**: Up to 50 operations stored in memory
+- **Command Pattern Implementation**: Each drawing stroke is a reversible command
+- **Keyboard Shortcuts**: 
+  - `Ctrl+W`: Undo last operation (AZERTY keyboard optimized)
+  - `Ctrl+Y`: Redo previously undone operation
+- **State Preservation**: Exact drawing states captured before and after each operation
+- **Memory Efficient**: Automatic cleanup of old history entries
+- **Visual Feedback**: Console output shows successful undo/redo operations
+- **Coordinate System Handling**: Proper orientation preservation across all operations
 
 ### File Operations
 - **Auto-Extension**: Missing file extensions are automatically added (.png default)
@@ -197,13 +217,17 @@ EpiGimp/
 │   ├── Core/              # Core application logic (split for maintainability)
 │   │   ├── ApplicationCore.cpp     # Initialization and lifecycle (101 lines)
 │   │   ├── ApplicationLoop.cpp     # Update/draw loops (74 lines)
-│   │   ├── ApplicationEvents.cpp   # Event handling (104 lines)
+│   │   ├── ApplicationEvents.cpp   # Event handling with undo/redo (104 lines)
 │   │   └── RaylibWrappers.cpp      # Graphics abstraction
+│   ├── Commands/          # Command pattern implementation for undo/redo
+│   │   ├── HistoryManager.cpp      # Undo/redo stack management (153 lines)
+│   │   ├── DrawCommand.cpp         # Drawing operation commands (108 lines)
+│   │   └── ClearCommand.cpp        # Canvas clearing commands
 │   ├── UI/                # User interface components (modular split)
-│   │   ├── CanvasCore.cpp         # Core canvas functionality (87 lines)
+│   │   ├── CanvasCore.cpp         # Core canvas functionality (176 lines)
 │   │   ├── CanvasImageOps.cpp     # Image loading/saving (160 lines)
 │   │   ├── CanvasInput.cpp        # Input handling (38 lines)
-│   │   ├── CanvasDrawing.cpp      # Drawing operations (77 lines)
+│   │   ├── CanvasDrawing.cpp      # Drawing operations with history (117 lines)
 │   │   ├── ToolbarCore.cpp        # Core toolbar functionality (66 lines)
 │   │   ├── ToolbarColors.cpp      # Color palette (131 lines)
 │   │   └── ToolbarButtons.cpp     # Button management (56 lines)
@@ -217,6 +241,11 @@ EpiGimp/
 │       └── SimpleFileManager.cpp
 ├── include/               # Header files (interface definitions)
 │   ├── Core/              # Core interfaces and classes
+│   │   ├── ICommand.hpp           # Command pattern interface (38 lines)
+│   │   └── HistoryManager.hpp     # History management (80 lines)
+│   ├── Commands/          # Command system headers
+│   │   ├── DrawCommand.hpp        # Drawing commands (65 lines)
+│   │   └── ClearCommand.hpp       # Clear commands
 │   ├── UI/                # UI component headers
 │   └── Utils/             # Utility headers
 ├── build/                 # Build output (generated)
@@ -225,10 +254,12 @@ EpiGimp/
 ```
 
 ### Architecture Highlights
-- **11 focused source files** (split from 4 large monolithic files)
+- **15+ focused source files** (expanded from 4 large monolithic files)
 - **All source files under 200 lines** for easy maintenance and debugging
-- **Logical separation**: Each file handles a specific aspect (core, input, drawing, etc.)
+- **Command Pattern Implementation** - Complete undo/redo system with reversible operations
+- **Logical separation**: Each file handles a specific aspect (core, input, drawing, commands, etc.)
 - **Clean interfaces**: Header files define clear contracts between components
+- **Memory Management**: Smart pointers and RAII throughout for crash-free operation
 
 ## 🧪 Testing
 
@@ -242,11 +273,13 @@ make && ./EpiGimp
 
 # Complete feature testing workflow:
 # 1. Load Image: Click "Load Image", navigate and select a file
-# 2. Drawing: Click "Crayon", draw on the image with left mouse button
-# 3. Save Image: Click "Save Image", choose location and filename
-# 4. Verify: Drawings are saved permanently with the image
-# 5. Format conversion: Load PNG, save as JPG to test conversion
-# 6. Edge cases: Try saving without extension (should auto-add .png)
+# 2. Drawing: Click "Crayon", draw multiple strokes on the image
+# 3. Undo/Redo: Test Ctrl+W (undo) and Ctrl+Y (redo) operations
+# 4. Save Image: Click "Save Image", choose location and filename
+# 5. Verify: Drawings and undo/redo states work correctly
+# 6. Format conversion: Load PNG, save as JPG to test conversion
+# 7. Edge cases: Try saving without extension (should auto-add .png)
+# 8. History testing: Draw 5+ strokes, undo all, then redo all
 ```
 
 ### Quality Assurance Verified
