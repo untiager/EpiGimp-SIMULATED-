@@ -27,6 +27,8 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - ✅ Robust error handling and user feedback system
 
 **Recent Updates**:
+- 🆕 **Code Refactoring** - Split large files into focused components for better maintainability
+- 🆕 **Improved Architecture** - Modular file structure with logical separation of concerns
 - 🆕 **Color Selector Palette** - Interactive color selection with 16 predefined colors
 - 🆕 **Crayon Drawing Tool** - Full drawing functionality with persistent layer system
 - 🆕 **Enhanced File Dialogs** - Cancel buttons work properly, ESC key handling
@@ -46,17 +48,31 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 EpiGimp follows modern C++ best practices with a clean, modular architecture:
 
 ### Core Components
-- **Application**: Main orchestrator managing all components
-- **Canvas**: Image display and manipulation area with RAII resource management
-- **Toolbar**: UI toolbar with extensible button system and integrated color palette
+- **Application**: Main orchestrator managing all components (split into Core, Loop, and Events modules)
+- **Canvas**: Image display and manipulation area with RAII resource management (split into Core, ImageOps, Input, and Drawing modules)
+- **Toolbar**: UI toolbar with extensible button system and integrated color palette (split into Core, Colors, and Buttons modules)
 - **ColorPalette**: Interactive color selection component with 16 predefined colors
-- **FileBrowser**: Safe in-application file navigation (no dangerous system calls)
+- **FileBrowser**: Safe in-application file navigation (split into Core, Navigation, and Dialogs modules)
+
+### Modular Architecture Benefits
+- **Maintainable**: Each file focuses on a specific aspect of functionality (<200 lines each)
+- **Readable**: Clear separation between initialization, rendering, input handling, and business logic  
+- **Extensible**: Easy to add new features without modifying unrelated code
+- **Debuggable**: Issues can be quickly isolated to specific functional areas
 
 ### Key Design Patterns
 - **RAII**: Automatic resource cleanup for textures and images
 - **Event System**: Type-safe event handling for component communication
 - **Interface-Based Design**: Abstract interfaces for testability and modularity
 - **Dependency Injection**: Clean separation of concerns
+
+### Key Design Patterns
+- **RAII**: Automatic resource cleanup for textures and images
+- **Event System**: Type-safe event handling for component communication
+- **Interface-Based Design**: Abstract interfaces for testability and modularity
+- **Dependency Injection**: Clean separation of concerns
+- **Modular File Structure**: Each source file under 200 lines for maintainability
+- **Single Responsibility**: Each module handles one specific aspect of functionality
 
 ### Technology Stack
 - **Language**: C++17
@@ -176,16 +192,30 @@ sudo make install  # Installs to /usr/local/bin
 EpiGimp/
 ├── CMakeLists.txt          # Build configuration
 ├── README.md               # This file
-├── src/                    # Source code
+├── src/                    # Source code (modular architecture)
 │   ├── main.cpp           # Application entry point
-│   ├── Core/              # Core application logic
-│   │   └── Application.cpp
-│   ├── UI/                # User interface components
-│   │   ├── Canvas.cpp
-│   │   └── Toolbar.cpp
-│   └── Utils/             # Utility classes
-│       └── FileBrowser.cpp
-├── include/               # Header files
+│   ├── Core/              # Core application logic (split for maintainability)
+│   │   ├── ApplicationCore.cpp     # Initialization and lifecycle (101 lines)
+│   │   ├── ApplicationLoop.cpp     # Update/draw loops (74 lines)
+│   │   ├── ApplicationEvents.cpp   # Event handling (104 lines)
+│   │   └── RaylibWrappers.cpp      # Graphics abstraction
+│   ├── UI/                # User interface components (modular split)
+│   │   ├── CanvasCore.cpp         # Core canvas functionality (87 lines)
+│   │   ├── CanvasImageOps.cpp     # Image loading/saving (160 lines)
+│   │   ├── CanvasInput.cpp        # Input handling (38 lines)
+│   │   ├── CanvasDrawing.cpp      # Drawing operations (77 lines)
+│   │   ├── ToolbarCore.cpp        # Core toolbar functionality (66 lines)
+│   │   ├── ToolbarColors.cpp      # Color palette (131 lines)
+│   │   └── ToolbarButtons.cpp     # Button management (56 lines)
+│   └── Utils/             # Utility classes (split for focus)
+│       ├── FileBrowserCore.cpp    # Core file operations (85 lines)
+│       ├── FileBrowserNavigation.cpp # Directory navigation
+│       ├── FileBrowserDialogs.cpp # Dialog rendering
+│       ├── ConsoleErrorHandler.cpp
+│       ├── FileDialogs.cpp
+│       ├── RaylibInputHandler.cpp
+│       └── SimpleFileManager.cpp
+├── include/               # Header files (interface definitions)
 │   ├── Core/              # Core interfaces and classes
 │   ├── UI/                # UI component headers
 │   └── Utils/             # Utility headers
@@ -193,6 +223,12 @@ EpiGimp/
 └── png/                   # Test images
     └── test.png
 ```
+
+### Architecture Highlights
+- **11 focused source files** (split from 4 large monolithic files)
+- **All source files under 200 lines** for easy maintenance and debugging
+- **Logical separation**: Each file handles a specific aspect (core, input, drawing, etc.)
+- **Clean interfaces**: Header files define clear contracts between components
 
 ## 🧪 Testing
 
@@ -271,9 +307,12 @@ We welcome contributions from developers of all skill levels! Here's how you can
 
 ### 📝 Contribution Guidelines
 
+### 📝 Contribution Guidelines
+
 #### Code Style
 - **Language**: Modern C++17 features encouraged
 - **Formatting**: Follow existing code style (4 spaces, no tabs)
+- **File Size**: Keep source files under 200 lines for maintainability
 - **Naming**: 
   - Classes: `PascalCase` (e.g., `FileBrowser`)
   - Functions/Variables: `camelCase` (e.g., `loadImage`)
@@ -287,6 +326,7 @@ We welcome contributions from developers of all skill levels! Here's how you can
 - **Interface Segregation**: Use abstract interfaces where appropriate
 - **No Memory Leaks**: Use smart pointers (`std::unique_ptr`, `std::shared_ptr`)
 - **Exception Safety**: Handle errors gracefully
+- **Modular Design**: Split large files into focused components (follow existing pattern)
 
 ### 🎯 Areas We Need Help
 
