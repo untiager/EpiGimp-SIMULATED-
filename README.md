@@ -312,7 +312,7 @@ make && ./EpiGimp
 ## 🐛 Known Issues
 
 **Current Limitations**:
-- Drawing tool limited to red crayon (color picker coming soon)
+- Drawing tool limited to a simple palette (color picker coming soon)
 - Single brush size (configurable brushes planned)
 - No undo/redo yet (major feature in development)
 
