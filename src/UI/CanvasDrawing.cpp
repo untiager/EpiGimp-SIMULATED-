@@ -63,7 +63,10 @@ void Canvas::handleDrawing()
         if (currentTool_ != DrawingTool::None) {
             isDrawing = true;
             lastMousePos = mousePos;
-            initializeDrawingLayer(); // Ensure drawing layer exists
+            // Only initialize drawing layer if it doesn't exist yet
+            if (!drawingLayer_ || !drawingLayer_->isValid()) {
+                initializeDrawingLayer();
+            }
         }
     }
     
