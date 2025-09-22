@@ -405,6 +405,7 @@ We welcome contributions from developers of all skill levels! Here's how you can
    ./EpiGimp  # Test that it runs
    ```
 
+
 ### 📝 Contribution Guidelines
 
 #### Code Style
