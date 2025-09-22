@@ -541,7 +541,6 @@ Contributors will be:
 
 - **GitHub Issues**: For bugs and feature requests
 - **Discussions**: For questions and general discussion
-- **Discord**: [Coming soon] For real-time chat
 
 ### 🌍 Community Guidelines
 
