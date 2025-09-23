@@ -38,26 +38,23 @@ static bool drawButton(Rectangle bounds, const char* text, bool isSelected = fal
     return isHovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
 
-bool FileBrowser::renderOpenDialog(float x, float y, float width, float height) {
+bool FileBrowser::renderOpenDialog(float x, float y, float width, float height)
+{
     // Draw background panel
     DrawRectangle((int)x, (int)y, (int)width, (int)height, RAYWHITE);
     DrawRectangleLinesEx(Rectangle{x, y, width, height}, 2, BLACK);
     
-    // Title
     DrawText("Open Image File", (int)(x + 10), (int)(y + 10), 16, BLACK);
     
     float padding = 10;
     float buttonHeight = 30;
-    float listHeight = height - 120; // Leave space for buttons and path
+    float listHeight = height - 120;
     
-    // Current path display
     DrawText(currentPath_.c_str(), (int)(x + padding), (int)(y + 35), 12, DARKGRAY);
     
-    // Up button
     Rectangle upButton = {x + width - 80, y + 30, 70, 25};
-    if (drawButton(upButton, "Up") && canProcessClicks()) {
+    if (drawButton(upButton, "Up") && canProcessClicks())
         goUp();
-    }
     
     // File list
     float itemHeight = 25;
@@ -109,7 +106,8 @@ bool FileBrowser::renderOpenDialog(float x, float y, float width, float height) 
     return false; // Continue showing dialog
 }
 
-bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) {
+bool FileBrowser::renderSaveDialog(float x, float y, float width, float height)
+{
     // Draw background panel
     DrawRectangle((int)x, (int)y, (int)width, (int)height, RAYWHITE);
     DrawRectangleLinesEx(Rectangle{x, y, width, height}, 2, BLACK);
@@ -121,15 +119,13 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
     float buttonHeight = 30;
     float listHeight = height - 160; // Leave more space for filename input
     
-    // Current path display
     DrawText(currentPath_.c_str(), (int)(x + padding), (int)(y + 35), 12, DARKGRAY);
     
     // Up button
     Rectangle upButton = {x + width - 80, y + 30, 70, 25};
-    if (drawButton(upButton, "Up") && canProcessClicks()) {
+    if (drawButton(upButton, "Up") && canProcessClicks())
         goUp();
-    }
-    
+
     // Directory and file list (show both for context in save dialog)
     float itemHeight = 25;
     float listY = y + 65;
@@ -164,7 +160,6 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
         }
     }
     
-    // Filename input (simple text display for now)
     float inputY = y + height - 80;
     DrawText("Filename:", (int)(x + padding), (int)(inputY - 20), 14, BLACK);
     
@@ -175,9 +170,8 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
     // Simple text input handling
     int key = GetCharPressed();
     while (key > 0) {
-        if (key >= 32 && key <= 125 && inputBuffer_.size() < 250) {
+        if (key >= 32 && key <= 125 && inputBuffer_.size() < 250)
             inputBuffer_ += (char)key;
-        }
         key = GetCharPressed();
     }
     
@@ -189,7 +183,6 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height) 
     
     DrawText(inputBuffer_.c_str(), (int)(inputRect.x + 5), (int)(inputRect.y + 8), 14, BLACK);
     
-    // Help text about supported formats
     float helpY = inputY + 35;
     std::string helpText = "Supported formats: .png, .jpg, .jpeg, .bmp, .tga (auto-adds .png if missing)";
     DrawText(helpText.c_str(), (int)(x + padding), (int)(helpY), 12, DARKGRAY);
