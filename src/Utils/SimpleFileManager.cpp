@@ -15,7 +15,8 @@ SimpleFileManager::SimpleFileManager()
 
 SimpleFileManager::~SimpleFileManager() = default;
 
-std::optional<std::string> SimpleFileManager::showOpenDialog(const std::string& /*filter*/) {
+std::optional<std::string> SimpleFileManager::showOpenDialog(const std::string& /*filter*/)
+{
     showingOpenDialog_ = true;
     openBrowser_->reset();
     openBrowser_->setShowAllFiles(true); // Show all files for consistency with save dialog
@@ -23,14 +24,16 @@ std::optional<std::string> SimpleFileManager::showOpenDialog(const std::string& 
 }
 
 std::optional<std::string> SimpleFileManager::showSaveDialog(const std::string& /*filter*/, 
-                                        const std::string& /*defaultName*/) {
+                                        const std::string& /*defaultName*/)
+{
     showingSaveDialog_ = true;
     saveBrowser_->reset();
     saveBrowser_->setShowAllFiles(true); // Show all files for context in save dialog
     return std::nullopt; // Will be handled in update loop
 }
 
-std::optional<std::string> SimpleFileManager::updateOpenDialog() {
+std::optional<std::string> SimpleFileManager::updateOpenDialog()
+{
     if (!showingOpenDialog_) return std::nullopt;
     
     float screenWidth = (float)GetScreenWidth();
@@ -61,7 +64,8 @@ std::optional<std::string> SimpleFileManager::updateOpenDialog() {
     return std::nullopt;
 }
 
-std::optional<std::string> SimpleFileManager::updateSaveDialog() {
+std::optional<std::string> SimpleFileManager::updateSaveDialog()
+{
     if (!showingSaveDialog_) return std::nullopt;
     
     float screenWidth = (float)GetScreenWidth();
@@ -93,15 +97,18 @@ std::optional<std::string> SimpleFileManager::updateSaveDialog() {
     return std::nullopt;
 }
 
-bool SimpleFileManager::isShowingDialog() const {
+bool SimpleFileManager::isShowingDialog() const
+{
     return showingOpenDialog_ || showingSaveDialog_;
 }
 
-bool SimpleFileManager::fileExists(const std::string& path) const {
+bool SimpleFileManager::fileExists(const std::string& path) const
+{
     return std::filesystem::exists(path);
 }
 
-bool SimpleFileManager::createDirectories(const std::string& path) const {
+bool SimpleFileManager::createDirectories(const std::string& path) const
+{
     std::error_code ec;
     return std::filesystem::create_directories(path, ec);
 }
