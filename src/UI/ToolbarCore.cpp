@@ -8,9 +8,8 @@ Toolbar::Toolbar(Rectangle bounds, EventDispatcher* dispatcher)
     : bounds_(bounds), eventDispatcher_(dispatcher)
 {
     
-    if (!dispatcher) {
+    if (!dispatcher)
         throw std::invalid_argument("EventDispatcher cannot be null");
-    }
     
     // Create color palette on the right side of the toolbar
     // Calculate optimal width: 8 colors per row * (swatch_size + margin) + padding
@@ -44,15 +43,12 @@ void Toolbar::draw() const
     DrawRectangleRec(bounds_, RAYWHITE);
     DrawRectangleLinesEx(bounds_, 1, LIGHTGRAY);
     
-    // Draw all buttons
     for (const auto& button : buttons_) {
         drawButton(*button);
     }
     
-    // Draw color palette
-    if (colorPalette_) {
+    if (colorPalette_)
         colorPalette_->draw();
-    }
 }
 
 void Toolbar::addButton(const std::string& text, std::function<void()> onClick)
