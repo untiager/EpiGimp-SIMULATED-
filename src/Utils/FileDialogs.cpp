@@ -8,30 +8,29 @@
 namespace EpiGimp {
 namespace FileDialogs {
 
-std::string execCommand(const char* cmd) {
+std::string execCommand(const char* cmd)
+{
     char buffer[128];
     std::string result = "";
     
-    // Use a simple FILE* with custom deleter to avoid template attribute warnings
     auto pipeDeleter = [](FILE* f) { if (f) pclose(f); };
     std::unique_ptr<FILE, decltype(pipeDeleter)> pipe(popen(cmd, "r"), pipeDeleter);
     
-    if (!pipe) {
+    if (!pipe)
         throw std::runtime_error("popen() failed!");
-    }
     while (fgets(buffer, sizeof buffer, pipe.get()) != nullptr) {
         result += buffer;
     }
     
     // Remove trailing newline
-    if (!result.empty() && result.back() == '\n') {
+    if (!result.empty() && result.back() == '\n')
         result.pop_back();
-    }
     
     return result;
 }
 
-std::optional<std::string> showOpenDialog(const std::string& filter) {
+std::optional<std::string> showOpenDialog(const std::string& filter)
+{
     try {
         // Use zenity for file dialog on Linux
         std::string cmd = "zenity --file-selection --title=\"Open Image File\"";
@@ -48,9 +47,8 @@ std::optional<std::string> showOpenDialog(const std::string& filter) {
         
         std::string result = execCommand(cmd.c_str());
         
-        if (result.empty()) {
+        if (result.empty())
             return std::nullopt; // User cancelled
-        }
         
         return result;
         
@@ -60,14 +58,14 @@ std::optional<std::string> showOpenDialog(const std::string& filter) {
     }
 }
 
-std::optional<std::string> showSaveDialog(const std::string& filter, const std::string& defaultName) {
+std::optional<std::string> showSaveDialog(const std::string& filter, const std::string& defaultName)
+{
     try {
         // Use zenity for save dialog on Linux
         std::string cmd = "zenity --file-selection --save --confirm-overwrite --title=\"Save Image As\"";
         
-        if (!defaultName.empty()) {
+        if (!defaultName.empty())
             cmd += " --filename=\"" + defaultName + "\"";
-        }
         
         // Add file filters
         if (!filter.empty()) {
@@ -79,9 +77,8 @@ std::optional<std::string> showSaveDialog(const std::string& filter, const std::
         
         std::string result = execCommand(cmd.c_str());
         
-        if (result.empty()) {
+        if (result.empty())
             return std::nullopt; // User cancelled
-        }
         
         // Ensure .png extension if not present
         if (result.find(".png") == std::string::npos && 
