@@ -22,9 +22,8 @@ void Canvas::initializeDrawingLayer()
 
 void Canvas::drawStroke(Vector2 from, Vector2 to)
 {
-    if (!drawingLayer_ || !drawingLayer_->isValid()) {
+    if (!drawingLayer_ || !drawingLayer_->isValid())
         return;
-    }
     
     // Convert screen coordinates to image coordinates
     const Rectangle imageRect = calculateImageDestRect();
@@ -54,9 +53,8 @@ void Canvas::handleDrawing()
     const Rectangle imageRect = calculateImageDestRect();
     
     // Check if mouse is over the image
-    if (!CheckCollisionPointRec(mousePos, imageRect)) {
+    if (!CheckCollisionPointRec(mousePos, imageRect))
         return;
-    }
     
     static bool isDrawing = false;
     static Vector2 lastMousePos = {0, 0};
@@ -68,9 +66,8 @@ void Canvas::handleDrawing()
             lastMousePos = mousePos;
             
             // Only initialize drawing layer if it doesn't exist yet
-            if (!drawingLayer_ || !drawingLayer_->isValid()) {
+            if (!drawingLayer_ || !drawingLayer_->isValid())
                 initializeDrawingLayer();
-            }
             
             // Create a new draw command if history manager is available
             if (historyManager_) {
