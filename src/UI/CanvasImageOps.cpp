@@ -18,7 +18,6 @@ void Canvas::loadImage(const std::string& filePath)
     currentImagePath_ = filePath;
     resetViewTransform();
     
-    // Initialize drawing layer for the new image
     initializeDrawingLayer();
     
     eventDispatcher_->emit<ImageLoadedEvent>(filePath);
@@ -32,7 +31,6 @@ bool Canvas::saveImage(const std::string& filePath)
         return false;
     }
     
-    // Validate the file path
     if (filePath.empty()) {
         eventDispatcher_->emit<ErrorEvent>("Invalid file path");
         return false;
@@ -65,32 +63,25 @@ bool Canvas::saveImage(const std::string& filePath)
             return false;
         }
         
-        // Flip the drawing image vertically to correct the render texture flip
         ImageFlipVertical(drawingImage->getMutable());
         
-        // Create a new image and composite them
         Image composite = GenImageColor(originalImage->get()->width, originalImage->get()->height, WHITE);
         
-        // Draw original image onto composite
         ImageDraw(&composite, *originalImage->get(), 
                  Rectangle{0, 0, static_cast<float>(originalImage->get()->width), static_cast<float>(originalImage->get()->height)},
                  Rectangle{0, 0, static_cast<float>(composite.width), static_cast<float>(composite.height)}, WHITE);
         
-        // Draw the drawing layer on top
         ImageDraw(&composite, *drawingImage->get(),
                  Rectangle{0, 0, static_cast<float>(drawingImage->get()->width), static_cast<float>(drawingImage->get()->height)},
                  Rectangle{0, 0, static_cast<float>(composite.width), static_cast<float>(composite.height)}, WHITE);
         
-        // Create ImageResource from the composite
         ImageResource compositeRes(composite);
         
         std::string actualPath;
         const bool success = compositeRes.exportToFile(filePath, actualPath);
         
-        // Inform user if filename was auto-corrected
-        if (success && actualPath != filePath) {
+        if (success && actualPath != filePath)
             std::cout << "Note: File extension was auto-corrected to: " << actualPath << std::endl;
-        }
         
         eventDispatcher_->emit<ImageSavedEvent>(actualPath, success);
         
@@ -113,10 +104,8 @@ bool Canvas::saveImage(const std::string& filePath)
     std::string actualPath;
     const bool success = imageRes->exportToFile(filePath, actualPath);
     
-    // Inform user if filename was auto-corrected
-    if (success && actualPath != filePath) {
+    if (success && actualPath != filePath)
         std::cout << "Note: File extension was auto-corrected to: " << actualPath << std::endl;
-    }
     
     eventDispatcher_->emit<ImageSavedEvent>(actualPath, success);
     
@@ -132,11 +121,9 @@ bool Canvas::saveImage(const std::string& filePath)
 std::optional<TextureResource> Canvas::createTextureFromFile(const std::string& filePath)
 {
     auto imageRes = ImageResource::fromFile(filePath);
-    if (!imageRes) {
+    if (!imageRes)
         return std::nullopt;
-    }
     
-    // Resize image if too large for canvas
     const auto maxWidth = static_cast<int>(bounds_.width);
     const auto maxHeight = static_cast<int>(bounds_.height);
     
