@@ -53,9 +53,8 @@ void ColorPalette::initializePalette()
         Rectangle swatchBounds = {x, y, SWATCH_SIZE, SWATCH_SIZE};
         auto swatch = std::make_unique<ColorSwatch>(swatchBounds, colors[i]);
         
-        if (i == 0) { // Select first color (black) by default
+        if (i == 0) // Select first color (black) by default
             swatch->isSelected = true;
-        }
         
         swatches_.push_back(std::move(swatch));
     }
@@ -91,13 +90,11 @@ void ColorPalette::update(float /*deltaTime*/)
 
 void ColorPalette::draw() const
 {
-    // Draw palette background
     DrawRectangleRec(bounds_, LIGHTGRAY);
     DrawRectangleLinesEx(bounds_, 1, DARKGRAY);
     
     // Draw color swatches
     for (const auto& swatch : swatches_) {
-        // Draw swatch background
         DrawRectangleRec(swatch->bounds, swatch->color);
         
         // Draw border - thicker if selected, different color if hovered
@@ -123,9 +120,8 @@ void ColorPalette::setSelectedColor(Color color)
     // Find and select the matching swatch
     for (size_t i = 0; i < swatches_.size(); ++i) {
         swatches_[i]->isSelected = (ColorToInt(swatches_[i]->color) == ColorToInt(color));
-        if (swatches_[i]->isSelected) {
+        if (swatches_[i]->isSelected)
             selectedIndex_ = static_cast<int>(i);
-        }
     }
 }
 
