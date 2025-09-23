@@ -7,17 +7,20 @@
 namespace EpiGimp {
 
 FileBrowser::FileBrowser() 
-    : selectedIndex_(-1), showHidden_(false), cancelled_(false), lastNavigationTime_(0.0), lastBackspaceTime_(0.0) {
+    : selectedIndex_(-1), showHidden_(false), cancelled_(false), lastNavigationTime_(0.0), lastBackspaceTime_(0.0)
+{
     currentPath_ = std::filesystem::current_path().string();
     setSupportedExtensions({".png", ".jpg", ".jpeg", ".bmp", ".tga"});
     loadDirectory();
 }
 
-void FileBrowser::setSupportedExtensions(const std::vector<std::string>& extensions) {
+void FileBrowser::setSupportedExtensions(const std::vector<std::string>& extensions)
+{
     supportedExtensions_ = extensions;
 }
 
-void FileBrowser::setShowAllFiles(bool showAll) {
+void FileBrowser::setShowAllFiles(bool showAll)
+{
     if (showAll) {
         // Temporarily clear extensions to show all files
         tempExtensions_ = supportedExtensions_;
@@ -30,11 +33,13 @@ void FileBrowser::setShowAllFiles(bool showAll) {
     }
 }
 
-void FileBrowser::setShowHidden(bool show) {
+void FileBrowser::setShowHidden(bool show)
+{
     showHidden_ = show;
 }
 
-bool FileBrowser::hasValidExtension(const std::string& filename) const {
+bool FileBrowser::hasValidExtension(const std::string& filename) const
+{
     if (supportedExtensions_.empty()) {
         return true; // No filter means all files are valid
     }
@@ -53,17 +58,20 @@ bool FileBrowser::hasValidExtension(const std::string& filename) const {
     return false;
 }
 
-bool FileBrowser::canProcessClicks() const {
+bool FileBrowser::canProcessClicks() const
+{
     double currentTime = GetTime();
     return (currentTime - lastNavigationTime_) > CLICK_DELAY_THRESHOLD;
 }
 
-bool FileBrowser::canProcessBackspace() const {
+bool FileBrowser::canProcessBackspace() const
+{
     double currentTime = GetTime();
     return (currentTime - lastBackspaceTime_) > BACKSPACE_DELAY_THRESHOLD;
 }
 
-std::optional<std::string> FileBrowser::getSelectedFile() const {
+std::optional<std::string> FileBrowser::getSelectedFile() const
+{
     if (selectedIndex_ >= 0 && selectedIndex_ < static_cast<int>(entries_.size())) {
         auto fullPath = std::filesystem::path(currentPath_) / entries_[selectedIndex_].name;
         return fullPath.string();
@@ -71,19 +79,19 @@ std::optional<std::string> FileBrowser::getSelectedFile() const {
     return std::nullopt;
 }
 
-std::string FileBrowser::getSaveFileName() const {
-    // Return the full path for save operations
+std::string FileBrowser::getSaveFileName() const
+{
     std::string filename = saveFileName_;
     if (filename.empty()) {
         filename = "untitled";
     }
     
-    // Construct full path: currentPath + "/" + filename
     std::filesystem::path fullPath = std::filesystem::path(currentPath_) / filename;
     return fullPath.string();
 }
 
-void FileBrowser::reset() {
+void FileBrowser::reset()
+{
     selectedIndex_ = -1;
     cancelled_ = false;
     saveFileName_.clear();
