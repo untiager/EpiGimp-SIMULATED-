@@ -33,9 +33,8 @@ void Toolbar::update(float deltaTime)
     }
     
     // Update color palette
-    if (colorPalette_) {
+    if (colorPalette_)
         colorPalette_->update(deltaTime);
-    }
 }
 
 void Toolbar::draw() const
