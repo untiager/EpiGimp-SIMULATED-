@@ -8,9 +8,8 @@ namespace EpiGimp {
 // ImageResource implementations
 void ImageResource::resize(int width, int height)
 {
-    if (isValid()) {
+    if (isValid())
         ImageResize(getMutable(), width, height);
-    }
 }
 
 bool ImageResource::exportToFile(const std::string& path) const
