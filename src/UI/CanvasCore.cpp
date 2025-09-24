@@ -132,9 +132,8 @@ bool Canvas::restoreDrawingLayer(const Image& image)
     
     try {
         // If drawing layer doesn't exist, initialize it
-        if (!hasDrawingLayer()) {
+        if (!hasDrawingLayer())
             initializeDrawingLayer();
-        }
         
         if (!hasDrawingLayer()) {
             std::cerr << "Canvas: Failed to initialize drawing layer for restoration" << std::endl;
@@ -151,9 +150,7 @@ bool Canvas::restoreDrawingLayer(const Image& image)
         // The image is already correctly oriented from copyDrawingLayer, so draw it normally
         DrawTexture(tempTexture, 0, 0, WHITE);
         drawingLayer_->endDrawing();
-        
         UnloadTexture(tempTexture);
-        
         return true;
     }
     catch (const std::exception& e) {
@@ -169,7 +166,6 @@ void Canvas::clearDrawingLayer()
         return;
     }
     
-    // Clear the drawing layer to transparent
     drawingLayer_->clear(BLANK);
     std::cout << "Canvas: Drawing layer cleared" << std::endl;
 }
