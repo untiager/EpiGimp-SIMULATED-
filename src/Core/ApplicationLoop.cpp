@@ -15,9 +15,8 @@ void Application::update(float deltaTime)
     
     // Check for open dialog result
     auto openResult = simpleFileManager->updateOpenDialog();
-    if (openResult) {
+    if (openResult)
         canvas_->loadImage(*openResult);
-    }
     
     // Check for save dialog result  
     auto saveResult = simpleFileManager->updateSaveDialog();
