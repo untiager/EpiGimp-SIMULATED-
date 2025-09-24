@@ -7,7 +7,8 @@ HistoryManager::HistoryManager(size_t maxHistorySize)
     : maxHistorySize_(maxHistorySize) {
 }
 
-bool HistoryManager::executeCommand(CommandPtr command) {
+bool HistoryManager::executeCommand(CommandPtr command)
+{
     if (!command) {
         std::cerr << "HistoryManager: Null command passed to executeCommand" << std::endl;
         return false;
@@ -60,10 +61,10 @@ bool HistoryManager::undo()
     return true;
 }
 
-bool HistoryManager::redo() {
-    if (!canRedo()) {
+bool HistoryManager::redo()
+{
+    if (!canRedo())
         return false;
-    }
     
     // Get the command from the top of the redo stack
     auto command = std::move(redoStack_.top());
@@ -83,15 +84,18 @@ bool HistoryManager::redo() {
     return true;
 }
 
-bool HistoryManager::canUndo() const {
+bool HistoryManager::canUndo() const
+{
     return !undoStack_.empty();
 }
 
-bool HistoryManager::canRedo() const {
+bool HistoryManager::canRedo() const
+{
     return !redoStack_.empty();
 }
 
-void HistoryManager::clearHistory() {
+void HistoryManager::clearHistory()
+{
     while (!undoStack_.empty()) {
         undoStack_.pop();
     }
@@ -100,29 +104,32 @@ void HistoryManager::clearHistory() {
     }
 }
 
-size_t HistoryManager::getUndoCount() const {
+size_t HistoryManager::getUndoCount() const
+{
     return undoStack_.size();
 }
 
-size_t HistoryManager::getRedoCount() const {
+size_t HistoryManager::getRedoCount() const
+{
     return redoStack_.size();
 }
 
-std::string HistoryManager::getNextUndoDescription() const {
-    if (canUndo()) {
+std::string HistoryManager::getNextUndoDescription() const
+{
+    if (canUndo())
         return undoStack_.top()->getDescription();
-    }
     return "";
 }
 
-std::string HistoryManager::getNextRedoDescription() const {
-    if (canRedo()) {
+std::string HistoryManager::getNextRedoDescription() const
+{
+    if (canRedo())
         return redoStack_.top()->getDescription();
-    }
     return "";
 }
 
-void HistoryManager::enforceMaxSize() {
+void HistoryManager::enforceMaxSize()
+{
     // Remove old commands from the bottom of the stack if we exceed max size
     if (undoStack_.size() > maxHistorySize_) {
         // We need to rebuild the stack without the bottom elements
