@@ -32,9 +32,8 @@ bool Application::initialize()
             config_.windowWidth, config_.windowHeight, config_.windowTitle
         );
         
-        if (!window_->isInitialized()) {
+        if (!window_->isInitialized())
             throw std::runtime_error("Failed to initialize window");
-        }
 
         errorHandler_ = std::make_unique<ConsoleErrorHandler>(eventDispatcher_.get());
         fileManager_ = std::make_unique<SimpleFileManager>();
