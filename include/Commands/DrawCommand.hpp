@@ -15,14 +15,15 @@ class Canvas;
 /**
  * @brief Command for drawing operations that can be undone/redone
  * 
- * This command captures the state of the drawing layer before a drawing action
+ * This command captures the state of the active layer before a drawing action
  * and can restore it for undo operations.
  */
 class DrawCommand : public ICommand {
 private:
     Canvas* canvas_;                              // Target canvas
-    std::unique_ptr<Image> beforeState_;         // Drawing layer state before the action
-    std::unique_ptr<Image> afterState_;          // Drawing layer state after the action
+    size_t targetLayerIndex_;                     // Index of the layer that was modified
+    std::unique_ptr<Image> beforeState_;         // Layer state before the action
+    std::unique_ptr<Image> afterState_;          // Layer state after the action
     std::string description_;                    // Description of the drawing action
     
 public:
@@ -58,17 +59,17 @@ public:
     
 private:
     /**
-     * @brief Copy the current drawing layer to an Image
+     * @brief Copy the current active layer to an Image
      * @return Unique pointer to the copied image, or nullptr if failed
      */
-    std::unique_ptr<Image> copyDrawingLayerToImage() const;
+    std::unique_ptr<Image> copyActiveLayerToImage() const;
     
     /**
-     * @brief Restore the drawing layer from an Image
+     * @brief Restore the active layer from an Image
      * @param image The image to restore from
      * @return true if restoration was successful, false otherwise
      */
-    bool restoreDrawingLayerFromImage(const std::unique_ptr<Image>& image);
+    bool restoreActiveLayerFromImage(const std::unique_ptr<Image>& image);
 };
 
 /**

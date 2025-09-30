@@ -2,6 +2,7 @@
 #include "../../include/Core/Application.hpp"
 #include "../../include/UI/Toolbar.hpp"
 #include "../../include/UI/Canvas.hpp"
+#include "../../include/UI/SimpleLayerPanel.hpp"
 #include "../../include/Utils/Implementations.hpp"
 #include "../../include/Commands/ClearCommand.hpp"
 #include <iostream>
@@ -69,13 +70,24 @@ void Application::createComponents()
         eventDispatcher_->emit<ClearCanvasRequestEvent>();
     });
     
-    // Create canvas (below toolbar)
+    // Create canvas (below toolbar, right of layer panel)
     const Rectangle canvasBounds = {
-        0, static_cast<float>(toolbar_->getHeight()), 
-        static_cast<float>(config_.windowWidth), 
+        200, static_cast<float>(toolbar_->getHeight()), // Leave space for layer panel
+        static_cast<float>(config_.windowWidth - 200), // Reduced width for layer panel
         static_cast<float>(config_.windowHeight - toolbar_->getHeight() - 25) // Leave space for status bar
     };
     canvas_ = std::make_unique<Canvas>(canvasBounds, eventDispatcher_.get(), historyManager_.get());
+    
+    // Create layer panel on the left
+    const Rectangle layerPanelBounds = {
+        0,
+        static_cast<float>(toolbar_->getHeight()),
+        200,
+        static_cast<float>(config_.windowHeight - toolbar_->getHeight() - 25)
+    };
+    layerPanel_ = std::make_unique<SimpleLayerPanel>(layerPanelBounds, 
+                                                     static_cast<Canvas*>(canvas_.get()), 
+                                                     eventDispatcher_.get());
 }
 
 void Application::onLoadImageRequest()
@@ -122,8 +134,8 @@ void Application::onClearCanvasRequest()
     // Cast to access Canvas methods
     auto* canvas = static_cast<Canvas*>(canvas_.get());
     
-    if (!canvas->hasDrawingLayer()) {
-        std::cout << "No drawing layer to clear" << std::endl;
+    if (!canvas->hasImage()) {
+        std::cout << "No image loaded to clear" << std::endl;
         return;
     }
     

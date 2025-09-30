@@ -2,6 +2,7 @@
 #include "../../include/Core/Application.hpp"
 #include "../../include/UI/Toolbar.hpp"
 #include "../../include/UI/Canvas.hpp"
+#include "../../include/UI/SimpleLayerPanel.hpp"
 #include "../../include/Utils/Implementations.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -19,6 +20,8 @@ Application::Application(AppConfig config)
               << " '" << config_.windowTitle << "'" << std::endl;
 }
 
+Application::~Application() = default;
+
 bool Application::initialize()
 {
     if (initialized_) {
@@ -28,17 +31,17 @@ bool Application::initialize()
 
     try {
         // Initialize window
-        window_ = std::make_unique<WindowResource>(
+        window_ = std::make_unique<EpiGimp::WindowResource>(
             config_.windowWidth, config_.windowHeight, config_.windowTitle
         );
         
         if (!window_->isInitialized())
             throw std::runtime_error("Failed to initialize window");
 
-        errorHandler_ = std::make_unique<ConsoleErrorHandler>(eventDispatcher_.get());
-        fileManager_ = std::make_unique<SimpleFileManager>();
-        inputHandler_ = std::make_unique<RaylibInputHandler>();
-        historyManager_ = std::make_unique<HistoryManager>(50); // Support up to 50 undo levels
+        errorHandler_ = std::make_unique<EpiGimp::ConsoleErrorHandler>(eventDispatcher_.get());
+        fileManager_ = std::make_unique<EpiGimp::SimpleFileManager>();
+        inputHandler_ = std::make_unique<EpiGimp::RaylibInputHandler>();
+        historyManager_ = std::make_unique<EpiGimp::HistoryManager>(50); // Support up to 50 undo levels
 
         // Create UI components
         createComponents();

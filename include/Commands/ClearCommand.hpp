@@ -11,9 +11,9 @@ namespace EpiGimp {
 class Canvas;
 
 /**
- * @brief Command for clearing the drawing layer
+ * @brief Command for clearing the active layer
  * 
- * This command captures the current drawing layer state and can restore it for undo.
+ * This command captures the current active layer state and can restore it for undo.
  */
 class ClearCommand : public ICommand {
 private:
@@ -35,13 +35,13 @@ public:
     // ICommand interface
     bool execute() override;
     bool undo() override;
-    std::string getDescription() const override { return "Clear drawing layer"; }
+    std::string getDescription() const override { return "Clear active layer"; }
     bool canUndo() const override { return beforeState_ != nullptr; }
 
 private:
-    std::unique_ptr<Image> copyDrawingLayerToImage() const;
-    bool restoreDrawingLayerFromImage(const std::unique_ptr<Image>& image);
-    void clearDrawingLayer();
+    std::unique_ptr<Image> copyActiveLayerToImage() const;
+    bool restoreActiveLayerFromImage(const std::unique_ptr<Image>& image);
+    void clearActiveLayer();
 };
 
 /**

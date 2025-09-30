@@ -1,5 +1,6 @@
 //Application update and draw loops
 #include "../../include/Core/Application.hpp"
+#include "../../include/UI/SimpleLayerPanel.hpp"
 #include "../../include/Utils/Implementations.hpp"
 #include <iostream>
 
@@ -28,12 +29,14 @@ void Application::update(float deltaTime)
     if (!simpleFileManager->isShowingDialog()) {
         if (toolbar_) toolbar_->update(deltaTime);
         if (canvas_) canvas_->update(deltaTime);
+        if (layerPanel_) layerPanel_->update(deltaTime);
     }
 }
     
 void Application::draw()
 {
     if (canvas_) canvas_->draw();
+    if (layerPanel_) layerPanel_->draw();
     if (toolbar_) toolbar_->draw();
     
     // Draw status bar

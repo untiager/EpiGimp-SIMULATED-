@@ -6,24 +6,23 @@
 
 namespace EpiGimp {
 
-void Canvas::initializeDrawingLayer()
+void Canvas::initializeDrawingTexture()
 {
-    if (hasImage() && currentTexture_) {
+    if (currentTexture_) {
         const int width = (*currentTexture_)->width;
         const int height = (*currentTexture_)->height;
-        drawingLayer_ = RenderTextureResource(width, height);
+        drawingTexture_ = RenderTextureResource(width, height);
         
-        // Clear the drawing layer to transparent
-        drawingLayer_->clear(BLANK);
+        // Clear the drawing texture to transparent
+        drawingTexture_->clear(Color{0, 0, 0, 0});
         
-        std::cout << "Drawing layer initialized: " << width << "x" << height << std::endl;
+        std::cout << "Drawing texture initialized: " << width << "x" << height << std::endl;
     }
 }
 
 void Canvas::drawStroke(Vector2 from, Vector2 to)
 {
-    if (!drawingLayer_ || !drawingLayer_->isValid())
-        return;
+    if (!drawingVisible_ || !hasDrawingTexture()) return;
     
     // Convert screen coordinates to image coordinates
     const Rectangle imageRect = calculateImageDestRect();
@@ -39,10 +38,15 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
         (to.y - imageRect.y) / imageRect.height * (*currentTexture_)->height
     };
     
-    // Draw to the render texture
-    drawingLayer_->beginDrawing();
+    std::cout << "Drawing stroke from (" << imageFrom.x << "," << imageFrom.y 
+              << ") to (" << imageTo.x << "," << imageTo.y << ") on drawing layer" << std::endl;
+    
+    // Draw directly to the drawing texture
+    drawingTexture_->beginDrawing();
     DrawLineEx(imageFrom, imageTo, 3.0f, drawingColor_); // Use selected drawing color
-    drawingLayer_->endDrawing();
+    drawingTexture_->endDrawing();
+    
+    std::cout << "Stroke drawn successfully" << std::endl;
 }
 
 void Canvas::handleDrawing()
@@ -50,6 +54,8 @@ void Canvas::handleDrawing()
     if (!hasImage()) return;
     
     const Vector2 mousePos = GetMousePosition();
+    
+    // Use image dimensions for rect calculation
     const Rectangle imageRect = calculateImageDestRect();
     
     // Check if mouse is over the image
@@ -61,24 +67,25 @@ void Canvas::handleDrawing()
     static std::unique_ptr<DrawCommand> currentDrawCommand = nullptr;
     
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        std::cout << "Mouse pressed at (" << mousePos.x << "," << mousePos.y << "), tool=" << static_cast<int>(currentTool_) 
+                  << ", over image=" << (CheckCollisionPointRec(mousePos, imageRect) ? "YES" : "NO") << std::endl;
         if (currentTool_ != DrawingTool::None) {
             isDrawing = true;
             lastMousePos = mousePos;
-            
-            // Only initialize drawing layer if it doesn't exist yet
-            if (!drawingLayer_ || !drawingLayer_->isValid())
-                initializeDrawingLayer();
             
             // Create a new draw command if history manager is available
             if (historyManager_) {
                 currentDrawCommand = createDrawCommand(this, "Draw stroke");
                 std::cout << "Started drawing stroke, captured before state" << std::endl;
             }
+        } else {
+            std::cout << "Drawing tool is NONE - cannot draw" << std::endl;
         }
     }
     
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && isDrawing) {
         if (currentTool_ != DrawingTool::None) {
+            std::cout << "Drawing from (" << lastMousePos.x << "," << lastMousePos.y << ") to (" << mousePos.x << "," << mousePos.y << ")" << std::endl;
             drawStroke(lastMousePos, mousePos);
             lastMousePos = mousePos;
         }
@@ -86,6 +93,7 @@ void Canvas::handleDrawing()
     
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
         if (isDrawing && currentDrawCommand && historyManager_) {
+            std::cout << "Mouse released, capturing after state" << std::endl;
             // Capture the after state and execute the command
             currentDrawCommand->captureAfterState();
             

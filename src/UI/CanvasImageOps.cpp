@@ -16,9 +16,25 @@ void Canvas::loadImage(const std::string& filePath)
     
     currentTexture_ = std::move(texture);
     currentImagePath_ = filePath;
-    resetViewTransform();
     
-    initializeDrawingLayer();
+    std::cout << "Canvas: Loaded texture " << (*currentTexture_)->width << "x" << (*currentTexture_)->height << std::endl;
+    
+    // TEMP: Save the loaded texture to verify it contains data
+    Image testImage = LoadImageFromTexture(**currentTexture_);
+    std::cout << "Canvas: Extracted test image: " << testImage.width << "x" << testImage.height << " format=" << testImage.format << std::endl;
+    ExportImage(testImage, "/tmp/debug_loaded_texture.png");
+    std::cout << "Canvas: Saved debug texture to /tmp/debug_loaded_texture.png" << std::endl;
+    UnloadImage(testImage);
+    
+    // Update layer manager size and load image into background layer
+    // Initialize drawing texture for the new image
+    if (currentTexture_) {
+        initializeDrawingTexture();
+    }
+    
+    // IMPORTANT: Reset view transform to prevent coordinate issues
+    resetViewTransform();
+    std::cout << "Canvas: View transform reset to defaults" << std::endl;
     
     eventDispatcher_->emit<ImageLoadedEvent>(filePath);
     std::cout << "Image loaded successfully: " << filePath << std::endl;
@@ -47,62 +63,43 @@ bool Canvas::saveImage(const std::string& filePath)
         // Continue anyway - the save operation might still work
     }
     
-    // If we have drawings, composite them with the original image
-    if (drawingLayer_ && drawingLayer_->isValid()) {
-        // Get original image
-        auto originalImage = ImageResource::fromTexture(**currentTexture_);
-        if (!originalImage) {
-            eventDispatcher_->emit<ErrorEvent>("Failed to create image from texture");
-            return false;
-        }
-        
-        // Get drawing layer as image (this handles the Y-flip automatically)
-        auto drawingImage = ImageResource::fromTexture((**drawingLayer_).texture);
-        if (!drawingImage) {
-            eventDispatcher_->emit<ErrorEvent>("Failed to create drawing image");
-            return false;
-        }
-        
-        ImageFlipVertical(drawingImage->getMutable());
-        
-        Image composite = GenImageColor(originalImage->get()->width, originalImage->get()->height, WHITE);
-        
-        ImageDraw(&composite, *originalImage->get(), 
-                 Rectangle{0, 0, static_cast<float>(originalImage->get()->width), static_cast<float>(originalImage->get()->height)},
-                 Rectangle{0, 0, static_cast<float>(composite.width), static_cast<float>(composite.height)}, WHITE);
-        
-        ImageDraw(&composite, *drawingImage->get(),
-                 Rectangle{0, 0, static_cast<float>(drawingImage->get()->width), static_cast<float>(drawingImage->get()->height)},
-                 Rectangle{0, 0, static_cast<float>(composite.width), static_cast<float>(composite.height)}, WHITE);
-        
-        ImageResource compositeRes(composite);
-        
-        std::string actualPath;
-        const bool success = compositeRes.exportToFile(filePath, actualPath);
-        
-        if (success && actualPath != filePath)
-            std::cout << "Note: File extension was auto-corrected to: " << actualPath << std::endl;
-        
-        eventDispatcher_->emit<ImageSavedEvent>(actualPath, success);
-        
-        if (success) {
-            std::cout << "Image saved successfully with drawings: " << actualPath << std::endl;
-        } else {
-            eventDispatcher_->emit<ErrorEvent>("Failed to save image: " + filePath);
-        }
-        
-        return success;
-    }
+    // Create a composite image combining background and drawing layers
+    Image compositeImage;
     
-    // No drawings, save original image
-    auto imageRes = ImageResource::fromTexture(**currentTexture_);
-    if (!imageRes) {
-        eventDispatcher_->emit<ErrorEvent>("Failed to create image from texture");
+    if (backgroundVisible_ && currentTexture_) {
+        // Start with the background image
+        compositeImage = LoadImageFromTexture(**currentTexture_);
+        
+        // If drawing layer exists and is visible, blend it on top
+        if (drawingVisible_ && hasDrawingTexture()) {
+            Image drawingImage = LoadImageFromTexture((**drawingTexture_).texture);
+            ImageFlipVertical(&drawingImage); // Fix texture orientation
+            
+            // Simple blend the drawing onto the background
+            for (int y = 0; y < compositeImage.height && y < drawingImage.height; y++) {
+                for (int x = 0; x < compositeImage.width && x < drawingImage.width; x++) {
+                    Color drawingPixel = GetImageColor(drawingImage, x, y);
+                    if (drawingPixel.a > 0) { // If drawing pixel is not transparent
+                        ImageDrawPixel(&compositeImage, x, y, drawingPixel);
+                    }
+                }
+            }
+            
+            UnloadImage(drawingImage);
+        }
+    } else if (drawingVisible_ && hasDrawingTexture()) {
+        // Only drawing layer is visible
+        compositeImage = LoadImageFromTexture((**drawingTexture_).texture);
+        ImageFlipVertical(&compositeImage);
+    } else {
+        eventDispatcher_->emit<ErrorEvent>("No visible layers to save");
         return false;
     }
     
+    ImageResource compositeRes(compositeImage);
+    
     std::string actualPath;
-    const bool success = imageRes->exportToFile(filePath, actualPath);
+    const bool success = compositeRes.exportToFile(filePath, actualPath);
     
     if (success && actualPath != filePath)
         std::cout << "Note: File extension was auto-corrected to: " << actualPath << std::endl;
@@ -146,17 +143,23 @@ void Canvas::drawImage() const
 {
     const Rectangle imageDestRect = calculateImageDestRect();
     
-    DrawTexturePro(**currentTexture_, 
-                  Rectangle{0, 0, static_cast<float>((*currentTexture_)->width), 
-                           static_cast<float>((*currentTexture_)->height)},
-                  imageDestRect, Vector2{0, 0}, 0, WHITE);
+    static int debugCount = 0;
+    debugCount++;
     
-    // Draw the drawing layer on top of the image
-    if (drawingLayer_ && drawingLayer_->isValid()) {
-        DrawTexturePro((**drawingLayer_).texture,
-                      Rectangle{0, 0, static_cast<float>((**drawingLayer_).texture.width),
-                               -static_cast<float>((**drawingLayer_).texture.height)}, // Negative height to flip Y
-                      imageDestRect, Vector2{0, 0}, 0, WHITE);
+    if (debugCount % 60 == 0) {
+        std::cout << "Drawing - zoom:" << zoomLevel_ << " pan:(" << panOffset_.x << "," << panOffset_.y << ")" 
+                  << " imageRect:(" << imageDestRect.x << "," << imageDestRect.y << "," 
+                  << imageDestRect.width << "," << imageDestRect.height << ")" << std::endl;
+    }
+    
+    // Draw the background layer if visible
+    if (backgroundVisible_ && currentTexture_) {
+        DrawTexture(**currentTexture_, static_cast<int>(imageDestRect.x), static_cast<int>(imageDestRect.y), WHITE);
+    }
+    
+    // Draw the drawing layer on top if visible
+    if (drawingVisible_ && hasDrawingTexture()) {
+        DrawTexture((**drawingTexture_).texture, static_cast<int>(imageDestRect.x), static_cast<int>(imageDestRect.y), WHITE);
     }
 }
 

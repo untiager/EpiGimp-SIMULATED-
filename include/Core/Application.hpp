@@ -12,6 +12,9 @@
 
 namespace EpiGimp {
 
+// Forward declarations
+class SimpleLayerPanel;
+
 // Application configuration
 struct AppConfig {
     int windowWidth = 1920;
@@ -32,6 +35,7 @@ private:
     std::unique_ptr<IErrorHandler> errorHandler_;
     std::unique_ptr<IInputHandler> inputHandler_;
     std::unique_ptr<HistoryManager> historyManager_;
+    std::unique_ptr<SimpleLayerPanel> layerPanel_;
     
     AppConfig config_;
     bool running_;
@@ -40,7 +44,7 @@ private:
 
 public:
     explicit Application(AppConfig config = AppConfig{});
-    ~Application() = default;
+    ~Application(); // Custom destructor needed for unique_ptr with forward declarations
 
     // Non-copyable but moveable
     Application(const Application&) = delete;

@@ -18,13 +18,17 @@ class HistoryManager;
 class Canvas : public ICanvas {
 private:
     Rectangle bounds_;
-    std::optional<TextureResource> currentTexture_;
-    std::optional<RenderTextureResource> drawingLayer_;  // Persistent drawing layer
+    std::optional<TextureResource> currentTexture_;        // Background layer (loaded image)
+    std::optional<RenderTextureResource> drawingTexture_;  // Drawing layer (transparent overlay)
     std::string currentImagePath_;
     float zoomLevel_;
     Vector2 panOffset_;
     EventDispatcher* eventDispatcher_;
     HistoryManager* historyManager_;  // For undo/redo functionality
+    
+    // Simple layer system
+    bool backgroundVisible_;
+    bool drawingVisible_;
     
     // Drawing state
     DrawingTool currentTool_;
@@ -62,12 +66,18 @@ public:
     Vector2 getPan() const override { return panOffset_; }
     void setDrawingTool(DrawingTool tool) override;
     
+    // Simple layer management
+    bool isBackgroundVisible() const { return backgroundVisible_; }
+    bool isDrawingVisible() const { return drawingVisible_; }
+    void setBackgroundVisible(bool visible) { backgroundVisible_ = visible; }
+    void setDrawingVisible(bool visible) { drawingVisible_ = visible; }
+    void clearDrawingLayer();
+    void resetToBackground();
+    
     // History/Command support
-    bool hasDrawingLayer() const;
-    Image copyDrawingLayer() const;
-    bool restoreDrawingLayer(const Image& image);
-    void clearDrawingLayer();  // Clear the drawing layer
-    void initializeDrawingLayer(); // Initialize drawing layer (for history support)
+    bool hasDrawingTexture() const;
+    Image copyDrawingImage() const;
+    void initializeDrawingTexture(); // Initialize drawing texture
 
 private:
     void handleInput();
