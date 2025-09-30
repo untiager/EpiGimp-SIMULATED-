@@ -157,9 +157,14 @@ void Canvas::drawImage() const
         DrawTexture(**currentTexture_, static_cast<int>(imageDestRect.x), static_cast<int>(imageDestRect.y), WHITE);
     }
     
-    // Draw the drawing layer on top if visible
+    // Draw the drawing layer on top if visible (with Y-axis correction for RenderTexture)
     if (drawingVisible_ && hasDrawingTexture()) {
-        DrawTexture((**drawingTexture_).texture, static_cast<int>(imageDestRect.x), static_cast<int>(imageDestRect.y), WHITE);
+        const Texture2D& drawingTex = (**drawingTexture_).texture;
+        
+        // Source rectangle with negative height to flip Y-axis for RenderTexture coordinate system
+        Rectangle sourceRect = {0, 0, static_cast<float>(drawingTex.width), static_cast<float>(-drawingTex.height)};
+        
+        DrawTexturePro(drawingTex, sourceRect, imageDestRect, Vector2{0, 0}, 0.0f, WHITE);
     }
 }
 
