@@ -4,32 +4,32 @@
 
 namespace EpiGimp {
 
-ClearCommand::ClearCommand(Canvas* canvas) : canvas_(canvas) {
-    if (!canvas_) {
+ClearCommand::ClearCommand(Canvas* canvas) : canvas_(canvas)
+{
+    if (!canvas_)
         throw std::invalid_argument("Canvas cannot be null");
-    }
     
-    // Capture the current state before clearing
     beforeState_ = copyActiveLayerToImage();
 }
 
-ClearCommand::~ClearCommand() {
-    if (beforeState_) {
+ClearCommand::~ClearCommand()
+{
+    if (beforeState_)
         UnloadImage(*beforeState_);
-    }
 }
 
-bool ClearCommand::execute() {
-    if (!canvas_) {
+bool ClearCommand::execute()
+{
+    if (!canvas_)
         return false;
-    }
     
     clearActiveLayer();
     std::cout << "Drawing layer cleared" << std::endl;
     return true;
 }
 
-bool ClearCommand::undo() {
+bool ClearCommand::undo()
+{
     if (!beforeState_) {
         std::cerr << "ClearCommand: No before state captured, cannot undo" << std::endl;
         return false;
@@ -38,10 +38,10 @@ bool ClearCommand::undo() {
     return restoreActiveLayerFromImage(beforeState_);
 }
 
-std::unique_ptr<Image> ClearCommand::copyActiveLayerToImage() const {
-    if (!canvas_ || !canvas_->hasDrawingTexture()) {
+std::unique_ptr<Image> ClearCommand::copyActiveLayerToImage() const
+{
+    if (!canvas_ || !canvas_->hasDrawingTexture())
         return nullptr;
-    }
     
     try {
         Image copiedImage = canvas_->copyDrawingImage();
@@ -53,10 +53,10 @@ std::unique_ptr<Image> ClearCommand::copyActiveLayerToImage() const {
     }
 }
 
-bool ClearCommand::restoreActiveLayerFromImage(const std::unique_ptr<Image>& image) {
-    if (!image || !canvas_) {
+bool ClearCommand::restoreActiveLayerFromImage(const std::unique_ptr<Image>& image)
+{
+    if (!image || !canvas_)
         return false;
-    }
     
     // For the simple drawing layer system, we'd need to restore the drawing texture
     // For now, return true to indicate success (this needs proper implementation)
@@ -64,16 +64,16 @@ bool ClearCommand::restoreActiveLayerFromImage(const std::unique_ptr<Image>& ima
     return true;
 }
 
-void ClearCommand::clearActiveLayer() {
-    if (!canvas_) {
+void ClearCommand::clearActiveLayer()
+{
+    if (!canvas_)
         return;
-    }
     
-    // Clear the drawing layer
     canvas_->clearDrawingLayer();
 }
 
-std::unique_ptr<ClearCommand> createClearCommand(Canvas* canvas) {
+std::unique_ptr<ClearCommand> createClearCommand(Canvas* canvas)
+{
     return std::make_unique<ClearCommand>(canvas);
 }
 
