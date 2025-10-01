@@ -12,9 +12,8 @@ ConsoleErrorHandler::ConsoleErrorHandler(EventDispatcher* dispatcher)
 void ConsoleErrorHandler::handleError(const std::string& message)
 {
     std::cerr << "[ERROR] " << message << std::endl;
-    if (eventDispatcher_) {
+    if (eventDispatcher_)
         eventDispatcher_->emit<ErrorEvent>(message);
-    }
 }
 
 void ConsoleErrorHandler::handleWarning(const std::string& message)
