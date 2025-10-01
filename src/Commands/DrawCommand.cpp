@@ -5,27 +5,24 @@
 namespace EpiGimp {
 
 DrawCommand::DrawCommand(Canvas* canvas, const std::string& description)
-    : canvas_(canvas), targetLayerIndex_(0), description_(description) {
-    if (!canvas_) {
+    : canvas_(canvas), targetLayerIndex_(0), description_(description)
+{
+    if (!canvas_)
         throw std::invalid_argument("Canvas cannot be null");
-    }
     
-    // For simple layer system, always target the drawing layer (index 0)
     targetLayerIndex_ = 0;
 }
 
-DrawCommand::~DrawCommand() {
-    // Clean up image resources if they exist
-    if (beforeState_) {
+DrawCommand::~DrawCommand()
+{
+    if (beforeState_)
         UnloadImage(*beforeState_);
-    }
-    if (afterState_) {
+    if (afterState_)
         UnloadImage(*afterState_);
-    }
 }
 
-void DrawCommand::captureBeforeState() {
-    // Capture the current state of the active layer
+void DrawCommand::captureBeforeState()
+{
     std::cout << "DrawCommand: Capturing before state..." << std::endl;
     beforeState_ = copyActiveLayerToImage();
     if (!beforeState_) {
@@ -35,8 +32,8 @@ void DrawCommand::captureBeforeState() {
     }
 }
 
-void DrawCommand::captureAfterState() {
-    // Capture the state after drawing
+void DrawCommand::captureAfterState()
+{
     std::cout << "DrawCommand: Capturing after state..." << std::endl;
     afterState_ = copyActiveLayerToImage();
     if (!afterState_) {
@@ -46,20 +43,21 @@ void DrawCommand::captureAfterState() {
     }
 }
 
-bool DrawCommand::execute() {
+bool DrawCommand::execute()
+{
     // For DrawCommand, execute is typically a no-op because the drawing has already happened
     // The actual drawing is performed outside the command, and this command just manages the state
     
     // However, if we have an afterState_ stored, we can restore it (useful for redo operations)
-    if (afterState_) {
+    if (afterState_)
         return restoreActiveLayerFromImage(afterState_);
-    }
     
     // If no after state is captured, the command represents the current state
     return true;
 }
 
-bool DrawCommand::undo() {
+bool DrawCommand::undo()
+{
     if (!beforeState_) {
         std::cerr << "DrawCommand: No before state captured, cannot undo" << std::endl;
         return false;
@@ -75,10 +73,10 @@ bool DrawCommand::undo() {
     return result;
 }
 
-std::unique_ptr<Image> DrawCommand::copyActiveLayerToImage() const {
-    if (!canvas_ || !canvas_->hasDrawingTexture()) {
+std::unique_ptr<Image> DrawCommand::copyActiveLayerToImage() const
+{
+    if (!canvas_ || !canvas_->hasDrawingTexture())
         return nullptr;
-    }
     
     try {
         Image copiedImage = canvas_->copyDrawingImage();
@@ -90,10 +88,10 @@ std::unique_ptr<Image> DrawCommand::copyActiveLayerToImage() const {
     }
 }
 
-bool DrawCommand::restoreActiveLayerFromImage(const std::unique_ptr<Image>& image) {
-    if (!image || !canvas_) {
+bool DrawCommand::restoreActiveLayerFromImage(const std::unique_ptr<Image>& image)
+{
+    if (!image || !canvas_)
         return false;
-    }
     
     // For the simple drawing layer system, we'd need to restore the drawing texture
     // For now, return true to indicate success (this needs proper implementation)
@@ -101,7 +99,8 @@ bool DrawCommand::restoreActiveLayerFromImage(const std::unique_ptr<Image>& imag
     return true;
 }
 
-std::unique_ptr<DrawCommand> createDrawCommand(Canvas* canvas, const std::string& description) {
+std::unique_ptr<DrawCommand> createDrawCommand(Canvas* canvas, const std::string& description)
+{
     auto command = std::make_unique<DrawCommand>(canvas, description);
     command->captureBeforeState();
     return command;
