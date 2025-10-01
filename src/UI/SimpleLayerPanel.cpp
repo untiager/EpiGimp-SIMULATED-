@@ -34,14 +34,52 @@ void SimpleLayerPanel::draw() const {
     // Title
     DrawText("Layers", static_cast<int>(bounds_.x + 10), static_cast<int>(bounds_.y + 10), 16, WHITE);
     
-    // Layer items
-    Rectangle backgroundRect = getBackgroundLayerRect();
+    // Calculate layout
+    const float titleHeight = 25;
+    const float layerHeight = 35;
+    const float buttonHeight = 25;
+    const float buttonMargin = 10;
+    const float instructionHeight = 55;
     
-    // Always show background layer  
-    drawLayerItem("Background", canvas_->isBackgroundVisible(), backgroundHovered_, false, backgroundRect);
+    int layerCount = canvas_->getLayerCount();
+    float totalLayersHeight = layerHeight * (layerCount + 1); // +1 for background
+    float availableHeight = bounds_.height - titleHeight - buttonHeight - buttonMargin - instructionHeight;
+    
+    bool needsScrolling = totalLayersHeight > availableHeight;
+    float maxScrollOffset = needsScrolling ? totalLayersHeight - availableHeight : 0;
+    
+    // Clamp scroll offset
+    if (scrollOffset_ < 0) scrollOffset_ = 0;
+    if (scrollOffset_ > maxScrollOffset) scrollOffset_ = maxScrollOffset;
+    
+    // Set up clipping for scrollable area
+    Rectangle layerArea = {
+        bounds_.x,
+        bounds_.y + titleHeight,
+        bounds_.width,
+        availableHeight
+    };
+    
+    BeginScissorMode(static_cast<int>(layerArea.x), static_cast<int>(layerArea.y), 
+                     static_cast<int>(layerArea.width), static_cast<int>(layerArea.height));
+    
+    // Draw layers with scroll offset
+    float currentY = bounds_.y + titleHeight - scrollOffset_;
+    
+    // Always show background layer first
+    Rectangle backgroundRect = {
+        bounds_.x + 5,
+        currentY + (layerCount * layerHeight), // Background goes after all drawing layers
+        bounds_.width - 10,
+        30
+    };
+    
+    if (backgroundRect.y + backgroundRect.height > bounds_.y + titleHeight && 
+        backgroundRect.y < bounds_.y + titleHeight + availableHeight) {
+        drawLayerItem("Background", canvas_->isBackgroundVisible(), backgroundHovered_, false, backgroundRect);
+    }
     
     // Show all drawing layers
-    int layerCount = canvas_->getLayerCount();
     int selectedLayer = canvas_->getSelectedLayerIndex();
     
     // Ensure we have enough hover states
@@ -50,16 +88,44 @@ void SimpleLayerPanel::draw() const {
     }
     
     for (int i = 0; i < layerCount; i++) {
-        Rectangle layerRect = getLayerRect(i);
-        bool isSelected = (i == selectedLayer);
-        bool isVisible = canvas_->isLayerVisible(i);
-        const std::string& layerName = canvas_->getLayerName(i);
-        bool isHovered = i < static_cast<int>(layerHovered_.size()) ? layerHovered_[i] : false;
+        Rectangle layerRect = {
+            bounds_.x + 5,
+            currentY + (i * layerHeight),
+            bounds_.width - 10,
+            30
+        };
         
-        drawLayerItem(layerName.c_str(), isVisible, isHovered, isSelected, layerRect);
+        // Only draw if visible in the clipped area
+        if (layerRect.y + layerRect.height > bounds_.y + titleHeight && 
+            layerRect.y < bounds_.y + titleHeight + availableHeight) {
+            
+            bool isSelected = (i == selectedLayer);
+            bool isVisible = canvas_->isLayerVisible(i);
+            const std::string& layerName = canvas_->getLayerName(i);
+            bool isHovered = i < static_cast<int>(layerHovered_.size()) ? layerHovered_[i] : false;
+            
+            drawLayerItem(layerName.c_str(), isVisible, isHovered, isSelected, layerRect);
+        }
     }
     
-    // Layer management buttons
+    EndScissorMode();
+    
+    // Draw scrollbar if needed
+    if (needsScrolling) {
+        float scrollbarHeight = availableHeight * (availableHeight / totalLayersHeight);
+        float scrollbarY = layerArea.y + (scrollOffset_ / maxScrollOffset) * (availableHeight - scrollbarHeight);
+        
+        Rectangle scrollbar = {
+            bounds_.x + bounds_.width - 8,
+            scrollbarY,
+            6,
+            scrollbarHeight
+        };
+        
+        DrawRectangleRec(scrollbar, LIGHTGRAY);
+    }
+    
+    // Layer management buttons (always at bottom)
     Rectangle addButtonRect = getAddButtonRect();
     Rectangle deleteButtonRect = getDeleteButtonRect();
     Rectangle clearButtonRect = getClearButtonRect();
@@ -77,7 +143,7 @@ void SimpleLayerPanel::draw() const {
              static_cast<int>(bounds_.x + 10), 
              static_cast<int>(bounds_.y + bounds_.height - 35), 
              12, GRAY);
-    DrawText("Buttons manage layers", 
+    DrawText("Scroll wheel: scroll layers", 
              static_cast<int>(bounds_.x + 10), 
              static_cast<int>(bounds_.y + bounds_.height - 20), 
              10, GRAY);
@@ -85,6 +151,15 @@ void SimpleLayerPanel::draw() const {
 
 void SimpleLayerPanel::handleInput() {
     Vector2 mousePos = GetMousePosition();
+    
+    // Handle scrolling
+    if (CheckCollisionPointRec(mousePos, bounds_)) {
+        float wheel = GetMouseWheelMove();
+        if (wheel != 0) {
+            const float scrollSpeed = 30.0f;
+            scrollOffset_ -= wheel * scrollSpeed;
+        }
+    }
     
     updateLayerHoverStates();
     
@@ -100,20 +175,33 @@ void SimpleLayerPanel::handleInput() {
         int layerCount = canvas_->getLayerCount();
         for (int i = 0; i < layerCount; i++) {
             if (i < static_cast<int>(layerHovered_.size()) && layerHovered_[i]) {
-                Rectangle layerRect = getLayerRect(i);
-                // Check if click is on the eye icon (visibility toggle)
-                float eyeX = layerRect.x + 15;
-                float eyeWidth = 20;
-                if (mousePos.x >= eyeX && mousePos.x <= eyeX + eyeWidth) {
-                    // Toggle visibility
-                    bool newState = !canvas_->isLayerVisible(i);
-                    canvas_->setLayerVisible(i, newState);
-                } else {
-                    // Select the layer
-                    canvas_->setSelectedLayerIndex(i);
-                    std::cout << "Selected layer: " << canvas_->getLayerName(i) << std::endl;
+                // Calculate actual layer rect with scroll offset
+                const float titleHeight = 25;
+                float currentY = bounds_.y + titleHeight - scrollOffset_;
+                Rectangle layerRect = {
+                    bounds_.x + 5,
+                    currentY + (i * 35),
+                    bounds_.width - 10,
+                    30
+                };
+                
+                if (CheckCollisionPointRec(mousePos, layerRect)) {
+                    // Check if clicking on visibility toggle (eye icon area)
+                    float eyeX = layerRect.x + 15;
+                    float eyeWidth = 20;
+                    if (mousePos.x >= eyeX && mousePos.x <= eyeX + eyeWidth) {
+                        // Toggle visibility
+                        bool newState = !canvas_->isLayerVisible(i);
+                        canvas_->setLayerVisible(i, newState);
+                        std::cout << "Layer " << i << " " << (newState ? "shown" : "hidden") << std::endl;
+                    } else {
+                        // Select the layer
+                        canvas_->setSelectedLayerIndex(i);
+                        std::cout << "Selected layer index: " << i << std::endl;
+                        std::cout << "Selected layer: " << canvas_->getLayerName(i) << std::endl;
+                    }
+                    break;
                 }
-                break;
             }
         }
         
@@ -126,13 +214,16 @@ void SimpleLayerPanel::handleInput() {
         if (deleteButtonHovered_) {
             int selectedLayer = canvas_->getSelectedLayerIndex();
             if (selectedLayer >= 0) {
+                std::string layerName = canvas_->getLayerName(selectedLayer);
                 canvas_->deleteLayer(selectedLayer);
+                std::cout << "Deleted layer: " << layerName << std::endl;
             }
         }
         if (clearButtonHovered_) {
             int selectedLayer = canvas_->getSelectedLayerIndex();
             if (selectedLayer >= 0) {
                 canvas_->clearLayer(selectedLayer);
+                std::cout << "Cleared layer: " << canvas_->getLayerName(selectedLayer) << std::endl;
             }
         }
     }
@@ -167,15 +258,6 @@ void SimpleLayerPanel::drawLayerItem(const char* name, bool visible, bool hovere
              14, textColor);
 }
 
-Rectangle SimpleLayerPanel::getBackgroundLayerRect() const {
-    return Rectangle{
-        bounds_.x + 5,
-        bounds_.y + 70,  // Below drawing layer
-        bounds_.width - 10,
-        30
-    };
-}
-
 void SimpleLayerPanel::drawButton(const char* text, Rectangle buttonRect, bool& hovered, Color baseColor) const {
     Color bgColor = hovered ? Color{
         static_cast<unsigned char>(std::min(255, baseColor.r + 20)), 
@@ -195,27 +277,57 @@ void SimpleLayerPanel::drawButton(const char* text, Rectangle buttonRect, bool& 
 }
 
 Rectangle SimpleLayerPanel::getAddButtonRect() const {
+    // Calculate button position based on number of layers
+    int layerCount = canvas_->getLayerCount();
+    float buttonsY = bounds_.y + 35 + (layerCount * 35) + 40; // After layers + background + margin
+    
+    // Ensure buttons don't go below panel bounds
+    float maxY = bounds_.y + bounds_.height - 80; // Leave space for instructions
+    if (buttonsY > maxY) {
+        buttonsY = maxY;
+    }
+    
     return Rectangle{
         bounds_.x + 5,
-        bounds_.y + 110,
+        buttonsY,
         55,
         25
     };
 }
 
 Rectangle SimpleLayerPanel::getDeleteButtonRect() const {
+    // Calculate button position based on number of layers
+    int layerCount = canvas_->getLayerCount();
+    float buttonsY = bounds_.y + 35 + (layerCount * 35) + 40; // After layers + background + margin
+    
+    // Ensure buttons don't go below panel bounds
+    float maxY = bounds_.y + bounds_.height - 80; // Leave space for instructions
+    if (buttonsY > maxY) {
+        buttonsY = maxY;
+    }
+    
     return Rectangle{
         bounds_.x + 70,
-        bounds_.y + 110,
+        buttonsY,
         55,
         25
     };
 }
 
 Rectangle SimpleLayerPanel::getClearButtonRect() const {
+    // Calculate button position based on number of layers
+    int layerCount = canvas_->getLayerCount();
+    float buttonsY = bounds_.y + 35 + (layerCount * 35) + 40; // After layers + background + margin
+    
+    // Ensure buttons don't go below panel bounds
+    float maxY = bounds_.y + bounds_.height - 80; // Leave space for instructions
+    if (buttonsY > maxY) {
+        buttonsY = maxY;
+    }
+    
     return Rectangle{
         bounds_.x + 135,
-        bounds_.y + 110,
+        buttonsY,
         55,
         25
     };
@@ -224,18 +336,57 @@ Rectangle SimpleLayerPanel::getClearButtonRect() const {
 void SimpleLayerPanel::updateLayerHoverStates() {
     Vector2 mousePos = GetMousePosition();
     
-    // Check background hover
-    backgroundHovered_ = CheckCollisionPointRec(mousePos, getBackgroundLayerRect());
+    // Calculate layout for scrollable area
+    const float titleHeight = 25;
+    const float layerHeight = 35;
+    const float buttonHeight = 25;
+    const float buttonMargin = 10;
+    const float instructionHeight = 55;
+    
+    int layerCount = canvas_->getLayerCount();
+    float availableHeight = bounds_.height - titleHeight - buttonHeight - buttonMargin - instructionHeight;
+    float currentY = bounds_.y + titleHeight - scrollOffset_;
+    
+    // Check background hover (position after all drawing layers)
+    Rectangle backgroundRect = {
+        bounds_.x + 5,
+        currentY + (layerCount * layerHeight),
+        bounds_.width - 10,
+        30
+    };
+    
+    // Only check if background is visible in the scrollable area
+    Rectangle layerArea = {
+        bounds_.x,
+        bounds_.y + titleHeight,
+        bounds_.width,
+        availableHeight
+    };
+    
+    backgroundHovered_ = CheckCollisionPointRec(mousePos, layerArea) && 
+                        CheckCollisionPointRec(mousePos, backgroundRect) &&
+                        backgroundRect.y + backgroundRect.height > bounds_.y + titleHeight && 
+                        backgroundRect.y < bounds_.y + titleHeight + availableHeight;
     
     // Check layer hovers
-    int layerCount = canvas_->getLayerCount();
     while (layerHovered_.size() < static_cast<size_t>(layerCount)) {
         layerHovered_.push_back(false);
     }
     
     for (int i = 0; i < layerCount; i++) {
         if (i < static_cast<int>(layerHovered_.size())) {
-            layerHovered_[i] = CheckCollisionPointRec(mousePos, getLayerRect(i));
+            Rectangle layerRect = {
+                bounds_.x + 5,
+                currentY + (i * layerHeight),
+                bounds_.width - 10,
+                30
+            };
+            
+            // Only check hover if layer is visible in the scrollable area
+            layerHovered_[i] = CheckCollisionPointRec(mousePos, layerArea) && 
+                              CheckCollisionPointRec(mousePos, layerRect) &&
+                              layerRect.y + layerRect.height > bounds_.y + titleHeight && 
+                              layerRect.y < bounds_.y + titleHeight + availableHeight;
         }
     }
     
@@ -246,15 +397,6 @@ void SimpleLayerPanel::updateLayerHoverStates() {
     addButtonHovered_ = CheckCollisionPointRec(mousePos, getAddButtonRect());
     deleteButtonHovered_ = hasSelectedLayer && CheckCollisionPointRec(mousePos, getDeleteButtonRect());
     clearButtonHovered_ = hasSelectedLayer && CheckCollisionPointRec(mousePos, getClearButtonRect());
-}
-
-Rectangle SimpleLayerPanel::getLayerRect(int layerIndex) const {
-    return Rectangle{
-        bounds_.x + 5,
-        bounds_.y + 35 + (layerIndex * 35), // Stack layers vertically  
-        bounds_.width - 10,
-        30
-    };
 }
 
 } // namespace EpiGimp

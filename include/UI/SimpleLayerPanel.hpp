@@ -40,8 +40,6 @@ private:
     void handleInput();
     void drawLayerItem(const char* name, bool visible, bool hovered, bool selected, Rectangle itemRect) const;
     void drawButton(const char* text, Rectangle buttonRect, bool& hovered, Color baseColor) const;
-    Rectangle getBackgroundLayerRect() const;
-    Rectangle getLayerRect(int layerIndex) const;
     Rectangle getAddButtonRect() const;
     Rectangle getDeleteButtonRect() const;
     Rectangle getClearButtonRect() const;
