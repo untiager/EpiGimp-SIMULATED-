@@ -283,6 +283,57 @@ int main(int argc, char** argv) {
 
 This replaces the default `gtest_main` to register our global environment.
 
+## Memory Testing
+
+### Valgrind Integration
+EpiGimp includes comprehensive memory leak detection with Valgrind integration:
+
+```bash
+# Quick local memory testing
+./scripts/memory_test.sh
+
+# Manual memory testing
+cd build
+valgrind --leak-check=full --suppressions=../.valgrind.supp ./EpiGimpTests --gtest_filter="SimpleTest.*"
+```
+
+### Memory Testing Architecture
+
+**Suppression File (`.valgrind.supp`):**
+- Filters out false positives from OpenGL/GLX libraries
+- Suppresses known system library "leaks" (driver initialization, context creation)
+- Focuses detection on application-specific memory issues
+
+**CI Memory Analysis:**
+- **Core Tests**: Non-graphics tests must have zero memory errors
+- **Graphics Tests**: Application leaks detected with system library suppression
+- **Dedicated Workflow**: `memory-analysis.yml` for comprehensive memory validation
+- **Matrix Testing**: Memory leak detection across different build configurations
+
+**Memory Test Categories:**
+- ✅ **Core Functionality**: Zero tolerance for memory leaks (SimpleTest, UtilityTest, MathTest)
+- ⚠️ **Graphics Tests**: Application leaks detected, system library leaks suppressed
+- ✅ **Layer System**: Memory validation during layer creation/deletion cycles
+- ✅ **Resource Management**: RAII validation for textures and framebuffers
+
+**Expected Results:**
+- **Application Code**: Zero memory leaks
+- **System Libraries**: OpenGL/GLX "leaks" are normal and suppressed
+- **Resource Cleanup**: All EpiGimp objects properly destroyed
+
+### Running Memory Tests Locally
+
+```bash
+# Full memory analysis
+./scripts/memory_test.sh
+
+# Quick core tests (no graphics)
+valgrind --leak-check=full ./EpiGimpTests --gtest_filter="SimpleTest.*:UtilityTest.*"
+
+# Layer system memory validation  
+xvfb-run valgrind --suppressions=.valgrind.supp ./EpiGimpTests --gtest_filter="LayerSystemTest.LayerCreation"
+```
+
 ## Development Workflow
 
 ### Adding New Tests

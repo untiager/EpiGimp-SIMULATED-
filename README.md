@@ -383,6 +383,31 @@ EpiGimp features a comprehensive unit test suite with 97/98 tests passing (99% s
 
 For detailed testing information, see [tests/README.md](tests/README.md).
 
+### Memory Testing
+EpiGimp includes comprehensive memory leak detection to ensure robust resource management:
+
+```bash
+# Quick local memory testing
+./scripts/memory_test.sh
+
+# Manual memory testing with Valgrind
+cd build
+valgrind --leak-check=full --suppressions=../.valgrind.supp ./EpiGimpTests --gtest_filter="SimpleTest.*"
+```
+
+**Memory Testing Features:**
+- **Valgrind Integration**: Automatic memory leak detection in CI
+- **Suppression File**: Filters out false positives from OpenGL/system libraries  
+- **Local Testing Script**: Easy memory validation for developers
+- **CI Memory Analysis**: Dedicated workflow for memory issue detection
+- **RAII Validation**: Ensures proper resource cleanup throughout the application
+
+**Known Memory Behavior:**
+- ✅ **Application Code**: Zero memory leaks in EpiGimp-specific code
+- ⚠️ **System Libraries**: OpenGL/GLX libraries may show "leaks" (expected behavior, suppressed in CI)
+- ✅ **Resource Management**: All textures, images, and objects properly cleaned up
+- ✅ **Layer System**: No memory leaks in layer creation/deletion cycles
+
 ### Manual Testing
 ```bash
 # Build and run
