@@ -4,7 +4,8 @@
 namespace EpiGimp {
 
 HistoryManager::HistoryManager(size_t maxHistorySize) 
-    : maxHistorySize_(maxHistorySize) {
+    : maxHistorySize_(maxHistorySize)
+{
 }
 
 bool HistoryManager::executeCommand(CommandPtr command)
@@ -16,23 +17,18 @@ bool HistoryManager::executeCommand(CommandPtr command)
     
     std::cout << "HistoryManager: Executing command: " << command->getDescription() << std::endl;
     
-    // Try to execute the command
     if (!command->execute()) {
         std::cerr << "HistoryManager: Command execution failed: " << command->getDescription() << std::endl;
         return false;
     }
     
-    // Clear redo stack when a new command is executed
-    // (standard undo/redo behavior)
     while (!redoStack_.empty()) {
         redoStack_.pop();
     }
     
-    // Add command to undo stack
     undoStack_.push(std::move(command));
     std::cout << "HistoryManager: Command added to undo stack. Stack size: " << undoStack_.size() << std::endl;
     
-    // Enforce maximum history size
     enforceMaxSize();
     
     return true;
@@ -43,11 +39,9 @@ bool HistoryManager::undo()
     if (!canUndo())
         return false;
     
-    // Get the command from the top of the undo stack
     auto command = std::move(undoStack_.top());
     undoStack_.pop();
     
-    // Try to undo the command
     if (!command->undo()) {
         std::cerr << "HistoryManager: Undo failed for command: " << command->getDescription() << std::endl;
         // Put the command back on the undo stack since undo failed
@@ -55,7 +49,6 @@ bool HistoryManager::undo()
         return false;
     }
     
-    // Move command to redo stack
     redoStack_.push(std::move(command));
     
     return true;
@@ -66,11 +59,9 @@ bool HistoryManager::redo()
     if (!canRedo())
         return false;
     
-    // Get the command from the top of the redo stack
     auto command = std::move(redoStack_.top());
     redoStack_.pop();
     
-    // Try to re-execute the command
     if (!command->execute()) {
         std::cerr << "HistoryManager: Redo failed for command: " << command->getDescription() << std::endl;
         // Put the command back on the redo stack since redo failed
@@ -78,7 +69,6 @@ bool HistoryManager::redo()
         return false;
     }
     
-    // Move command back to undo stack
     undoStack_.push(std::move(command));
     
     return true;
@@ -130,7 +120,6 @@ std::string HistoryManager::getNextRedoDescription() const
 
 void HistoryManager::enforceMaxSize()
 {
-    // Remove old commands from the bottom of the stack if we exceed max size
     if (undoStack_.size() > maxHistorySize_) {
         // We need to rebuild the stack without the bottom elements
         std::stack<CommandPtr> tempStack;
