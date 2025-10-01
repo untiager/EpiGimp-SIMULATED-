@@ -10,9 +10,7 @@ Toolbar::Toolbar(Rectangle bounds, EventDispatcher* dispatcher)
     
     if (!dispatcher)
         throw std::invalid_argument("EventDispatcher cannot be null");
-    
-    // Create color palette on the right side of the toolbar
-    // Calculate optimal width: 8 colors per row * (swatch_size + margin) + padding
+
     const float paletteWidth = 8 * (20 + 2) + 2 * 5; // 8 colors per row + padding = 186 pixels
     const float paletteHeight = bounds.height - 10; // Leave some padding
     const float paletteX = bounds.x + bounds.width - paletteWidth - 10; // Right side with margin
@@ -32,7 +30,6 @@ void Toolbar::update(float deltaTime)
         updateButton(*button);
     }
     
-    // Update color palette
     if (colorPalette_)
         colorPalette_->update(deltaTime);
 }
