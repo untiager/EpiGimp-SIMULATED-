@@ -30,21 +30,21 @@ private:
     Rectangle bounds_;
     std::optional<TextureResource> currentTexture_;        // Background layer (loaded image)
     std::vector<DrawingLayer> drawingLayers_;               // Multiple drawing layers
-    int selectedLayerIndex_;                                // Currently selected layer for drawing/editing
     std::string currentImagePath_;
     float zoomLevel_;
     Vector2 panOffset_;
     EventDispatcher* eventDispatcher_;
     HistoryManager* historyManager_;  // For undo/redo functionality
     
-    // Simple layer system
-    bool backgroundVisible_;
-    
     // Drawing state
     DrawingTool currentTool_;
     bool isDrawing_;
     Vector2 lastMousePos_;
     Color drawingColor_; // Current drawing color
+    
+    // Simple layer system
+    bool backgroundVisible_;
+    int selectedLayerIndex_;                                // Currently selected layer for drawing/editing
     
     static constexpr float MIN_ZOOM = 0.1f;
     static constexpr float MAX_ZOOM = 5.0f;
