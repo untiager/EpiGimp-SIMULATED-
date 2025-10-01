@@ -40,9 +40,8 @@ void FileBrowser::setShowHidden(bool show)
 
 bool FileBrowser::hasValidExtension(const std::string& filename) const
 {
-    if (supportedExtensions_.empty()) {
+    if (supportedExtensions_.empty())
         return true; // No filter means all files are valid
-    }
 
     std::string extension = std::filesystem::path(filename).extension().string();
     std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
@@ -50,9 +49,8 @@ bool FileBrowser::hasValidExtension(const std::string& filename) const
     for (const auto& ext : supportedExtensions_) {
         std::string lowerExt = ext;
         std::transform(lowerExt.begin(), lowerExt.end(), lowerExt.begin(), ::tolower);
-        if (extension == lowerExt) {
+        if (extension == lowerExt)
             return true;
-        }
     }
     
     return false;
@@ -82,9 +80,8 @@ std::optional<std::string> FileBrowser::getSelectedFile() const
 std::string FileBrowser::getSaveFileName() const
 {
     std::string filename = saveFileName_;
-    if (filename.empty()) {
+    if (filename.empty())
         filename = "untitled";
-    }
     
     std::filesystem::path fullPath = std::filesystem::path(currentPath_) / filename;
     return fullPath.string();
@@ -99,11 +96,13 @@ void FileBrowser::reset()
     lastBackspaceTime_ = 0.0;
 }
 
-bool FileBrowser::isValidSelection() const {
+bool FileBrowser::isValidSelection() const
+{
     return selectedIndex_ >= 0 && selectedIndex_ < static_cast<int>(entries_.size());
 }
 
-bool FileBrowser::wasCancelled() const {
+bool FileBrowser::wasCancelled() const
+{
     return cancelled_;
 }
 
