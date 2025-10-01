@@ -11,7 +11,7 @@ namespace EpiGimp {
 
 Application::Application(AppConfig config) 
     : config_(std::move(config)), running_(false), initialized_(false), currentTool_(DrawingTool::None)
-    {
+{
     
     eventDispatcher_ = std::make_unique<EventDispatcher>();
     
