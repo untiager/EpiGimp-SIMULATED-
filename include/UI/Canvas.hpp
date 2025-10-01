@@ -117,6 +117,7 @@ private:
     Vector2 getImageCenter() const;
     std::optional<TextureResource> createTextureFromFile(const std::string& filePath);
     void resetViewTransform();
+    std::string generateUniqueLayerName() const; // Generate unique layer name
 };
 
 } // namespace EpiGimp

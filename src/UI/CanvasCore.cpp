@@ -161,7 +161,7 @@ int Canvas::addNewDrawingLayer(const std::string& name) {
         return -1;
     }
     
-    std::string layerName = name.empty() ? "Layer " + std::to_string(drawingLayers_.size() + 1) : name;
+    std::string layerName = name.empty() ? generateUniqueLayerName() : name;
     drawingLayers_.emplace_back(layerName);
     int newIndex = static_cast<int>(drawingLayers_.size()) - 1;
     
@@ -234,6 +234,33 @@ void Canvas::clearDrawingLayer() {
     if (selectedLayerIndex_ >= 0) {
         clearLayer(selectedLayerIndex_);
     }
+}
+
+std::string Canvas::generateUniqueLayerName() const {
+    // Find the next available layer number
+    int nextNumber = 1;
+    bool numberExists = true;
+    
+    while (numberExists) {
+        std::string candidateName = "Layer " + std::to_string(nextNumber);
+        numberExists = false;
+        
+        // Check if this name already exists
+        for (const auto& layer : drawingLayers_) {
+            if (layer.name == candidateName) {
+                numberExists = true;
+                break;
+            }
+        }
+        
+        if (!numberExists) {
+            return candidateName;
+        }
+        nextNumber++;
+    }
+    
+    // Fallback (should never reach here)
+    return "Layer " + std::to_string(drawingLayers_.size() + 1);
 }
 
 } // namespace EpiGimp
