@@ -19,7 +19,6 @@ void Canvas::loadImage(const std::string& filePath)
     
     std::cout << "Canvas: Loaded texture " << (*currentTexture_)->width << "x" << (*currentTexture_)->height << std::endl;
     
-    // TEMP: Save the loaded texture to verify it contains data
     Image testImage = LoadImageFromTexture(**currentTexture_);
     std::cout << "Canvas: Extracted test image: " << testImage.width << "x" << testImage.height << " format=" << testImage.format << std::endl;
     ExportImage(testImage, "/tmp/debug_loaded_texture.png");
@@ -28,9 +27,8 @@ void Canvas::loadImage(const std::string& filePath)
     
     // Update layer manager size and load image into background layer
     // Initialize drawing texture for the new image
-    if (currentTexture_) {
+    if (currentTexture_)
         initializeDrawingTexture();
-    }
     
     // IMPORTANT: Reset view transform to prevent coordinate issues
     resetViewTransform();
@@ -52,22 +50,18 @@ bool Canvas::saveImage(const std::string& filePath)
         return false;
     }
     
-    // Create parent directories only if they don't exist and path is valid
     try {
         std::filesystem::path parentPath = std::filesystem::path(filePath).parent_path();
-        if (!parentPath.empty() && !std::filesystem::exists(parentPath)) {
+        if (!parentPath.empty() && !std::filesystem::exists(parentPath))
             std::filesystem::create_directories(parentPath);
-        }
     } catch (const std::filesystem::filesystem_error& e) {
         std::cerr << "Failed to create directories: " << e.what() << std::endl;
         // Continue anyway - the save operation might still work
     }
     
-    // Create a composite image combining background and all visible drawing layers
     Image compositeImage;
     
     if (backgroundVisible_ && currentTexture_) {
-        // Start with the background image
         compositeImage = LoadImageFromTexture(**currentTexture_);
         
         // Blend all visible drawing layers on top
@@ -183,12 +177,9 @@ void Canvas::drawImage() const
                   << imageDestRect.width << "," << imageDestRect.height << ")" << std::endl;
     }
     
-    // Draw the background layer if visible
-    if (backgroundVisible_ && currentTexture_) {
+    if (backgroundVisible_ && currentTexture_)
         DrawTexture(**currentTexture_, static_cast<int>(imageDestRect.x), static_cast<int>(imageDestRect.y), WHITE);
-    }
     
-    // Draw all visible drawing layers in order (with Y-axis correction for RenderTexture)
     for (const auto& layer : drawingLayers_) {
         if (layer.visible && layer.texture) {
             const Texture2D& layerTex = (**layer.texture).texture;
