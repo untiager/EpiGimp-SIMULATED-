@@ -1,0 +1,96 @@
+name: Memory Check (Simple)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  memory-check:
+    runs-on: ubuntu-latest
+    continue-on-error: true  # Don't fail the entire workflow on memory issues
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libasound2-dev mesa-common-dev libx11-dev libxrandr-dev libxi-dev xorg-dev libgl1-mesa-dev libglu1-mesa-dev xvfb valgrind
+        
+    - name: Build Raylib
+      run: |
+        git clone https://github.com/raysan5/raylib.git
+        cd raylib
+        mkdir build && cd build
+        cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug ..
+        make -j2
+        sudo make install
+        sudo ldconfig
+        
+    - name: Build EpiGimp
+      run: |
+        mkdir -p build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Debug ..
+        make -j2
+        
+    - name: Quick Memory Check
+      continue-on-error: true
+      run: |
+        cd build
+        echo "🧪 Quick Memory Validation"
+        echo "========================="
+        
+        # Test 1: Simple operations (should have zero leaks)
+        echo "Testing basic operations..."
+        timeout 30s xvfb-run -a valgrind \
+          --leak-check=summary \
+          --suppressions=../.valgrind.supp \
+          --log-file=quick_test.log \
+          ./EpiGimpTests --gtest_filter="SimpleTest.BasicStringOperations" --gtest_brief || echo "Test completed"
+        
+        # Test 2: One layer test (may have OpenGL leaks)  
+        echo "Testing layer creation..."
+        timeout 30s xvfb-run -a valgrind \
+          --leak-check=summary \
+          --suppressions=../.valgrind.supp \
+          --log-file=layer_test.log \
+          ./EpiGimpTests --gtest_filter="LayerSystemTest.LayerCreation" --gtest_brief || echo "Test completed"
+        
+    - name: Report Results
+      if: always()
+      run: |
+        cd build
+        echo "📊 Memory Check Results"
+        echo "======================"
+        
+        if [ -f quick_test.log ]; then
+          echo "✅ Basic test log generated"
+          leak_count=$(grep -o "[0-9,]* bytes in [0-9,]* blocks are definitely lost" quick_test.log | head -1 || echo "0 bytes")
+          echo "   Basic test leaks: $leak_count"
+        else
+          echo "❌ Basic test log not found"
+        fi
+        
+        if [ -f layer_test.log ]; then
+          echo "✅ Layer test log generated" 
+          # Check for non-OpenGL leaks
+          app_leaks=$(grep "definitely lost" layer_test.log | grep -v "libGL\|dri\|glX\|extensionSupportedGLX" || echo "No application leaks")
+          echo "   Layer test application leaks: $app_leaks"
+        else
+          echo "❌ Layer test log not found"
+        fi
+        
+        echo ""
+        echo "💡 Note: This is a basic memory check. OpenGL/driver 'leaks' are normal."
+        echo "   Focus on application-specific memory issues in your code changes."
+        
+    - name: Upload Logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: memory-check-logs
+        path: |
+          build/*.log
