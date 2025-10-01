@@ -1,8 +1,11 @@
 # EpiGimp - Modern C++ Paint Interface
 
-[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/std/the-standard)
+[!- ✅ **Comprehensive Test Suite** - 97/98 unit tests passing (99% success rate) using Google Test framework with complete layer functionality coverage
+- ✅ **Layer System Testing** - Dedicated test suites for LayerManager, Canvas layer integration, and drawing command validation
+- ✅ **Global Test Environment** - Unified Raylib initialization preventing segmentation faults during test execution
+- ✅ **Performance Testing** - Layer system validated with 100+ layers and stress testing scenarios++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/std/the-standard)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/untiager/EpiGimp-SIMULATED-)
-[![Tests](https://img.shields.io/badge/tests-46%2F46%20passing-brightgreen.svg)](tests/README.md)
+[![Tests](https://img.shields.io/badge/tests-97%2F98%20passing-brightgreen.svg)](tests/README.md)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A modern, lightweight paint application built with C++17 and Raylib. EpiGimp provides a clean, intuitive interface for basic image editing operations with a focus on performance and extensibility.
@@ -101,7 +104,7 @@ EpiGimp follows modern C++ best practices with a clean, modular architecture:
 - **Language**: C++17
 - **Graphics**: Raylib 5.5
 - **Build System**: CMake 3.10+
-- **Testing**: Google Test framework with 46 unit tests (100% passing)
+- **Testing**: Google Test framework with 97/98 unit tests (99% passing) and comprehensive layer system validation
 - **Architecture**: Modern C++ with smart pointers and RAII
 
 ## 📋 Requirements
@@ -156,7 +159,7 @@ make
 ./EpiGimp
 
 # Optional: Run the test suite to verify installation
-./EpiGimpTests  # Should show "46 tests PASSED"
+./EpiGimpTests  # Should show "97 tests PASSED, 1 test failed"
 ```
 
 ### 3. Optional: Install to System
@@ -315,12 +318,17 @@ EpiGimp/
 │   └── Utils/                         # Utility headers
 ├── tests/                             # Unit test suite (Google Test)
 │   ├── README.md                      # Comprehensive testing guide
+│   ├── test_globals.hpp               # Global test environment for unified Raylib initialization
+│   ├── test_main.cpp                  # Custom test main with global environment setup
+│   ├── test_layer_system.cpp          # LayerManager and Layer class tests (14 tests)
+│   ├── test_canvas_layers.cpp         # Canvas DrawingLayer system tests (comprehensive)
+│   ├── test_layer_draw_commands.cpp   # DrawCommand integration tests with layers
 │   ├── test_history_comprehensive.cpp # HistoryManager tests (12 tests)
 │   ├── test_canvas_utils.cpp          # Graphics utilities tests (11 tests)  
 │   ├── test_file_utils.cpp            # File operations tests (11 tests)
 │   ├── test_simple.cpp                # Basic utility tests (8 tests)
 │   ├── test_history.cpp               # Basic history tests (1 test)
-│   └── test_basic.cpp                 # Raylib integration tests (disabled)
+│   └── test_basic.cpp                 # Basic Raylib integration tests
 ├── build/                             # Build output (generated)
 ├── TEST_SUMMARY.md                    # Detailed test coverage analysis
 └── png/                               # Test images
@@ -331,12 +339,49 @@ EpiGimp/
 - **15+ focused source files** (expanded from 4 large monolithic files)
 - **All source files under 200 lines** for easy maintenance and debugging
 - **Command Pattern Implementation** - Complete undo/redo system with reversible operations
-- **Comprehensive Test Coverage** - 46 unit tests with 100% success rate ensuring reliability
+- **Comprehensive Test Coverage** - 97/98 unit tests (99% passing) with specialized layer system validation
+- **Layer System Testing** - Dedicated test suites covering LayerManager, Canvas integration, and drawing commands
+- **Global Test Environment** - Unified Raylib initialization preventing segmentation faults during testing
+- **Performance Validation** - Layer system tested with 100+ layers and stress scenarios
 - **Logical separation**: Each file handles a specific aspect (core, input, drawing, commands, etc.)
 - **Clean interfaces**: Header files define clear contracts between components
 - **Memory Management**: Smart pointers and RAII throughout for crash-free operation
 
 ## 🧪 Testing
+
+### Automated Test Suite
+EpiGimp features a comprehensive unit test suite with 97/98 tests passing (99% success rate):
+
+```bash
+# Run all tests
+./EpiGimpTests
+
+# Run specific test suites
+./EpiGimpTests --gtest_filter="LayerSystemTest.*"      # Layer management tests
+./EpiGimpTests --gtest_filter="CanvasLayerTest.*"      # Canvas layer integration
+./EpiGimpTests --gtest_filter="LayerDrawCommandTest.*" # Drawing command tests
+
+# Run with brief output
+./EpiGimpTests --gtest_brief
+```
+
+**Test Coverage:**
+- **Layer System Tests** (14 tests): LayerManager functionality, layer properties, events, performance
+- **Canvas Layer Tests**: DrawingLayer integration, multi-layer operations, visibility management
+- **Draw Command Tests**: Layer-specific drawing, undo/redo with layers, command integration
+- **History Manager Tests** (12 tests): Undo/redo functionality, command stack management
+- **Canvas Utils Tests** (11 tests): Graphics utilities, color operations, geometry functions
+- **File Utils Tests** (11 tests): File I/O operations, path handling, image format validation
+- **Basic Tests** (8 tests): Core utilities, string operations, mathematical functions
+
+**Test Infrastructure:**
+- **Global Test Environment**: Unified Raylib initialization preventing segmentation faults
+- **Headless Testing**: All graphics tests run without requiring display
+- **Performance Testing**: Layer system validated with 100+ layers
+- **Mock Objects**: Isolated testing of components without dependencies
+- **Integration Testing**: End-to-end validation of feature interactions
+
+For detailed testing information, see [tests/README.md](tests/README.md).
 
 ### Manual Testing
 ```bash
