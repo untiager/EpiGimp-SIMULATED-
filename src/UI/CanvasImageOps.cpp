@@ -63,34 +63,65 @@ bool Canvas::saveImage(const std::string& filePath)
         // Continue anyway - the save operation might still work
     }
     
-    // Create a composite image combining background and drawing layers
+    // Create a composite image combining background and all visible drawing layers
     Image compositeImage;
     
     if (backgroundVisible_ && currentTexture_) {
         // Start with the background image
         compositeImage = LoadImageFromTexture(**currentTexture_);
         
-        // If drawing layer exists and is visible, blend it on top
-        if (drawingVisible_ && hasDrawingTexture()) {
-            Image drawingImage = LoadImageFromTexture((**drawingTexture_).texture);
-            ImageFlipVertical(&drawingImage); // Fix texture orientation
-            
-            // Simple blend the drawing onto the background
-            for (int y = 0; y < compositeImage.height && y < drawingImage.height; y++) {
-                for (int x = 0; x < compositeImage.width && x < drawingImage.width; x++) {
-                    Color drawingPixel = GetImageColor(drawingImage, x, y);
-                    if (drawingPixel.a > 0) { // If drawing pixel is not transparent
-                        ImageDrawPixel(&compositeImage, x, y, drawingPixel);
+        // Blend all visible drawing layers on top
+        for (const auto& layer : drawingLayers_) {
+            if (layer.visible && layer.texture) {
+                Image layerImage = LoadImageFromTexture((**layer.texture).texture);
+                ImageFlipVertical(&layerImage); // Fix texture orientation
+                
+                // Simple blend the layer onto the composite
+                for (int y = 0; y < compositeImage.height && y < layerImage.height; y++) {
+                    for (int x = 0; x < compositeImage.width && x < layerImage.width; x++) {
+                        Color layerPixel = GetImageColor(layerImage, x, y);
+                        if (layerPixel.a > 0) { // If layer pixel is not transparent
+                            ImageDrawPixel(&compositeImage, x, y, layerPixel);
+                        }
                     }
                 }
+                
+                UnloadImage(layerImage);
             }
-            
-            UnloadImage(drawingImage);
         }
-    } else if (drawingVisible_ && hasDrawingTexture()) {
-        // Only drawing layer is visible
-        compositeImage = LoadImageFromTexture((**drawingTexture_).texture);
-        ImageFlipVertical(&compositeImage);
+    } else if (!drawingLayers_.empty()) {
+        // Only drawing layers are visible - create composite from layers
+        bool hasVisibleLayer = false;
+        for (const auto& layer : drawingLayers_) {
+            if (layer.visible && layer.texture) {
+                if (!hasVisibleLayer) {
+                    // First visible layer becomes the base
+                    compositeImage = LoadImageFromTexture((**layer.texture).texture);
+                    ImageFlipVertical(&compositeImage);
+                    hasVisibleLayer = true;
+                } else {
+                    // Blend subsequent layers
+                    Image layerImage = LoadImageFromTexture((**layer.texture).texture);
+                    ImageFlipVertical(&layerImage);
+                    
+                    for (int y = 0; y < compositeImage.height && y < layerImage.height; y++) {
+                        for (int x = 0; x < compositeImage.width && x < layerImage.width; x++) {
+                            Color layerPixel = GetImageColor(layerImage, x, y);
+                            if (layerPixel.a > 0) {
+                                ImageDrawPixel(&compositeImage, x, y, layerPixel);
+                            }
+                        }
+                    }
+                    
+                    UnloadImage(layerImage);
+                }
+            }
+        }
+        
+        if (!hasVisibleLayer) {
+            eventDispatcher_->emit<ErrorEvent>("No visible layers to save");
+            return false;
+        }
     } else {
         eventDispatcher_->emit<ErrorEvent>("No visible layers to save");
         return false;
@@ -157,14 +188,16 @@ void Canvas::drawImage() const
         DrawTexture(**currentTexture_, static_cast<int>(imageDestRect.x), static_cast<int>(imageDestRect.y), WHITE);
     }
     
-    // Draw the drawing layer on top if visible (with Y-axis correction for RenderTexture)
-    if (drawingVisible_ && hasDrawingTexture()) {
-        const Texture2D& drawingTex = (**drawingTexture_).texture;
-        
-        // Source rectangle with negative height to flip Y-axis for RenderTexture coordinate system
-        Rectangle sourceRect = {0, 0, static_cast<float>(drawingTex.width), static_cast<float>(-drawingTex.height)};
-        
-        DrawTexturePro(drawingTex, sourceRect, imageDestRect, Vector2{0, 0}, 0.0f, WHITE);
+    // Draw all visible drawing layers in order (with Y-axis correction for RenderTexture)
+    for (const auto& layer : drawingLayers_) {
+        if (layer.visible && layer.texture) {
+            const Texture2D& layerTex = (**layer.texture).texture;
+            
+            // Source rectangle with negative height to flip Y-axis for RenderTexture coordinate system
+            Rectangle sourceRect = {0, 0, static_cast<float>(layerTex.width), static_cast<float>(-layerTex.height)};
+            
+            DrawTexturePro(layerTex, sourceRect, imageDestRect, Vector2{0, 0}, 0.0f, WHITE);
+        }
     }
 }
 

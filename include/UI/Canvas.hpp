@@ -5,12 +5,22 @@
 #include <optional>
 #include <string>
 #include <memory>
+#include <vector>
 #include "raylib.h"
 #include "../Core/Interfaces.hpp"
 #include "../Core/RaylibWrappers.hpp"
 #include "../Core/EventSystem.hpp"
 
 namespace EpiGimp {
+
+// Simple drawing layer structure
+struct DrawingLayer {
+    std::optional<RenderTextureResource> texture;
+    bool visible;
+    std::string name;
+    
+    DrawingLayer(const std::string& layerName) : visible(true), name(layerName) {}
+};
 
 // Forward declaration
 class HistoryManager;
@@ -19,7 +29,8 @@ class Canvas : public ICanvas {
 private:
     Rectangle bounds_;
     std::optional<TextureResource> currentTexture_;        // Background layer (loaded image)
-    std::optional<RenderTextureResource> drawingTexture_;  // Drawing layer (transparent overlay)
+    std::vector<DrawingLayer> drawingLayers_;               // Multiple drawing layers
+    int selectedLayerIndex_;                                // Currently selected layer for drawing/editing
     std::string currentImagePath_;
     float zoomLevel_;
     Vector2 panOffset_;
@@ -28,7 +39,6 @@ private:
     
     // Simple layer system
     bool backgroundVisible_;
-    bool drawingVisible_;
     
     // Drawing state
     DrawingTool currentTool_;
@@ -66,20 +76,33 @@ public:
     Vector2 getPan() const override { return panOffset_; }
     void setDrawingTool(DrawingTool tool) override;
     
-    // Simple layer management
+    // Multi-layer management
     bool isBackgroundVisible() const { return backgroundVisible_; }
-    bool isDrawingVisible() const { return drawingVisible_; }
     void setBackgroundVisible(bool visible) { backgroundVisible_ = visible; }
-    void setDrawingVisible(bool visible) { drawingVisible_ = visible; }
-    void clearDrawingLayer();
+    
+    // Drawing layer management
+    int getLayerCount() const { return static_cast<int>(drawingLayers_.size()); }
+    int getSelectedLayerIndex() const { return selectedLayerIndex_; }
+    void setSelectedLayerIndex(int index);
+    const DrawingLayer* getLayer(int index) const;
+    DrawingLayer* getLayer(int index);
+    
+    // Layer operations
+    int addNewDrawingLayer(const std::string& name = "");
+    void deleteLayer(int index);
+    void clearLayer(int index);
+    bool isLayerVisible(int index) const;
+    void setLayerVisible(int index, bool visible);
+    const std::string& getLayerName(int index) const;
+    
+    // Legacy compatibility (operates on selected layer)
+    bool hasDrawingTexture() const;
+    void clearDrawingLayer();  // Clear selected layer
     void resetToBackground();
-    void addNewDrawingLayer(); // Create a new drawing layer (overwrites current)
-    void deleteDrawingLayer(); // Remove the drawing layer entirely
     
     // History/Command support
-    bool hasDrawingTexture() const;
-    Image copyDrawingImage() const;
-    void initializeDrawingTexture(); // Initialize drawing texture
+    Image copyDrawingImage() const;  // Copy selected layer
+    void initializeDrawingTexture(); // Initialize selected layer texture
 
 private:
     void handleInput();

@@ -21,10 +21,11 @@ private:
     
     // UI state
     mutable bool backgroundHovered_;
-    mutable bool drawingHovered_;
+    mutable std::vector<bool> layerHovered_;  // Track hover state for each layer
     mutable bool addButtonHovered_;
     mutable bool deleteButtonHovered_;
     mutable bool clearButtonHovered_;
+    mutable float scrollOffset_;  // For scrolling through layers
     
 public:
     SimpleLayerPanel(Rectangle bounds, Canvas* canvas, EventDispatcher* dispatcher);
@@ -37,13 +38,14 @@ public:
     
 private:
     void handleInput();
-    void drawLayerItem(const char* name, bool visible, bool& hovered, Rectangle itemRect) const;
+    void drawLayerItem(const char* name, bool visible, bool hovered, bool selected, Rectangle itemRect) const;
     void drawButton(const char* text, Rectangle buttonRect, bool& hovered, Color baseColor) const;
     Rectangle getBackgroundLayerRect() const;
-    Rectangle getDrawingLayerRect() const;
+    Rectangle getLayerRect(int layerIndex) const;
     Rectangle getAddButtonRect() const;
     Rectangle getDeleteButtonRect() const;
     Rectangle getClearButtonRect() const;
+    void updateLayerHoverStates();
 };
 
 } // namespace EpiGimp

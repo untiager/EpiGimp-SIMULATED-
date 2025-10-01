@@ -8,21 +8,26 @@ namespace EpiGimp {
 
 void Canvas::initializeDrawingTexture()
 {
-    if (currentTexture_) {
+    // This method is now used to initialize the selected layer's texture
+    if (selectedLayerIndex_ >= 0 && selectedLayerIndex_ < static_cast<int>(drawingLayers_.size()) && currentTexture_) {
         const int width = (*currentTexture_)->width;
         const int height = (*currentTexture_)->height;
-        drawingTexture_ = RenderTextureResource(width, height);
+        DrawingLayer& layer = drawingLayers_[selectedLayerIndex_];
+        layer.texture = RenderTextureResource(width, height);
         
         // Clear the drawing texture to transparent
-        drawingTexture_->clear(Color{0, 0, 0, 0});
+        layer.texture->clear(Color{0, 0, 0, 0});
         
-        std::cout << "Drawing texture initialized: " << width << "x" << height << std::endl;
+        std::cout << "Drawing texture initialized for layer: " << layer.name << " (" << width << "x" << height << ")" << std::endl;
     }
 }
 
 void Canvas::drawStroke(Vector2 from, Vector2 to)
 {
-    if (!drawingVisible_ || !hasDrawingTexture()) return;
+    if (!hasDrawingTexture()) return;
+    
+    const DrawingLayer& layer = drawingLayers_[selectedLayerIndex_];
+    if (!layer.visible) return;
     
     // Convert screen coordinates to image coordinates
     const Rectangle imageRect = calculateImageDestRect();
@@ -39,12 +44,12 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
     };
     
     std::cout << "Drawing stroke from (" << imageFrom.x << "," << imageFrom.y 
-              << ") to (" << imageTo.x << "," << imageTo.y << ") on drawing layer" << std::endl;
+              << ") to (" << imageTo.x << "," << imageTo.y << ") on layer: " << layer.name << std::endl;
     
-    // Draw directly to the drawing texture
-    drawingTexture_->beginDrawing();
+    // Draw directly to the selected layer's texture
+    layer.texture->beginDrawing();
     DrawLineEx(imageFrom, imageTo, 3.0f, drawingColor_); // Use selected drawing color
-    drawingTexture_->endDrawing();
+    layer.texture->endDrawing();
     
     std::cout << "Stroke drawn successfully" << std::endl;
 }

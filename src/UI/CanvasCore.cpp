@@ -8,7 +8,7 @@ Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* hi
     : bounds_(bounds), zoomLevel_(1.0f), panOffset_{0, 0}, eventDispatcher_(dispatcher),
       historyManager_(historyManager), currentTool_(DrawingTool::None), isDrawing_(false), 
       lastMousePos_{0, 0}, drawingColor_(BLACK), // Initialize with black color
-      backgroundVisible_(true), drawingVisible_(true) // Both layers visible by default
+      backgroundVisible_(true), selectedLayerIndex_(-1) // No layer selected initially
 {
     
     if (!dispatcher)
@@ -109,11 +109,6 @@ Vector2 Canvas::getImageCenter() const
     return Vector2{bounds_.x + bounds_.width / 2, bounds_.y + bounds_.height / 2};
 }
 
-bool Canvas::hasDrawingTexture() const
-{
-    return drawingTexture_ && drawingTexture_->isValid();
-}
-
 Image Canvas::copyDrawingImage() const
 {
     if (!hasDrawingTexture()) {
@@ -121,8 +116,9 @@ Image Canvas::copyDrawingImage() const
         return GenImageColor(1, 1, BLANK);
     }
     
-    // Get the texture from the drawing layer and convert to image
-    Image image = LoadImageFromTexture((**drawingTexture_).texture);
+    // Get the texture from the selected drawing layer and convert to image
+    const DrawingLayer& layer = drawingLayers_[selectedLayerIndex_];
+    Image image = LoadImageFromTexture((**layer.texture).texture);
     
     // RenderTexture images need to be flipped vertically due to coordinate system differences
     ImageFlipVertical(&image);
@@ -130,41 +126,113 @@ Image Canvas::copyDrawingImage() const
     return image;
 }
 
-void Canvas::clearDrawingLayer()
-{
-    if (hasDrawingTexture()) {
-        drawingTexture_->clear(Color{0, 0, 0, 0}); // Clear with transparent
-    }
-}
-
 void Canvas::resetToBackground()
 {
-    clearDrawingLayer();
+    drawingLayers_.clear();
+    selectedLayerIndex_ = -1;
     backgroundVisible_ = true;
-    drawingVisible_ = true;
 }
 
-void Canvas::addNewDrawingLayer()
-{
-    if (hasImage()) {
-        // Re-initialize the drawing texture (this effectively creates a "new" layer)
-        initializeDrawingTexture();
-        drawingVisible_ = true;
-        std::cout << "New drawing layer created" << std::endl;
-    } else {
-        std::cout << "Cannot add drawing layer: no background image loaded" << std::endl;
+// Multi-layer management methods
+void Canvas::setSelectedLayerIndex(int index) {
+    if (index >= -1 && index < static_cast<int>(drawingLayers_.size())) {
+        selectedLayerIndex_ = index;
+        std::cout << "Selected layer index: " << index << std::endl;
     }
 }
 
-void Canvas::deleteDrawingLayer()
-{
-    if (hasDrawingTexture()) {
-        // Reset the drawing texture to null (delete it)
-        drawingTexture_.reset();
-        // Keep drawingVisible_ as is so when user adds a new layer, it will use the last visibility state
-        std::cout << "Drawing layer deleted" << std::endl;
-    } else {
-        std::cout << "No drawing layer to delete" << std::endl;
+const DrawingLayer* Canvas::getLayer(int index) const {
+    if (index >= 0 && index < static_cast<int>(drawingLayers_.size())) {
+        return &drawingLayers_[index];
+    }
+    return nullptr;
+}
+
+DrawingLayer* Canvas::getLayer(int index) {
+    if (index >= 0 && index < static_cast<int>(drawingLayers_.size())) {
+        return &drawingLayers_[index];
+    }
+    return nullptr;
+}
+
+int Canvas::addNewDrawingLayer(const std::string& name) {
+    if (!hasImage()) {
+        std::cout << "Cannot add drawing layer: no background image loaded" << std::endl;
+        return -1;
+    }
+    
+    std::string layerName = name.empty() ? "Layer " + std::to_string(drawingLayers_.size() + 1) : name;
+    drawingLayers_.emplace_back(layerName);
+    int newIndex = static_cast<int>(drawingLayers_.size()) - 1;
+    
+    // Initialize the texture for the new layer
+    DrawingLayer& layer = drawingLayers_[newIndex];
+    const int width = (*currentTexture_)->width;
+    const int height = (*currentTexture_)->height;
+    layer.texture = RenderTextureResource(width, height);
+    layer.texture->clear(Color{0, 0, 0, 0}); // Clear with transparent
+    
+    // Select the new layer
+    selectedLayerIndex_ = newIndex;
+    
+    std::cout << "New drawing layer created: " << layerName << " (index " << newIndex << ")" << std::endl;
+    return newIndex;
+}
+
+void Canvas::deleteLayer(int index) {
+    if (index >= 0 && index < static_cast<int>(drawingLayers_.size())) {
+        std::string layerName = drawingLayers_[index].name;
+        drawingLayers_.erase(drawingLayers_.begin() + index);
+        
+        // Adjust selected layer index
+        if (selectedLayerIndex_ == index) {
+            selectedLayerIndex_ = drawingLayers_.empty() ? -1 : std::min(selectedLayerIndex_, static_cast<int>(drawingLayers_.size()) - 1);
+        } else if (selectedLayerIndex_ > index) {
+            selectedLayerIndex_--;
+        }
+        
+        std::cout << "Deleted layer: " << layerName << std::endl;
+    }
+}
+
+void Canvas::clearLayer(int index) {
+    if (index >= 0 && index < static_cast<int>(drawingLayers_.size())) {
+        DrawingLayer& layer = drawingLayers_[index];
+        if (layer.texture) {
+            layer.texture->clear(Color{0, 0, 0, 0});
+            std::cout << "Cleared layer: " << layer.name << std::endl;
+        }
+    }
+}
+
+bool Canvas::isLayerVisible(int index) const {
+    const DrawingLayer* layer = getLayer(index);
+    return layer ? layer->visible : false;
+}
+
+void Canvas::setLayerVisible(int index, bool visible) {
+    DrawingLayer* layer = getLayer(index);
+    if (layer) {
+        layer->visible = visible;
+        std::cout << "Layer " << layer->name << " " << (visible ? "shown" : "hidden") << std::endl;
+    }
+}
+
+const std::string& Canvas::getLayerName(int index) const {
+    static const std::string empty = "";
+    const DrawingLayer* layer = getLayer(index);
+    return layer ? layer->name : empty;
+}
+
+// Legacy compatibility methods
+bool Canvas::hasDrawingTexture() const {
+    return selectedLayerIndex_ >= 0 && selectedLayerIndex_ < static_cast<int>(drawingLayers_.size()) &&
+           drawingLayers_[selectedLayerIndex_].texture.has_value();
+}
+
+void Canvas::clearDrawingLayer() {
+    if (selectedLayerIndex_ >= 0) {
+        clearLayer(selectedLayerIndex_);
     }
 }
 
