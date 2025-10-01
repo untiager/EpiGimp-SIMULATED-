@@ -5,8 +5,8 @@
 
 namespace EpiGimp {
 
-// Static helper function for drawing buttons
-static bool drawButton(Rectangle bounds, const char* text, bool isSelected = false) {
+static bool drawButton(Rectangle bounds, const char* text, bool isSelected = false)
+{
     Vector2 mousePos = GetMousePosition();
     bool isHovered = CheckCollisionPointRec(mousePos, bounds);
     
@@ -40,7 +40,6 @@ static bool drawButton(Rectangle bounds, const char* text, bool isSelected = fal
 
 bool FileBrowser::renderOpenDialog(float x, float y, float width, float height)
 {
-    // Draw background panel
     DrawRectangle((int)x, (int)y, (int)width, (int)height, RAYWHITE);
     DrawRectangleLinesEx(Rectangle{x, y, width, height}, 2, BLACK);
     
@@ -56,7 +55,6 @@ bool FileBrowser::renderOpenDialog(float x, float y, float width, float height)
     if (drawButton(upButton, "Up") && canProcessClicks())
         goUp();
     
-    // File list
     float itemHeight = 25;
     float listY = y + 65;
     int visibleItems = (int)(listHeight / itemHeight);
@@ -83,7 +81,6 @@ bool FileBrowser::renderOpenDialog(float x, float y, float width, float height)
         }
     }
     
-    // Control buttons
     float buttonY = y + height - 40;
     Rectangle openBtn = {x + padding, buttonY, 80, buttonHeight};
     Rectangle cancelBtn = {x + width - 90, buttonY, 80, buttonHeight};
@@ -108,11 +105,9 @@ bool FileBrowser::renderOpenDialog(float x, float y, float width, float height)
 
 bool FileBrowser::renderSaveDialog(float x, float y, float width, float height)
 {
-    // Draw background panel
     DrawRectangle((int)x, (int)y, (int)width, (int)height, RAYWHITE);
     DrawRectangleLinesEx(Rectangle{x, y, width, height}, 2, BLACK);
     
-    // Title
     DrawText("Save Image As", (int)(x + 10), (int)(y + 10), 16, BLACK);
     
     float padding = 10;
@@ -121,12 +116,10 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height)
     
     DrawText(currentPath_.c_str(), (int)(x + padding), (int)(y + 35), 12, DARKGRAY);
     
-    // Up button
     Rectangle upButton = {x + width - 80, y + 30, 70, 25};
     if (drawButton(upButton, "Up") && canProcessClicks())
         goUp();
 
-    // Directory and file list (show both for context in save dialog)
     float itemHeight = 25;
     float listY = y + 65;
     int visibleItems = (int)(listHeight / itemHeight);
@@ -167,7 +160,6 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height)
     DrawRectangleRec(inputRect, WHITE);
     DrawRectangleLinesEx(inputRect, 1, GRAY);
     
-    // Simple text input handling
     int key = GetCharPressed();
     while (key > 0) {
         if (key >= 32 && key <= 125 && inputBuffer_.size() < 250)
@@ -175,7 +167,6 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height)
         key = GetCharPressed();
     }
     
-    // Handle backspace
     if (IsKeyPressed(KEY_BACKSPACE) && !inputBuffer_.empty() && canProcessBackspace()) {
         inputBuffer_.pop_back();
         lastBackspaceTime_ = GetTime();
@@ -187,7 +178,6 @@ bool FileBrowser::renderSaveDialog(float x, float y, float width, float height)
     std::string helpText = "Supported formats: .png, .jpg, .jpeg, .bmp, .tga (auto-adds .png if missing)";
     DrawText(helpText.c_str(), (int)(x + padding), (int)(helpY), 12, DARKGRAY);
     
-    // Control buttons
     float buttonY = y + height - 40;
     Rectangle saveBtn = {x + padding, buttonY, 80, buttonHeight};
     Rectangle cancelBtn = {x + width - 90, buttonY, 80, buttonHeight};
