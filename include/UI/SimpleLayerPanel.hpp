@@ -22,6 +22,9 @@ private:
     // UI state
     mutable bool backgroundHovered_;
     mutable bool drawingHovered_;
+    mutable bool addButtonHovered_;
+    mutable bool deleteButtonHovered_;
+    mutable bool clearButtonHovered_;
     
 public:
     SimpleLayerPanel(Rectangle bounds, Canvas* canvas, EventDispatcher* dispatcher);
@@ -35,8 +38,12 @@ public:
 private:
     void handleInput();
     void drawLayerItem(const char* name, bool visible, bool& hovered, Rectangle itemRect) const;
+    void drawButton(const char* text, Rectangle buttonRect, bool& hovered, Color baseColor) const;
     Rectangle getBackgroundLayerRect() const;
     Rectangle getDrawingLayerRect() const;
+    Rectangle getAddButtonRect() const;
+    Rectangle getDeleteButtonRect() const;
+    Rectangle getClearButtonRect() const;
 };
 
 } // namespace EpiGimp

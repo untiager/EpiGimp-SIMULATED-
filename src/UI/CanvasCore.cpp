@@ -144,4 +144,28 @@ void Canvas::resetToBackground()
     drawingVisible_ = true;
 }
 
+void Canvas::addNewDrawingLayer()
+{
+    if (hasImage()) {
+        // Re-initialize the drawing texture (this effectively creates a "new" layer)
+        initializeDrawingTexture();
+        drawingVisible_ = true;
+        std::cout << "New drawing layer created" << std::endl;
+    } else {
+        std::cout << "Cannot add drawing layer: no background image loaded" << std::endl;
+    }
+}
+
+void Canvas::deleteDrawingLayer()
+{
+    if (hasDrawingTexture()) {
+        // Reset the drawing texture to null (delete it)
+        drawingTexture_.reset();
+        // Keep drawingVisible_ as is so when user adds a new layer, it will use the last visibility state
+        std::cout << "Drawing layer deleted" << std::endl;
+    } else {
+        std::cout << "No drawing layer to delete" << std::endl;
+    }
+}
+
 } // namespace EpiGimp

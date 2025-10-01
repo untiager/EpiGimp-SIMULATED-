@@ -73,6 +73,8 @@ public:
     void setDrawingVisible(bool visible) { drawingVisible_ = visible; }
     void clearDrawingLayer();
     void resetToBackground();
+    void addNewDrawingLayer(); // Create a new drawing layer (overwrites current)
+    void deleteDrawingLayer(); // Remove the drawing layer entirely
     
     // History/Command support
     bool hasDrawingTexture() const;
