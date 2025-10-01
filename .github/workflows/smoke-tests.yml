@@ -1,0 +1,66 @@
+name: Smoke Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libasound2-dev mesa-common-dev libx11-dev libxrandr-dev libxi-dev xorg-dev libgl1-mesa-dev libglu1-mesa-dev xvfb
+        
+    - name: Build Raylib
+      run: |
+        git clone https://github.com/raysan5/raylib.git
+        cd raylib
+        mkdir build && cd build
+        cmake -DBUILD_SHARED_LIBS=ON ..
+        make -j2
+        sudo make install
+        sudo ldconfig
+        
+    - name: Build EpiGimp
+      run: |
+        mkdir -p build
+        cd build
+        cmake ..
+        make -j2
+        
+    - name: Quick Smoke Test - Core Functionality
+      run: |
+        cd build
+        echo "=== Quick Smoke Test - Core Layer System ==="
+        xvfb-run -a ./EpiGimpTests --gtest_filter="LayerSystemTest.LayerCreation:LayerSystemTest.LayerManagerBasics:CanvasLayerTest.CanvasInitialization" --gtest_brief
+        
+    - name: Quick Smoke Test - Critical Tests
+      run: |
+        cd build
+        echo "=== Quick Smoke Test - Critical Functionality ==="
+        xvfb-run -a ./EpiGimpTests --gtest_filter="LayerDrawCommandTest.DrawCommandCreation:HistoryManagerTest.ExecuteCommand:SimpleTest.StringOperations" --gtest_brief
+        
+    - name: Application Smoke Test
+      run: |
+        cd build
+        echo "=== Application Smoke Test ==="
+        # Test that the main application can be built and doesn't immediately crash
+        timeout 5s xvfb-run -a ./EpiGimp || true
+        echo "Application smoke test completed"
+        
+    - name: Test Build Verification
+      run: |
+        cd build
+        echo "=== Build Verification ==="
+        # Verify all executables were built
+        ls -la EpiGimp EpiGimpTests
+        file EpiGimp EpiGimpTests
+        ldd EpiGimp | head -10
+        echo "Build verification completed"

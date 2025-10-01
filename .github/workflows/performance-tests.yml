@@ -1,0 +1,94 @@
+name: Performance Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run performance tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  performance-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libasound2-dev mesa-common-dev libx11-dev libxrandr-dev libxi-dev xorg-dev libgl1-mesa-dev libglu1-mesa-dev xvfb time
+        
+    - name: Build Raylib (Release mode)
+      run: |
+        git clone https://github.com/raysan5/raylib.git
+        cd raylib
+        mkdir build && cd build
+        cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release ..
+        make -j2
+        sudo make install
+        sudo ldconfig
+        
+    - name: Build EpiGimp (Release mode)
+      run: |
+        mkdir -p build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        make -j2
+        
+    - name: Run Layer Performance Tests
+      run: |
+        cd build
+        echo "=== Layer System Performance Tests ==="
+        /usr/bin/time -v xvfb-run -a ./EpiGimpTests --gtest_filter="LayerSystemTest.LayerPerformanceStress" --gtest_brief
+        
+    - name: Run Canvas Performance Tests  
+      run: |
+        cd build
+        echo "=== Canvas Layer Performance Tests ==="
+        /usr/bin/time -v xvfb-run -a ./EpiGimpTests --gtest_filter="CanvasLayerTest.LayerPerformance" --gtest_brief
+        
+    - name: Run DrawCommand Performance Tests
+      run: |
+        cd build
+        echo "=== DrawCommand Performance Tests ==="
+        /usr/bin/time -v xvfb-run -a ./EpiGimpTests --gtest_filter="LayerDrawCommandTest.PerformanceTest:LayerDrawCommandTest.MemoryManagement" --gtest_brief
+        
+    - name: Run All Performance-Related Tests
+      run: |
+        cd build
+        echo "=== All Performance Tests ==="
+        /usr/bin/time -v xvfb-run -a ./EpiGimpTests --gtest_filter="*Performance*:*Memory*:*Stress*" --gtest_brief
+        
+    - name: Memory Usage Analysis
+      run: |
+        cd build
+        echo "=== Memory Usage Analysis ==="
+        # Run tests with memory monitoring
+        sudo apt-get install -y psmisc
+        (xvfb-run -a ./EpiGimpTests --gtest_filter="LayerSystemTest.LayerPerformanceStress" --gtest_brief) &
+        TEST_PID=$!
+        
+        # Monitor memory usage during test execution
+        while kill -0 $TEST_PID 2>/dev/null; do
+          ps -o pid,vsz,rss,comm -p $TEST_PID || break
+          sleep 1
+        done
+        wait $TEST_PID
+        
+    - name: Performance Benchmarking
+      run: |
+        cd build
+        echo "=== Performance Benchmarking ==="
+        
+        # Time different test suites
+        echo "Layer System Tests:"
+        /usr/bin/time -f "Real: %e s, User: %U s, System: %S s, Memory: %M KB" xvfb-run -a ./EpiGimpTests --gtest_filter="LayerSystemTest.*" --gtest_brief
+        
+        echo "Canvas Tests:" 
+        /usr/bin/time -f "Real: %e s, User: %U s, System: %S s, Memory: %M KB" xvfb-run -a ./EpiGimpTests --gtest_filter="CanvasLayerTest.*" --gtest_brief
+        
+        echo "DrawCommand Tests:"
+        /usr/bin/time -f "Real: %e s, User: %U s, System: %S s, Memory: %M KB" xvfb-run -a ./EpiGimpTests --gtest_filter="LayerDrawCommandTest.*" --gtest_brief

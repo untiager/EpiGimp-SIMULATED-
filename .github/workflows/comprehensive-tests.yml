@@ -1,0 +1,144 @@
+name: Comprehensive Test Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  comprehensive-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libasound2-dev mesa-common-dev libx11-dev libxrandr-dev libxi-dev xorg-dev libgl1-mesa-dev libglu1-mesa-dev xvfb lcov
+        
+    - name: Build Raylib
+      run: |
+        git clone https://github.com/raysan5/raylib.git
+        cd raylib
+        mkdir build && cd build
+        cmake -DBUILD_SHARED_LIBS=ON ..
+        make -j2
+        sudo make install
+        sudo ldconfig
+        
+    - name: Build EpiGimp with Coverage
+      run: |
+        mkdir -p build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" ..
+        make -j2
+        
+    - name: Test Suite 1 - Core Layer System
+      run: |
+        cd build
+        echo "=== Core Layer System Tests (14 tests) ==="
+        xvfb-run -a ./EpiGimpTests --gtest_filter="LayerSystemTest.*" --gtest_output=xml:layer_system_results.xml
+        
+    - name: Test Suite 2 - Canvas Layer Integration  
+      run: |
+        cd build
+        echo "=== Canvas Layer Integration Tests ==="
+        xvfb-run -a ./EpiGimpTests --gtest_filter="CanvasLayerTest.*" --gtest_output=xml:canvas_layer_results.xml
+        
+    - name: Test Suite 3 - DrawCommand Integration
+      run: |
+        cd build
+        echo "=== DrawCommand Integration Tests ==="
+        xvfb-run -a ./EpiGimpTests --gtest_filter="LayerDrawCommandTest.*" --gtest_output=xml:draw_command_results.xml
+        
+    - name: Test Suite 4 - History Manager
+      run: |
+        cd build
+        echo "=== History Manager Tests (12 tests) ==="
+        xvfb-run -a ./EpiGimpTests --gtest_filter="HistoryManagerTest.*" --gtest_output=xml:history_results.xml
+        
+    - name: Test Suite 5 - File Operations
+      run: |
+        cd build
+        echo "=== File Operations Tests (11 tests) ==="
+        xvfb-run -a ./EpiGimpTests --gtest_filter="FileUtilsTest.*" --gtest_output=xml:file_utils_results.xml
+        
+    - name: Test Suite 6 - Canvas Utilities
+      run: |
+        cd build
+        echo "=== Canvas Utilities Tests (11 tests) ==="
+        xvfb-run -a ./EpiGimpTests --gtest_filter="CanvasUtilsTest.*" --gtest_output=xml:canvas_utils_results.xml
+        
+    - name: Test Suite 7 - Basic Utilities
+      run: |
+        cd build
+        echo "=== Basic Utilities Tests (8 tests) ==="
+        xvfb-run -a ./EpiGimpTests --gtest_filter="SimpleTest.*:SimpleFunctionTest.*:UtilityTest.*:ColorTest.*:MathTest.*:FileSystemTest.*" --gtest_output=xml:basic_utils_results.xml
+        
+    - name: Complete Test Suite Run
+      run: |
+        cd build
+        echo "=== Complete Test Suite (97/98 tests expected) ==="
+        xvfb-run -a ./EpiGimpTests --gtest_output=xml:complete_results.xml --gtest_brief
+        
+    - name: Generate Test Summary
+      run: |
+        cd build
+        echo "=== Test Summary Report ===" > test_summary.txt
+        echo "Date: $(date)" >> test_summary.txt
+        echo "Commit: ${{ github.sha }}" >> test_summary.txt
+        echo "" >> test_summary.txt
+        
+        echo "Individual Test Suite Results:" >> test_summary.txt
+        for file in *_results.xml; do
+          if [ -f "$file" ]; then
+            suite_name=$(echo "$file" | sed 's/_results.xml//')
+            tests=$(grep -o 'tests="[0-9]*"' "$file" | cut -d'"' -f2)
+            failures=$(grep -o 'failures="[0-9]*"' "$file" | cut -d'"' -f2)
+            echo "  $suite_name: $tests tests, $failures failures" >> test_summary.txt
+          fi
+        done
+        
+        echo "" >> test_summary.txt
+        echo "Complete Test Suite Results:" >> test_summary.txt
+        if [ -f complete_results.xml ]; then
+          total_tests=$(grep -o 'tests="[0-9]*"' complete_results.xml | cut -d'"' -f2)
+          total_failures=$(grep -o 'failures="[0-9]*"' complete_results.xml | cut -d'"' -f2)
+          passing_tests=$((total_tests - total_failures))
+          echo "  Total: $total_tests tests" >> test_summary.txt
+          echo "  Passing: $passing_tests tests" >> test_summary.txt  
+          echo "  Failing: $total_failures tests" >> test_summary.txt
+          echo "  Success Rate: $(( (passing_tests * 100) / total_tests ))%" >> test_summary.txt
+        fi
+        
+        cat test_summary.txt
+        
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: comprehensive-test-results
+        path: |
+          build/*_results.xml
+          build/test_summary.txt
+          
+    - name: Comment PR with Test Results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          try {
+            const summary = fs.readFileSync('build/test_summary.txt', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🧪 Test Results\n\n\`\`\`\n${summary}\n\`\`\``
+            });
+          } catch (error) {
+            console.log('Could not read test summary:', error);
+          }

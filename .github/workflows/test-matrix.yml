@@ -1,0 +1,78 @@
+name: Test Matrix
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-matrix:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04]
+        compiler: [gcc, clang]
+        build-type: [Debug, Release]
+        
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies (Ubuntu)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libasound2-dev mesa-common-dev libx11-dev libxrandr-dev libxi-dev xorg-dev libgl1-mesa-dev libglu1-mesa-dev xvfb
+        
+    - name: Install Clang
+      if: matrix.compiler == 'clang'
+      run: |
+        sudo apt-get install -y clang
+        
+    - name: Build Raylib
+      run: |
+        git clone https://github.com/raysan5/raylib.git
+        cd raylib
+        mkdir build && cd build
+        if [ "${{ matrix.compiler }}" = "clang" ]; then
+          export CC=clang
+          export CXX=clang++
+        fi
+        cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} ..
+        make -j2
+        sudo make install
+        sudo ldconfig
+        
+    - name: Build EpiGimp
+      run: |
+        mkdir -p build
+        cd build
+        if [ "${{ matrix.compiler }}" = "clang" ]; then
+          export CC=clang
+          export CXX=clang++
+        fi
+        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} ..
+        make -j2
+        
+    - name: Run Core Tests
+      run: |
+        cd build
+        xvfb-run -a ./EpiGimpTests --gtest_filter="LayerSystemTest.*:CanvasLayerTest.*:LayerDrawCommandTest.*" --gtest_brief
+        
+    - name: Run Utility Tests
+      run: |
+        cd build  
+        xvfb-run -a ./EpiGimpTests --gtest_filter="HistoryManagerTest.*:FileUtilsTest.*:CanvasUtilsTest.*" --gtest_brief
+        
+    - name: Run Basic Tests
+      run: |
+        cd build
+        xvfb-run -a ./EpiGimpTests --gtest_filter="SimpleTest.*:SimpleFunctionTest.*:UtilityTest.*" --gtest_brief
+        
+    - name: Check for Memory Leaks (Debug build only)
+      if: matrix.build-type == 'Debug' && matrix.compiler == 'gcc'
+      run: |
+        sudo apt-get install -y valgrind
+        cd build
+        # Run a subset of tests with valgrind to check for leaks
+        xvfb-run -a valgrind --leak-check=full --error-exitcode=1 ./EpiGimpTests --gtest_filter="LayerSystemTest.LayerCreation:SimpleTest.StringOperations" --gtest_brief

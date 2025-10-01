@@ -1,4 +1,4 @@
-name: Test
+name: Unit Tests CI
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  test:
+  unit-tests:
     runs-on: ubuntu-latest
     
     steps:
@@ -28,10 +28,61 @@ jobs:
         sudo make install
         sudo ldconfig
         
-    - name: Build and test
+    - name: Build EpiGimp
       run: |
         mkdir -p build
         cd build
         cmake ..
         make -j2
-        xvfb-run -a ./EpiGimpTests --gtest_filter=-BasicTest.RaylibInitialization
+        
+    - name: Run All Unit Tests
+      run: |
+        cd build
+        xvfb-run -a ./EpiGimpTests --gtest_brief
+        
+    - name: Run Layer System Tests
+      run: |
+        cd build
+        xvfb-run -a ./EpiGimpTests --gtest_filter="LayerSystemTest.*" --gtest_brief
+        
+    - name: Run Canvas Layer Tests  
+      run: |
+        cd build
+        xvfb-run -a ./EpiGimpTests --gtest_filter="CanvasLayerTest.*" --gtest_brief
+        
+    - name: Run DrawCommand Integration Tests
+      run: |
+        cd build
+        xvfb-run -a ./EpiGimpTests --gtest_filter="LayerDrawCommandTest.*" --gtest_brief
+        
+    - name: Run History Manager Tests
+      run: |
+        cd build
+        xvfb-run -a ./EpiGimpTests --gtest_filter="HistoryManagerTest.*" --gtest_brief
+        
+    - name: Run File Utils Tests
+      run: |
+        cd build
+        xvfb-run -a ./EpiGimpTests --gtest_filter="FileUtilsTest.*" --gtest_brief
+        
+    - name: Run Canvas Utils Tests
+      run: |
+        cd build
+        xvfb-run -a ./EpiGimpTests --gtest_filter="CanvasUtilsTest.*" --gtest_brief
+        
+    - name: Run Basic Utility Tests
+      run: |
+        cd build
+        xvfb-run -a ./EpiGimpTests --gtest_filter="SimpleTest.*:SimpleFunctionTest.*:UtilityTest.*:ColorTest.*:MathTest.*:FileSystemTest.*" --gtest_brief
+        
+    - name: Generate Test Report
+      run: |
+        cd build
+        xvfb-run -a ./EpiGimpTests --gtest_output=xml:test_results.xml
+        
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: build/test_results.xml
