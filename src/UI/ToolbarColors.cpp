@@ -5,13 +5,11 @@
 
 namespace EpiGimp {
 
-// ColorPalette implementation
 ColorPalette::ColorPalette(Rectangle bounds, EventDispatcher* dispatcher) 
     : bounds_(bounds), eventDispatcher_(dispatcher), selectedColor_(BLACK), selectedIndex_(0)
 {
-    if (!dispatcher) {
+    if (!dispatcher)
         throw std::invalid_argument("EventDispatcher cannot be null");
-    }
     initializePalette();
 }
 
@@ -37,7 +35,6 @@ void ColorPalette::initializePalette()
         MAGENTA             // 15
     };
     
-    // Calculate layout for color swatches
     const int swatchesPerRow = static_cast<int>((bounds_.width - 2 * PALETTE_PADDING) / (SWATCH_SIZE + SWATCH_MARGIN));
     const float startX = bounds_.x + PALETTE_PADDING;
     const float startY = bounds_.y + PALETTE_PADDING;
@@ -93,7 +90,6 @@ void ColorPalette::draw() const
     DrawRectangleRec(bounds_, LIGHTGRAY);
     DrawRectangleLinesEx(bounds_, 1, DARKGRAY);
     
-    // Draw color swatches
     for (const auto& swatch : swatches_) {
         DrawRectangleRec(swatch->bounds, swatch->color);
         
@@ -117,7 +113,6 @@ void ColorPalette::setSelectedColor(Color color)
 {
     selectedColor_ = color;
     
-    // Find and select the matching swatch
     for (size_t i = 0; i < swatches_.size(); ++i) {
         swatches_[i]->isSelected = (ColorToInt(swatches_[i]->color) == ColorToInt(color));
         if (swatches_[i]->isSelected)
