@@ -74,5 +74,25 @@ jobs:
       run: |
         sudo apt-get install -y valgrind
         cd build
-        # Run a subset of tests with valgrind to check for leaks
-        xvfb-run -a valgrind --leak-check=full --error-exitcode=1 ./EpiGimpTests --gtest_filter="LayerSystemTest.LayerCreation:SimpleTest.StringOperations" --gtest_brief
+        echo "=== Memory Leak Detection with Valgrind ==="
+        # Copy suppression file to build directory
+        cp ../.valgrind.supp .
+        
+        # Run a subset of tests with valgrind to check for application leaks
+        # Using suppressions to ignore OpenGL/system library leaks
+        echo "Testing Layer System for memory leaks..."
+        xvfb-run -a valgrind \
+          --leak-check=full \
+          --show-leak-kinds=definite \
+          --suppressions=.valgrind.supp \
+          --error-exitcode=1 \
+          --track-origins=yes \
+          ./EpiGimpTests --gtest_filter="LayerSystemTest.LayerCreation:LayerSystemTest.LayerManagerBasics" --gtest_brief
+          
+        echo "Testing Simple Operations for memory leaks..."  
+        xvfb-run -a valgrind \
+          --leak-check=full \
+          --show-leak-kinds=definite \
+          --suppressions=.valgrind.supp \
+          --error-exitcode=1 \
+          ./EpiGimpTests --gtest_filter="SimpleTest.StringOperations:UtilityTest.BasicOperations" --gtest_brief

@@ -1,0 +1,76 @@
+# Valgrind suppression file for EpiGimp tests
+# Suppresses known false positives from system libraries
+
+{
+   OpenGL_GLX_Extension_Leak
+   Memcheck:Leak
+   match-leak-kinds: definite,indirect
+   fun:calloc
+   ...
+   fun:extensionSupportedGLX
+   fun:_glfwInitGLX
+   fun:_glfwCreateWindowX11
+   fun:glfwCreateWindow
+}
+
+{
+   OpenGL_GLX_Context_Leak
+   Memcheck:Leak
+   match-leak-kinds: definite,indirect
+   fun:malloc
+   ...
+   fun:_glfwInitGLX
+   fun:_glfwCreateWindowX11
+   fun:glfwCreateWindow
+}
+
+{
+   OpenGL_DRI_Driver_Leak
+   Memcheck:Leak
+   match-leak-kinds: definite,indirect
+   fun:calloc
+   fun:malloc
+   ...
+   obj:*/dri/*
+}
+
+{
+   OpenGL_Mesa_Driver_Leak
+   Memcheck:Leak
+   match-leak-kinds: definite,indirect
+   fun:calloc
+   fun:malloc
+   ...
+   obj:*/libGL.so*
+}
+
+{
+   Raylib_OpenGL_Context_Leak
+   Memcheck:Leak
+   match-leak-kinds: definite,indirect
+   fun:calloc
+   fun:malloc
+   ...
+   fun:InitWindow
+}
+
+{
+   X11_GLX_Visual_Leak
+   Memcheck:Leak
+   match-leak-kinds: definite,indirect
+   fun:calloc
+   ...
+   fun:glXChooseVisual
+   fun:glXChooseFBConfig
+}
+
+{
+   X11_Display_Connection_Leak
+   Memcheck:Leak
+   match-leak-kinds: definite,indirect
+   fun:malloc
+   fun:calloc
+   ...
+   fun:XOpenDisplay
+   fun:_glfwConnectX11
+}

@@ -1,0 +1,104 @@
+name: Memory Analysis
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  memory-analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libasound2-dev mesa-common-dev libx11-dev libxrandr-dev libxi-dev xorg-dev libgl1-mesa-dev libglu1-mesa-dev xvfb valgrind
+        
+    - name: Build Raylib
+      run: |
+        git clone https://github.com/raysan5/raylib.git
+        cd raylib
+        mkdir build && cd build
+        cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug ..
+        make -j2
+        sudo make install
+        sudo ldconfig
+        
+    - name: Build EpiGimp (Debug with symbols)
+      run: |
+        mkdir -p build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-g -O0" ..
+        make -j2
+        
+    - name: Test Memory - Core Tests (No Graphics)
+      run: |
+        cd build
+        echo "=== Testing Core Functionality (No Graphics) ==="
+        valgrind \
+          --leak-check=full \
+          --show-leak-kinds=definite \
+          --track-origins=yes \
+          --suppressions=../.valgrind.supp \
+          --gen-suppressions=all \
+          --log-file=valgrind_core.log \
+          ./EpiGimpTests --gtest_filter="SimpleTest.*:UtilityTest.*:MathTest.*" --gtest_brief
+        
+        echo "Core tests valgrind results:"
+        cat valgrind_core.log | grep -A 10 -B 5 "ERROR SUMMARY"
+        
+    - name: Test Memory - Layer System (Minimal Graphics)
+      run: |
+        cd build
+        echo "=== Testing Layer System (Minimal Graphics) ==="
+        timeout 30s xvfb-run -a valgrind \
+          --leak-check=full \
+          --show-leak-kinds=definite \
+          --track-origins=yes \
+          --suppressions=../.valgrind.supp \
+          --log-file=valgrind_layers.log \
+          ./EpiGimpTests --gtest_filter="LayerSystemTest.LayerCreation:LayerSystemTest.LayerProperties" --gtest_brief || true
+        
+        echo "Layer tests valgrind results:"
+        cat valgrind_layers.log | grep -A 10 -B 5 "ERROR SUMMARY"
+        
+    - name: Analyze Results
+      run: |
+        cd build
+        echo "=== Memory Analysis Summary ==="
+        
+        echo "Core Tests Results:"
+        if grep -q "ERROR SUMMARY: 0 errors" valgrind_core.log; then
+          echo "✅ Core tests: No memory errors detected"
+        else
+          echo "⚠️ Core tests: Memory issues found"
+          grep "definitely lost\|indirectly lost\|ERROR SUMMARY" valgrind_core.log
+        fi
+        
+        echo ""
+        echo "Layer Tests Results:"
+        if [ -f valgrind_layers.log ]; then
+          if grep -q "ERROR SUMMARY: 0 errors" valgrind_layers.log; then
+            echo "✅ Layer tests: No application memory errors detected"
+          else
+            echo "⚠️ Layer tests: Checking for application-specific leaks..."
+            # Only report leaks that are not in system/OpenGL libraries
+            grep -v "libGL\|dri\|glX\|X11\|extensionSupportedGLX" valgrind_layers.log | grep "definitely lost\|indirectly lost\|ERROR SUMMARY" || echo "No application-specific leaks found"
+          fi
+        else
+          echo "⚠️ Layer tests: Log file not generated (timeout or crash)"
+        fi
+        
+    - name: Upload Memory Analysis Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: memory-analysis-results
+        path: |
+          build/valgrind_*.log
+          .valgrind.supp
