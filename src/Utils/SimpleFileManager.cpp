@@ -54,7 +54,6 @@ std::optional<std::string> SimpleFileManager::updateOpenDialog()
         return openBrowser_->getSelectedFile();
     }
     
-    // Check if dialog was cancelled (Cancel button or ESC key)
     if (openBrowser_->wasCancelled()) {
         showingOpenDialog_ = false;
         openBrowser_->setShowAllFiles(false); // Restore normal filtering
