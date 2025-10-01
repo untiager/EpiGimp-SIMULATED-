@@ -8,14 +8,12 @@ namespace EpiGimp {
 
 void Canvas::initializeDrawingTexture()
 {
-    // This method is now used to initialize the selected layer's texture
     if (selectedLayerIndex_ >= 0 && selectedLayerIndex_ < static_cast<int>(drawingLayers_.size()) && currentTexture_) {
         const int width = (*currentTexture_)->width;
         const int height = (*currentTexture_)->height;
         DrawingLayer& layer = drawingLayers_[selectedLayerIndex_];
         layer.texture = RenderTextureResource(width, height);
         
-        // Clear the drawing texture to transparent
         layer.texture->clear(Color{0, 0, 0, 0});
         
         std::cout << "Drawing texture initialized for layer: " << layer.name << " (" << width << "x" << height << ")" << std::endl;
@@ -29,10 +27,8 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
     const DrawingLayer& layer = drawingLayers_[selectedLayerIndex_];
     if (!layer.visible) return;
     
-    // Convert screen coordinates to image coordinates
     const Rectangle imageRect = calculateImageDestRect();
     
-    // Transform screen coordinates to image texture coordinates
     const Vector2 imageFrom = {
         (from.x - imageRect.x) / imageRect.width * (*currentTexture_)->width,
         (from.y - imageRect.y) / imageRect.height * (*currentTexture_)->height
@@ -46,7 +42,6 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
     std::cout << "Drawing stroke from (" << imageFrom.x << "," << imageFrom.y 
               << ") to (" << imageTo.x << "," << imageTo.y << ") on layer: " << layer.name << std::endl;
     
-    // Draw directly to the selected layer's texture
     layer.texture->beginDrawing();
     DrawLineEx(imageFrom, imageTo, 3.0f, drawingColor_); // Use selected drawing color
     layer.texture->endDrawing();
@@ -60,10 +55,8 @@ void Canvas::handleDrawing()
     
     const Vector2 mousePos = GetMousePosition();
     
-    // Use image dimensions for rect calculation
     const Rectangle imageRect = calculateImageDestRect();
     
-    // Check if mouse is over the image
     if (!CheckCollisionPointRec(mousePos, imageRect))
         return;
     
