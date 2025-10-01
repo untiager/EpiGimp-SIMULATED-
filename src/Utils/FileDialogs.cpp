@@ -22,7 +22,6 @@ std::string execCommand(const char* cmd)
         result += buffer;
     }
     
-    // Remove trailing newline
     if (!result.empty() && result.back() == '\n')
         result.pop_back();
     
@@ -80,7 +79,6 @@ std::optional<std::string> showSaveDialog(const std::string& filter, const std::
         if (result.empty())
             return std::nullopt; // User cancelled
         
-        // Ensure .png extension if not present
         if (result.find(".png") == std::string::npos && 
             result.find(".jpg") == std::string::npos && 
             result.find(".bmp") == std::string::npos) {
