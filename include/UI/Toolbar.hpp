@@ -54,12 +54,14 @@ private:
         Color normalColor;
         Color hoverColor;
         Color pressedColor;
+        Color selectedColor;
         bool isHovered = false;
         bool isPressed = false;
+        bool isSelected = false;
         
         Button(Rectangle rect, std::string buttonText, std::function<void()> callback)
             : bounds(rect), text(std::move(buttonText)), onClick(std::move(callback)),
-              normalColor(LIGHTGRAY), hoverColor(GRAY), pressedColor(DARKGRAY) {}
+              normalColor(LIGHTGRAY), hoverColor(GRAY), pressedColor(DARKGRAY), selectedColor(BLUE) {}
     };
 
     static constexpr int TOOLBAR_HEIGHT = 60;
@@ -72,6 +74,7 @@ private:
     std::vector<std::unique_ptr<Button>> buttons_;
     EventDispatcher* eventDispatcher_;
     std::unique_ptr<ColorPalette> colorPalette_;
+    DrawingTool currentTool_;
     
 public:
     explicit Toolbar(Rectangle bounds, EventDispatcher* dispatcher);
@@ -84,6 +87,9 @@ public:
     // IToolbar interface
     void addButton(const std::string& text, std::function<void()> onClick) override;
     int getHeight() const override { return static_cast<int>(bounds_.height); }
+    
+    // Tool selection
+    void setSelectedTool(DrawingTool tool);
 
 private:
     void updateButton(Button& button) const;

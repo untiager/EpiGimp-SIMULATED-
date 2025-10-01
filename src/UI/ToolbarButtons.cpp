@@ -27,20 +27,25 @@ void Toolbar::drawButton(const Button& button) const
 {
     Color buttonColor = button.normalColor;
     
-    if (button.isPressed) {
+    if (button.isSelected) {
+        buttonColor = button.selectedColor;
+    } else if (button.isPressed) {
         buttonColor = button.pressedColor;
     } else if (button.isHovered) {
         buttonColor = button.hoverColor;
     }
     
     DrawRectangleRec(button.bounds, buttonColor);
-    DrawRectangleLinesEx(button.bounds, 1, DARKGRAY);
+    
+    Color borderColor = button.isSelected ? WHITE : DARKGRAY;
+    DrawRectangleLinesEx(button.bounds, button.isSelected ? 2 : 1, borderColor);
     
     const int textWidth = MeasureText(button.text.c_str(), FONT_SIZE);
     const int textX = static_cast<int>(button.bounds.x + (button.bounds.width - textWidth) / 2);
     const int textY = static_cast<int>(button.bounds.y + (button.bounds.height - FONT_SIZE) / 2);
     
-    DrawText(button.text.c_str(), textX, textY, FONT_SIZE, BLACK);
+    Color textColor = button.isSelected ? WHITE : BLACK;
+    DrawText(button.text.c_str(), textX, textY, FONT_SIZE, textColor);
 }
 
 Rectangle Toolbar::calculateNextButtonBounds() const

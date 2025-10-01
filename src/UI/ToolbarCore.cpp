@@ -5,11 +5,16 @@
 namespace EpiGimp {
 
 Toolbar::Toolbar(Rectangle bounds, EventDispatcher* dispatcher) 
-    : bounds_(bounds), eventDispatcher_(dispatcher)
+    : bounds_(bounds), eventDispatcher_(dispatcher), currentTool_(DrawingTool::None)
 {
     
     if (!dispatcher)
         throw std::invalid_argument("EventDispatcher cannot be null");
+
+    // Subscribe to tool selection events
+    dispatcher->subscribe<ToolSelectedEvent>([this](const ToolSelectedEvent& event) {
+        setSelectedTool(event.toolType);
+    });
 
     const float paletteWidth = 8 * (20 + 2) + 2 * 5; // 8 colors per row + padding = 186 pixels
     const float paletteHeight = bounds.height - 10; // Leave some padding
@@ -54,6 +59,22 @@ void Toolbar::addButton(const std::string& text, std::function<void()> onClick)
     buttons_.push_back(std::move(button));
     
     std::cout << "Added button: " << text << std::endl;
+}
+
+void Toolbar::setSelectedTool(DrawingTool tool)
+{
+    currentTool_ = tool;
+    
+    for (auto& button : buttons_) {
+        // Only the "Crayon" button should be selected when Crayon tool is active
+        if (button->text == "Crayon") {
+            button->isSelected = (tool == DrawingTool::Crayon);
+        } else {
+            button->isSelected = false;
+        }
+    }
+    
+    std::cout << "Tool selected: " << (tool == DrawingTool::Crayon ? "Crayon" : "None") << std::endl;
 }
 
 } // namespace EpiGimp
