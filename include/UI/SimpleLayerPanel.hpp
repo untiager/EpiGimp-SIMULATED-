@@ -25,13 +25,12 @@ private:
     mutable bool addButtonHovered_;
     mutable bool deleteButtonHovered_;
     mutable bool clearButtonHovered_;
-    mutable float scrollOffset_;  // For scrolling through layers
+    mutable float scrollOffset_;              // For scrolling through layers
     
 public:
     SimpleLayerPanel(Rectangle bounds, Canvas* canvas, EventDispatcher* dispatcher);
     ~SimpleLayerPanel() override = default;
     
-    // IUIComponent interface
     void update(float deltaTime) override;
     void draw() const override;
     Rectangle getBounds() const override { return bounds_; }

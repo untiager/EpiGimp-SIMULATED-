@@ -13,9 +13,8 @@
 
 namespace EpiGimp {
 
-class FileBrowser; // Forward declaration
+class FileBrowser;
 
-// File manager implementation
 class SimpleFileManager : public IFileManager {
 private:
     std::unique_ptr<FileBrowser> openBrowser_;
@@ -31,7 +30,6 @@ public:
     std::optional<std::string> showSaveDialog(const std::string& filter = "", 
                                             const std::string& defaultName = "") override;
     
-    // New methods for rendering the dialogs
     std::optional<std::string> updateOpenDialog();
     std::optional<std::string> updateSaveDialog();
     bool isShowingDialog() const;
@@ -40,7 +38,6 @@ public:
     bool createDirectories(const std::string& path) const override;
 };
 
-// Console-based error handler
 class ConsoleErrorHandler : public IErrorHandler {
 private:
     EventDispatcher* eventDispatcher_;
@@ -54,7 +51,6 @@ public:
     void handleInfo(const std::string& message) override;
 };
 
-// Raylib-based input handler
 class RaylibInputHandler : public IInputHandler {
 public:
     RaylibInputHandler() = default;

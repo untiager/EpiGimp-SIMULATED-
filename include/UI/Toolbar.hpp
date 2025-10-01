@@ -12,7 +12,6 @@
 
 namespace EpiGimp {
 
-// Color palette component for selecting drawing colors
 class ColorPalette {
 private:
     struct ColorSwatch {
@@ -78,7 +77,6 @@ public:
     explicit Toolbar(Rectangle bounds, EventDispatcher* dispatcher);
     ~Toolbar() override = default;
 
-    // IUIComponent interface
     void update(float deltaTime) override;
     void draw() const override;
     Rectangle getBounds() const override { return bounds_; }

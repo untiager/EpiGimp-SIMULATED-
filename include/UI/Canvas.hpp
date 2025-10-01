@@ -13,7 +13,6 @@
 
 namespace EpiGimp {
 
-// Simple drawing layer structure
 struct DrawingLayer {
     std::optional<RenderTextureResource> texture;
     bool visible;
@@ -22,29 +21,26 @@ struct DrawingLayer {
     DrawingLayer(const std::string& layerName) : visible(true), name(layerName) {}
 };
 
-// Forward declaration
 class HistoryManager;
 
 class Canvas : public ICanvas {
 private:
     Rectangle bounds_;
     std::optional<TextureResource> currentTexture_;        // Background layer (loaded image)
-    std::vector<DrawingLayer> drawingLayers_;               // Multiple drawing layers
+    std::vector<DrawingLayer> drawingLayers_;              // Multiple drawing layers
     std::string currentImagePath_;
     float zoomLevel_;
     Vector2 panOffset_;
     EventDispatcher* eventDispatcher_;
-    HistoryManager* historyManager_;  // For undo/redo functionality
+    HistoryManager* historyManager_;                       // For undo/redo functionality
     
-    // Drawing state
     DrawingTool currentTool_;
     bool isDrawing_;
     Vector2 lastMousePos_;
-    Color drawingColor_; // Current drawing color
+    Color drawingColor_;                                   // Current drawing color
     
-    // Simple layer system
     bool backgroundVisible_;
-    int selectedLayerIndex_;                                // Currently selected layer for drawing/editing
+    int selectedLayerIndex_;                               // Currently selected layer for drawing/editing
     
     static constexpr float MIN_ZOOM = 0.1f;
     static constexpr float MAX_ZOOM = 5.0f;
@@ -55,18 +51,15 @@ public:
     explicit Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* historyManager = nullptr);
     ~Canvas() override = default;
 
-    // Non-copyable but moveable
     Canvas(const Canvas&) = delete;
     Canvas& operator=(const Canvas&) = delete;
     Canvas(Canvas&&) = default;
     Canvas& operator=(Canvas&&) = default;
 
-    // IUIComponent interface
     void update(float deltaTime) override;
     void draw() const override;
     Rectangle getBounds() const override { return bounds_; }
 
-    // ICanvas interface
     void loadImage(const std::string& filePath) override;
     bool saveImage(const std::string& filePath) override;
     bool hasImage() const override;
@@ -76,18 +69,15 @@ public:
     Vector2 getPan() const override { return panOffset_; }
     void setDrawingTool(DrawingTool tool) override;
     
-    // Multi-layer management
     bool isBackgroundVisible() const { return backgroundVisible_; }
     void setBackgroundVisible(bool visible) { backgroundVisible_ = visible; }
     
-    // Drawing layer management
     int getLayerCount() const { return static_cast<int>(drawingLayers_.size()); }
     int getSelectedLayerIndex() const { return selectedLayerIndex_; }
     void setSelectedLayerIndex(int index);
     const DrawingLayer* getLayer(int index) const;
     DrawingLayer* getLayer(int index);
     
-    // Layer operations
     int addNewDrawingLayer(const std::string& name = "");
     void deleteLayer(int index);
     void clearLayer(int index);
@@ -95,12 +85,10 @@ public:
     void setLayerVisible(int index, bool visible);
     const std::string& getLayerName(int index) const;
     
-    // Legacy compatibility (operates on selected layer)
     bool hasDrawingTexture() const;
     void clearDrawingLayer();  // Clear selected layer
     void resetToBackground();
     
-    // History/Command support
     Image copyDrawingImage() const;  // Copy selected layer
     void initializeDrawingTexture(); // Initialize selected layer texture
 

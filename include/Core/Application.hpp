@@ -46,13 +46,11 @@ public:
     explicit Application(AppConfig config = AppConfig{});
     ~Application(); // Custom destructor needed for unique_ptr with forward declarations
 
-    // Non-copyable but moveable
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
     Application(Application&&) = default;
     Application& operator=(Application&&) = default;
 
-    // Main application lifecycle
     bool initialize();
     void run();
     void shutdown();
@@ -73,7 +71,6 @@ private:
     void setupEventHandlers();
     void createComponents();
     
-    // Event handlers
     void onLoadImageRequest();
     void onImageSaveRequest(const ImageSaveRequestEvent& event);
     void onError(const ErrorEvent& event);

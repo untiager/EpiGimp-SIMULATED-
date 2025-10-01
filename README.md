@@ -15,19 +15,31 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 **Core Features Implemented**:
 - ✅ Modern C++ architecture with RAII resource management
 - ✅ Clean paint interface with toolbar and canvas
-- ✅ **Crayon Drawing Tool** - Draw directly on images with smooth strokes
+- ✅ **Multi-Layer Drawing System** - Create, manage, and select multiple drawing layers independently
+- ✅ **Scrollable Layer Panel** - Navigate unlimited layers with dynamic button positioning
+- ✅ **Smart Layer Naming** - Intelligent layer numbering that reuses gaps when layers are deleted
+- ✅ **Individual Layer Management** - Add, delete, clear, and toggle visibility for each layer
+- ✅ **Crayon Drawing Tool** - Draw directly on selected layers with smooth strokes
 - ✅ **Color Selector Palette** - 16 color swatches for drawing customization
 - ✅ **Undo/Redo System** - Full history support with keyboard shortcuts (Ctrl+Z/Ctrl+Y)
 - ✅ Safe in-application file browser (no system crashes!)
 - ✅ Load Image functionality (PNG, JPG, BMP, TGA formats)
 - ✅ Save Image functionality with auto-extension and format conversion
-- ✅ **Persistent Drawing Layer** - Drawings save permanently with images
+- ✅ **Multi-Layer Rendering** - Composite all visible layers for saving and display
 - ✅ Zoom and pan controls for image navigation
 - ✅ Event-driven architecture for easy extensibility
 - ✅ Zero compiler warnings (clean production code)
 - ✅ Robust error handling and user feedback system
 
 **Recent Updates**:
+- 🆕 **Multi-Layer Drawing System** - Complete layer management with unlimited drawing layers
+- 🆕 **Scrollable Layer Panel** - Navigate many layers with mouse wheel scrolling and dynamic UI
+- 🆕 **Smart Layer Naming** - Intelligent layer numbering that reuses gaps (no duplicate "Layer 9" issues)
+- 🆕 **Individual Layer Controls** - Add, delete, clear, and toggle visibility for each layer independently
+- 🆕 **Layer Selection System** - Click any layer to select it for drawing or management operations
+- 🆕 **Multi-Layer Rendering** - All visible layers composite correctly for display and saving
+- 🆕 **Warning-Free Build** - Fixed all compiler warnings for production-ready code
+- 🆕 **Enhanced UI Layout** - Dynamic button positioning that adapts to layer count
 - 🆕 **Comprehensive Test Suite** - 46 unit tests with 100% success rate using Google Test framework
 - 🆕 **Quality Assurance** - Complete validation of core functionality with mock objects and integration tests
 - 🆕 **Undo/Redo History System** - Complete command pattern implementation with 50-level history
@@ -46,7 +58,7 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 **Upcoming Features**:
 - 🚧 Additional drawing tools (brush sizes, eraser)
 - 🚧 Custom color picker (beyond preset palette)
-- 🚧 Layers support
+- 🚧 Layer reordering and advanced layer operations
 - 🚧 Filters and effects
 
 ## 🛠️ Technical Architecture
@@ -55,7 +67,9 @@ EpiGimp follows modern C++ best practices with a clean, modular architecture:
 
 ### Core Components
 - **Application**: Main orchestrator managing all components (split into Core, Loop, and Events modules)
-- **Canvas**: Image display and manipulation area with RAII resource management (split into Core, ImageOps, Input, and Drawing modules)
+- **Canvas**: Image display and manipulation area with multi-layer support and RAII resource management (split into Core, ImageOps, Input, and Drawing modules)
+- **SimpleLayerPanel**: Interactive layer management panel with scrolling and dynamic layout
+- **Multi-Layer System**: Vector-based layer management with individual selection, visibility, and operations
 - **Toolbar**: UI toolbar with extensible button system and integrated color palette (split into Core, Colors, and Buttons modules)
 - **ColorPalette**: Interactive color selection component with 16 predefined colors
 - **FileBrowser**: Safe in-application file navigation (split into Core, Navigation, and Dialogs modules)
@@ -178,6 +192,46 @@ sudo make install  # Installs to /usr/local/bin
   - Real-time color switching while drawing
   - Default color is black
 
+### Multi-Layer System
+EpiGimp features a comprehensive multi-layer drawing system that allows you to create complex compositions with independent drawing layers.
+
+#### Layer Management
+- **Add New Layer**: Click the "Add" button in the layer panel to create a new drawing layer
+- **Select Layer**: Click on any layer in the panel to select it for drawing or editing
+- **Delete Layer**: Select a layer and click "Delete" to remove it permanently
+- **Clear Layer**: Select a layer and click "Clear" to erase all content while keeping the layer
+- **Layer Visibility**: Click the eye icon on any layer to toggle its visibility on/off
+
+#### Layer Panel Features
+- **Scrollable Interface**: Use mouse wheel to scroll through unlimited layers when they exceed panel height
+- **Dynamic Layout**: Add/Delete/Clear buttons automatically position below layers regardless of count
+- **Visual Selection**: Selected layer highlighted with green background
+- **Hover Feedback**: Layers highlight when mouse hovers over them
+- **Smart Naming**: Layers automatically named "Layer 1", "Layer 2", etc. with intelligent gap reuse
+
+#### Layer Workflow
+1. **Load Image**: Start by loading a background image (automatically creates background layer)
+2. **Create Layers**: Click "Add" to create new drawing layers for different elements
+3. **Select & Draw**: Click a layer to select it, then use the crayon tool to draw on that specific layer
+4. **Layer Operations**: 
+   - Toggle visibility to see how different layers interact
+   - Delete unwanted layers completely
+   - Clear layers to start over while preserving layer structure
+5. **Save**: All visible layers automatically composite when saving the image
+
+#### Layer Benefits
+- **Non-destructive editing**: Draw on separate layers without affecting others
+- **Organization**: Separate different elements (outlines, colors, details) onto different layers
+- **Flexibility**: Hide/show layers to experiment with different combinations
+- **Safety**: Clear or delete individual layers without losing other work
+- **Unlimited layers**: Create as many layers as needed for complex compositions
+
+#### Layer Navigation
+- **Mouse Wheel Scrolling**: Scroll up/down in the layer panel to navigate many layers
+- **Automatic Scrollbar**: Visual scrollbar appears when scrolling is needed
+- **Button Accessibility**: Management buttons stay at bottom regardless of layer count
+- **Responsive UI**: Panel adapts to any number of layers without overlap issues
+
 ### Undo/Redo System
 - **Full History Management**: Up to 50 operations stored in memory
 - **Command Pattern Implementation**: Each drawing stroke is a reversible command
@@ -231,10 +285,11 @@ EpiGimp/
 │   │   ├── DrawCommand.cpp            # Drawing operation commands (108 lines)
 │   │   └── ClearCommand.cpp           # Canvas clearing commands
 │   ├── UI/                            # User interface components (modular split)
-│   │   ├── CanvasCore.cpp             # Core canvas functionality (176 lines)
-│   │   ├── CanvasImageOps.cpp         # Image loading/saving (160 lines)
+│   │   ├── CanvasCore.cpp             # Core canvas with multi-layer support (266 lines)
+│   │   ├── CanvasImageOps.cpp         # Image loading/saving with layer compositing (160 lines)
 │   │   ├── CanvasInput.cpp            # Input handling (38 lines)
-│   │   ├── CanvasDrawing.cpp          # Drawing operations with history (117 lines)
+│   │   ├── CanvasDrawing.cpp          # Drawing operations with layer targeting (117 lines)
+│   │   ├── SimpleLayerPanel.cpp       # Layer management panel with scrolling (350+ lines)
 │   │   ├── ToolbarCore.cpp            # Core toolbar functionality (66 lines)
 │   │   ├── ToolbarColors.cpp          # Color palette (131 lines)
 │   │   └── ToolbarButtons.cpp         # Button management (56 lines)
@@ -254,6 +309,9 @@ EpiGimp/
 │   │   ├── DrawCommand.hpp            # Drawing commands (65 lines)
 │   │   └── ClearCommand.hpp           # Clear commands
 │   ├── UI/                            # UI component headers
+│   │   ├── Canvas.hpp                 # Multi-layer canvas interface (125 lines)
+│   │   ├── SimpleLayerPanel.hpp       # Layer management panel interface (53 lines)
+│   │   └── Toolbar.hpp                # Toolbar and color palette interfaces
 │   └── Utils/                         # Utility headers
 ├── tests/                             # Unit test suite (Google Test)
 │   ├── README.md                      # Comprehensive testing guide
@@ -290,16 +348,29 @@ make && ./EpiGimp
 
 # Complete feature testing workflow:
 # 1. Load Image: Click "Load Image", navigate and select a file
-# 2. Drawing: Click "Crayon", draw multiple strokes on the image
-# 3. Undo/Redo: Test Ctrl+Z (undo) and Ctrl+Y (redo) operations
-# 4. Save Image: Click "Save Image", choose location and filename
-# 5. Verify: Drawings and undo/redo states work correctly
-# 6. Format conversion: Load PNG, save as JPG to test conversion
-# 7. Edge cases: Try saving without extension (should auto-add .png)
-# 8. History testing: Draw 5+ strokes, undo all, then redo all
+# 2. Layer Creation: Click "Add" to create multiple drawing layers (test with 5+ layers)
+# 3. Layer Selection: Click different layers to select them (visual feedback with green highlight)
+# 4. Drawing: Click "Crayon", draw different strokes on different selected layers
+# 5. Layer Management: Test "Delete" and "Clear" buttons on various layers
+# 6. Layer Visibility: Click eye icons to toggle layer visibility on/off
+# 7. Layer Scrolling: Create many layers (10+) and test mouse wheel scrolling in layer panel
+# 8. Undo/Redo: Test Ctrl+Z (undo) and Ctrl+Y (redo) operations across multiple layers
+# 9. Save Image: Click "Save Image", choose location and filename (tests multi-layer compositing)
+# 10. Verify: All visible layers should be composited in the saved image
+# 11. Format conversion: Load PNG, save as JPG to test multi-layer conversion
+# 12. Edge cases: Try saving without extension (should auto-add .png)
+# 13. History testing: Draw on multiple layers, undo all, then redo all
+# 14. Layer naming: Delete middle layers and add new ones to test smart naming (no duplicates)
 ```
 
 ### Quality Assurance Verified
+- ✅ **Multi-layer system** with unlimited layers and individual management
+- ✅ **Smart layer naming** prevents duplicate names when layers are deleted
+- ✅ **Scrollable layer panel** handles any number of layers efficiently  
+- ✅ **Dynamic UI layout** with buttons that position correctly regardless of layer count
+- ✅ **Warning-free compilation** with proper member initialization order
+- ✅ **Multi-layer compositing** for accurate saving and display
+- ✅ **Layer selection system** with visual feedback and proper state management
 - ✅ **No crashes** from missing file extensions
 - ✅ **Image orientation** preserved correctly when saving
 - ✅ **Drawing persistence** - strokes saved permanently with images
@@ -313,9 +384,13 @@ make && ./EpiGimp
 **Current Limitations**:
 - Drawing tool limited to a simple palette (color picker coming soon)
 - Single brush size (configurable brushes planned)
-- No undo/redo yet (major feature in development)
+- Layer reordering not yet implemented (layers render in creation order)
 
 **Fixed Issues** ✅:
+- ~~Layers support~~ → **Implemented**: Full multi-layer system with scrolling panel
+- ~~Layer naming duplicates when deleting layers~~ → **Fixed**: Smart naming reuses gaps
+- ~~Layer panel button positioning with many layers~~ → **Fixed**: Dynamic layout with scrolling
+- ~~Build warnings from member initialization order~~ → **Fixed**: Clean warning-free compilation
 - ~~File browser directories overlap in save mode~~ → Fixed
 - ~~Image flipping after saving with drawings~~ → Fixed  
 - ~~Double character deletion with backspace~~ → Fixed
@@ -464,7 +539,7 @@ We welcome contributions from developers of all skill levels! Here's how you can
 - **Unit Tests**: Automated testing framework for drawing and file operations
 
 #### 🟡 Medium Priority
-- **Layers**: Layer management system for complex compositions
+- **Layer Enhancements**: Layer reordering, grouping, and advanced layer operations
 - **Filters**: Basic image filters (blur, sharpen, brightness/contrast)
 - **Drawing Tools**: Eraser, different brush types, shapes
 - **Cross-platform**: Windows and macOS support testing

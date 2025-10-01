@@ -20,8 +20,8 @@ class Canvas;
  */
 class DrawCommand : public ICommand {
 private:
-    Canvas* canvas_;                              // Target canvas
-    size_t targetLayerIndex_;                     // Index of the layer that was modified
+    Canvas* canvas_;                             // Target canvas
+    size_t targetLayerIndex_;                    // Index of the layer that was modified
     std::unique_ptr<Image> beforeState_;         // Layer state before the action
     std::unique_ptr<Image> afterState_;          // Layer state after the action
     std::string description_;                    // Description of the drawing action

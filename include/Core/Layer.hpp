@@ -37,13 +37,11 @@ public:
     explicit Layer(const std::string& name, int width, int height);
     ~Layer() = default;
 
-    // Non-copyable but moveable
     Layer(const Layer&) = delete;
     Layer& operator=(const Layer&) = delete;
     Layer(Layer&&) = default;
     Layer& operator=(Layer&&) = default;
 
-    // Getters
     const std::string& getName() const { return name_; }
     bool isVisible() const { return visible_; }
     float getOpacity() const { return opacity_; }
@@ -53,20 +51,17 @@ public:
     bool hasTexture() const { return texture_.has_value(); }
     const RenderTextureResource& getTexture() const;
 
-    // Setters
     void setName(const std::string& name) { name_ = name; }
     void setVisible(bool visible) { visible_ = visible; }
     void setOpacity(float opacity);
     void setBlendMode(BlendMode mode) { blendMode_ = mode; }
 
-    // Drawing operations
     void beginDrawing();
     void endDrawing();
     void clear(Color color = BLANK);
     Image copyImage() const;
     bool restoreImage(const Image& image);
     
-    // Utility
     void resize(int width, int height);
     void initializeTexture();
 };

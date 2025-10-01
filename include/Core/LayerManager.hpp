@@ -53,19 +53,16 @@ public:
     explicit LayerManager(int width, int height, EventDispatcher* dispatcher = nullptr);
     ~LayerManager() = default;
 
-    // Non-copyable but moveable
     LayerManager(const LayerManager&) = delete;
     LayerManager& operator=(const LayerManager&) = delete;
     LayerManager(LayerManager&&) = default;
     LayerManager& operator=(LayerManager&&) = default;
 
-    // Layer management
     size_t createLayer(const std::string& name);
     bool deleteLayer(size_t index);
     bool moveLayer(size_t fromIndex, size_t toIndex);
     bool duplicateLayer(size_t index);
 
-    // Layer access
     Layer* getLayer(size_t index);
     const Layer* getLayer(size_t index) const;
     Layer* getActiveLayer();
@@ -73,21 +70,17 @@ public:
     size_t getLayerCount() const { return layers_.size(); }
     size_t getActiveLayerIndex() const { return activeLayerIndex_; }
 
-    // Layer selection
     bool setActiveLayer(size_t index);
     
-    // Layer properties
     bool setLayerVisibility(size_t index, bool visible);
     bool setLayerOpacity(size_t index, float opacity);
     bool setLayerBlendMode(size_t index, BlendMode mode);
     bool setLayerName(size_t index, const std::string& name);
 
-    // Canvas operations
     void resizeAllLayers(int width, int height);
     void renderComposite(RenderTexture2D& target) const;
     void clear();
 
-    // Utility
     std::vector<std::string> getLayerNames() const;
     int findLayerByName(const std::string& name) const;
 
