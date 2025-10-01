@@ -14,9 +14,8 @@ void Toolbar::updateButton(Button& button) const
         button.isPressed = true;
     
     if (button.isPressed && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-        if (button.isHovered && button.onClick) {
+        if (button.isHovered && button.onClick)
             button.onClick();
-        }
         button.isPressed = false;
     }
     
@@ -37,7 +36,6 @@ void Toolbar::drawButton(const Button& button) const
     DrawRectangleRec(button.bounds, buttonColor);
     DrawRectangleLinesEx(button.bounds, 1, DARKGRAY);
     
-    // Calculate text position for centering
     const int textWidth = MeasureText(button.text.c_str(), FONT_SIZE);
     const int textX = static_cast<int>(button.bounds.x + (button.bounds.width - textWidth) / 2);
     const int textY = static_cast<int>(button.bounds.y + (button.bounds.height - FONT_SIZE) / 2);
