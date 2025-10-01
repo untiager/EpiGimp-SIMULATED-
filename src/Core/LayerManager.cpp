@@ -9,14 +9,15 @@ LayerManager::LayerManager(int width, int height, EventDispatcher* dispatcher)
     : activeLayerIndex_(0)
     , eventDispatcher_(dispatcher)
     , canvasWidth_(width)
-    , canvasHeight_(height) {
-    if (width <= 0 || height <= 0) {
+    , canvasHeight_(height)
+{
+    if (width <= 0 || height <= 0)
         throw std::invalid_argument("Canvas dimensions must be positive");
-    }
     ensureDefaultLayer();
 }
 
-size_t LayerManager::createLayer(const std::string& name) {
+size_t LayerManager::createLayer(const std::string& name)
+{
     auto layer = std::make_unique<Layer>(name, canvasWidth_, canvasHeight_);
     layers_.push_back(std::move(layer));
     size_t newIndex = layers_.size() - 1;
@@ -25,15 +26,14 @@ size_t LayerManager::createLayer(const std::string& name) {
     return newIndex;
 }
 
-bool LayerManager::deleteLayer(size_t index) {
-    if (!isValidIndex(index) || layers_.size() <= 1) {
+bool LayerManager::deleteLayer(size_t index)
+{
+    if (!isValidIndex(index) || layers_.size() <= 1)
         return false; // Can't delete the last layer
-    }
     
     std::string layerName = layers_[index]->getName();
     layers_.erase(layers_.begin() + index);
-    
-    // Adjust active layer index
+
     if (activeLayerIndex_ >= layers_.size()) {
         size_t oldIndex = activeLayerIndex_;
         activeLayerIndex_ = layers_.size() - 1;
@@ -48,17 +48,15 @@ bool LayerManager::deleteLayer(size_t index) {
     return true;
 }
 
-bool LayerManager::moveLayer(size_t fromIndex, size_t toIndex) {
-    if (!isValidIndex(fromIndex) || !isValidIndex(toIndex) || fromIndex == toIndex) {
+bool LayerManager::moveLayer(size_t fromIndex, size_t toIndex)
+{
+    if (!isValidIndex(fromIndex) || !isValidIndex(toIndex) || fromIndex == toIndex)
         return false;
-    }
     
-    // Move the layer
     auto layer = std::move(layers_[fromIndex]);
     layers_.erase(layers_.begin() + fromIndex);
     layers_.insert(layers_.begin() + toIndex, std::move(layer));
     
-    // Adjust active layer index
     if (activeLayerIndex_ == fromIndex) {
         size_t oldIndex = activeLayerIndex_;
         activeLayerIndex_ = toIndex;
@@ -77,10 +75,10 @@ bool LayerManager::moveLayer(size_t fromIndex, size_t toIndex) {
     return true;
 }
 
-bool LayerManager::duplicateLayer(size_t index) {
-    if (!isValidIndex(index)) {
+bool LayerManager::duplicateLayer(size_t index)
+{
+    if (!isValidIndex(index))
         return false;
-    }
     
     const Layer* sourceLayer = layers_[index].get();
     std::string newName = sourceLayer->getName() + " Copy";
@@ -90,7 +88,6 @@ bool LayerManager::duplicateLayer(size_t index) {
     newLayer->setOpacity(sourceLayer->getOpacity());
     newLayer->setBlendMode(sourceLayer->getBlendMode());
     
-    // Copy the image content
     if (sourceLayer->hasTexture()) {
         Image sourceImage = sourceLayer->copyImage();
         newLayer->restoreImage(sourceImage);
@@ -99,7 +96,6 @@ bool LayerManager::duplicateLayer(size_t index) {
     
     layers_.insert(layers_.begin() + index + 1, std::move(newLayer));
     
-    // Adjust active layer index if needed
     if (activeLayerIndex_ > index) {
         size_t oldIndex = activeLayerIndex_;
         activeLayerIndex_++;
@@ -110,26 +106,30 @@ bool LayerManager::duplicateLayer(size_t index) {
     return true;
 }
 
-Layer* LayerManager::getLayer(size_t index) {
+Layer* LayerManager::getLayer(size_t index)
+{
     return isValidIndex(index) ? layers_[index].get() : nullptr;
 }
 
-const Layer* LayerManager::getLayer(size_t index) const {
+const Layer* LayerManager::getLayer(size_t index) const
+{
     return isValidIndex(index) ? layers_[index].get() : nullptr;
 }
 
-Layer* LayerManager::getActiveLayer() {
+Layer* LayerManager::getActiveLayer()
+{
     return getLayer(activeLayerIndex_);
 }
 
-const Layer* LayerManager::getActiveLayer() const {
+const Layer* LayerManager::getActiveLayer() const
+{
     return getLayer(activeLayerIndex_);
 }
 
-bool LayerManager::setActiveLayer(size_t index) {
-    if (!isValidIndex(index) || index == activeLayerIndex_) {
+bool LayerManager::setActiveLayer(size_t index)
+{
+    if (!isValidIndex(index) || index == activeLayerIndex_)
         return false;
-    }
     
     size_t oldIndex = activeLayerIndex_;
     activeLayerIndex_ = index;
@@ -137,51 +137,51 @@ bool LayerManager::setActiveLayer(size_t index) {
     return true;
 }
 
-bool LayerManager::setLayerVisibility(size_t index, bool visible) {
+bool LayerManager::setLayerVisibility(size_t index, bool visible)
+{
     Layer* layer = getLayer(index);
-    if (!layer) {
+    if (!layer)
         return false;
-    }
     
     layer->setVisible(visible);
     notifyLayerVisibilityChanged(index, visible);
     return true;
 }
 
-bool LayerManager::setLayerOpacity(size_t index, float opacity) {
+bool LayerManager::setLayerOpacity(size_t index, float opacity)
+{
     Layer* layer = getLayer(index);
-    if (!layer) {
+    if (!layer)
         return false;
-    }
     
     layer->setOpacity(opacity);
     return true;
 }
 
-bool LayerManager::setLayerBlendMode(size_t index, BlendMode mode) {
+bool LayerManager::setLayerBlendMode(size_t index, BlendMode mode)
+{
     Layer* layer = getLayer(index);
-    if (!layer) {
+    if (!layer)
         return false;
-    }
     
     layer->setBlendMode(mode);
     return true;
 }
 
-bool LayerManager::setLayerName(size_t index, const std::string& name) {
+bool LayerManager::setLayerName(size_t index, const std::string& name)
+{
     Layer* layer = getLayer(index);
-    if (!layer) {
+    if (!layer)
         return false;
-    }
     
     layer->setName(name);
     return true;
 }
 
-void LayerManager::resizeAllLayers(int width, int height) {
-    if (width <= 0 || height <= 0) {
+void LayerManager::resizeAllLayers(int width, int height)
+{
+    if (width <= 0 || height <= 0)
         return;
-    }
     
     canvasWidth_ = width;
     canvasHeight_ = height;
@@ -199,7 +199,6 @@ void LayerManager::renderComposite(RenderTexture2D& compositeTexture) const
     static int debugCount = 0;
     debugCount++;
     
-    // Always draw a test rectangle to verify composite rendering
     DrawRectangle(50, 50, 200, 200, RED);
     DrawRectangle(300, 300, 100, 100, GREEN);
     
@@ -221,20 +220,21 @@ void LayerManager::renderComposite(RenderTexture2D& compositeTexture) const
         }
     }
     
-    if (debugCount % 120 == 0) {
+    if (debugCount % 120 == 0)
         std::cout << "Rendered " << visibleLayers << " layers to composite with test rectangles" << std::endl;
-    }
     
     EndTextureMode();
 }
 
-void LayerManager::clear() {
+void LayerManager::clear()
+{
     for (auto& layer : layers_) {
         layer->clear(BLANK);
     }
 }
 
-std::vector<std::string> LayerManager::getLayerNames() const {
+std::vector<std::string> LayerManager::getLayerNames() const
+{
     std::vector<std::string> names;
     names.reserve(layers_.size());
     
@@ -245,30 +245,32 @@ std::vector<std::string> LayerManager::getLayerNames() const {
     return names;
 }
 
-int LayerManager::findLayerByName(const std::string& name) const {
+int LayerManager::findLayerByName(const std::string& name) const
+{
     for (size_t i = 0; i < layers_.size(); ++i) {
-        if (layers_[i]->getName() == name) {
+        if (layers_[i]->getName() == name)
             return static_cast<int>(i);
-        }
     }
     return -1;
 }
 
-void LayerManager::ensureDefaultLayer() {
+void LayerManager::ensureDefaultLayer()
+{
     if (layers_.empty()) {
         createLayer("Background");
         // Clear the background layer to white
-        if (!layers_.empty()) {
+        if (!layers_.empty())
             layers_[0]->clear(WHITE);
-        }
     }
 }
 
-bool LayerManager::isValidIndex(size_t index) const {
+bool LayerManager::isValidIndex(size_t index) const
+{
     return index < layers_.size();
 }
 
-void LayerManager::notifyLayerCreated(size_t index) {
+void LayerManager::notifyLayerCreated(size_t index)
+{
     if (eventDispatcher_) {
         LayerCreatedEvent event;
         event.layerIndex = index;
@@ -277,7 +279,8 @@ void LayerManager::notifyLayerCreated(size_t index) {
     }
 }
 
-void LayerManager::notifyLayerDeleted(size_t index, const std::string& name) {
+void LayerManager::notifyLayerDeleted(size_t index, const std::string& name)
+{
     if (eventDispatcher_) {
         LayerDeletedEvent event;
         event.layerIndex = index;
@@ -286,7 +289,8 @@ void LayerManager::notifyLayerDeleted(size_t index, const std::string& name) {
     }
 }
 
-void LayerManager::notifyLayerVisibilityChanged(size_t index, bool visible) {
+void LayerManager::notifyLayerVisibilityChanged(size_t index, bool visible)
+{
     if (eventDispatcher_) {
         LayerVisibilityChangedEvent event;
         event.layerIndex = index;
@@ -295,7 +299,8 @@ void LayerManager::notifyLayerVisibilityChanged(size_t index, bool visible) {
     }
 }
 
-void LayerManager::notifyLayerReordered(size_t fromIndex, size_t toIndex) {
+void LayerManager::notifyLayerReordered(size_t fromIndex, size_t toIndex)
+{
     if (eventDispatcher_) {
         LayerReorderedEvent event;
         event.fromIndex = fromIndex;
@@ -304,7 +309,8 @@ void LayerManager::notifyLayerReordered(size_t fromIndex, size_t toIndex) {
     }
 }
 
-void LayerManager::notifyActiveLayerChanged(size_t oldIndex, size_t newIndex) {
+void LayerManager::notifyActiveLayerChanged(size_t oldIndex, size_t newIndex)
+{
     if (eventDispatcher_) {
         ActiveLayerChangedEvent event;
         event.oldIndex = oldIndex;
