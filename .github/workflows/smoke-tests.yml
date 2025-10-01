@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+# High priority - run these first
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   smoke-tests:
     runs-on: ubuntu-latest

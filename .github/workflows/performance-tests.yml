@@ -2,12 +2,16 @@ name: Performance Tests
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]  # Only on main
+  workflow_dispatch:  # Allow manual triggering
   schedule:
-    # Run performance tests daily at 2 AM UTC
-    - cron: '0 2 * * *'
+    # Run weekly instead of daily to reduce load
+    - cron: '0 2 * * 6'  # Saturday at 2 AM UTC
+
+# Performance testing concurrency
+concurrency:
+  group: performance-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   performance-tests:

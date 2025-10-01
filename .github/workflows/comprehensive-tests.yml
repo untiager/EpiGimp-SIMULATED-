@@ -2,10 +2,15 @@ name: Comprehensive Test Suite
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]  # Only on main branch
   pull_request:
     branches: [ main ]
   workflow_dispatch: # Allow manual triggering
+
+# Lower priority workflow
+concurrency:
+  group: comprehensive-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   comprehensive-tests:

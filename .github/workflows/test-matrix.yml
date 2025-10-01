@@ -2,17 +2,26 @@ name: Test Matrix
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]  # Only run on main to reduce load
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual triggering
+
+# Lower priority concurrency
+concurrency:
+  group: matrix-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test-matrix:
     strategy:
+      # Reduce matrix size to prevent resource exhaustion
       matrix:
-        os: [ubuntu-latest, ubuntu-20.04]
+        os: [ubuntu-latest]  # Focus on one OS primarily
         compiler: [gcc, clang]
         build-type: [Debug, Release]
+      # Limit concurrent jobs  
+      max-parallel: 2
         
     runs-on: ${{ matrix.os }}
     

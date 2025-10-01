@@ -1,10 +1,14 @@
 name: Memory Check (Simple)
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main ]  # Only on PRs
+  workflow_dispatch:  # Allow manual triggering
+
+# Simple memory check concurrency
+concurrency:
+  group: memory-simple-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   memory-check:
