@@ -3,18 +3,18 @@
 
 namespace EpiGimp {
 
-// CreateLayerCommand Implementation
 CreateLayerCommand::CreateLayerCommand(LayerManager* layerManager, const std::string& layerName)
     : layerManager_(layerManager)
     , layerName_(layerName)
     , createdLayerIndex_(0)
-    , description_("Create Layer: " + layerName) {
-    if (!layerManager_) {
+    , description_("Create Layer: " + layerName)
+{
+    if (!layerManager_)
         throw std::invalid_argument("LayerManager cannot be null");
-    }
 }
 
-bool CreateLayerCommand::execute() {
+bool CreateLayerCommand::execute()
+{
     if (!layerManager_) return false;
     
     createdLayerIndex_ = layerManager_->createLayer(layerName_);
@@ -22,47 +22,44 @@ bool CreateLayerCommand::execute() {
     return true;
 }
 
-bool CreateLayerCommand::undo() {
+bool CreateLayerCommand::undo()
+{
     if (!layerManager_) return false;
     
     bool result = layerManager_->deleteLayer(createdLayerIndex_);
-    if (result) {
+    if (result)
         std::cout << "CreateLayerCommand: Undone - deleted layer at index " << createdLayerIndex_ << std::endl;
-    }
     return result;
 }
 
-// DeleteLayerCommand Implementation
 DeleteLayerCommand::DeleteLayerCommand(LayerManager* layerManager, size_t layerIndex)
     : layerManager_(layerManager)
     , layerIndex_(layerIndex)
-    , description_("Delete Layer") {
-    if (!layerManager_) {
+    , description_("Delete Layer")
+{
+    if (!layerManager_)
         throw std::invalid_argument("LayerManager cannot be null");
-    }
     
-    // Update description with layer name if possible
     const Layer* layer = layerManager_->getLayer(layerIndex);
-    if (layer) {
+    if (layer)
         description_ = "Delete Layer: " + layer->getName();
-    }
 }
 
-bool DeleteLayerCommand::execute() {
-    if (!layerManager_ || layerManager_->getLayerCount() <= 1) {
+bool DeleteLayerCommand::execute()
+{
+    if (!layerManager_ || layerManager_->getLayerCount() <= 1)
         return false; // Can't delete the last layer
-    }
     
     // Store the layer before deleting (note: this is a simplified approach)
     // In a full implementation, we'd need to properly store and restore the layer
     bool result = layerManager_->deleteLayer(layerIndex_);
-    if (result) {
+    if (result)
         std::cout << "DeleteLayerCommand: Deleted layer at index " << layerIndex_ << std::endl;
-    }
     return result;
 }
 
-bool DeleteLayerCommand::undo() {
+bool DeleteLayerCommand::undo()
+{
     // Note: This is a simplified implementation
     // A full implementation would need to restore the exact layer state
     if (!layerManager_) return false;
@@ -76,49 +73,45 @@ bool DeleteLayerCommand::undo() {
     return true;
 }
 
-// MoveLayerCommand Implementation
 MoveLayerCommand::MoveLayerCommand(LayerManager* layerManager, size_t fromIndex, size_t toIndex)
     : layerManager_(layerManager)
     , fromIndex_(fromIndex)
     , toIndex_(toIndex)
-    , description_("Move Layer from " + std::to_string(fromIndex) + " to " + std::to_string(toIndex)) {
-    if (!layerManager_) {
+    , description_("Move Layer from " + std::to_string(fromIndex) + " to " + std::to_string(toIndex))
+    {
+    if (!layerManager_)
         throw std::invalid_argument("LayerManager cannot be null");
-    }
 }
 
-bool MoveLayerCommand::execute() {
+bool MoveLayerCommand::execute()
+{
     if (!layerManager_) return false;
     
     bool result = layerManager_->moveLayer(fromIndex_, toIndex_);
-    if (result) {
+    if (result)
         std::cout << "MoveLayerCommand: Moved layer from " << fromIndex_ << " to " << toIndex_ << std::endl;
-    }
     return result;
 }
 
-bool MoveLayerCommand::undo() {
+bool MoveLayerCommand::undo()
+{
     if (!layerManager_) return false;
     
-    // Reverse the move operation
     bool result = layerManager_->moveLayer(toIndex_, fromIndex_);
-    if (result) {
+    if (result)
         std::cout << "MoveLayerCommand: Undone - moved layer from " << toIndex_ << " back to " << fromIndex_ << std::endl;
-    }
     return result;
 }
 
-// ToggleLayerVisibilityCommand Implementation
 ToggleLayerVisibilityCommand::ToggleLayerVisibilityCommand(LayerManager* layerManager, size_t layerIndex)
     : layerManager_(layerManager)
     , layerIndex_(layerIndex)
     , previousVisibility_(true)
-    , description_("Toggle Layer Visibility") {
-    if (!layerManager_) {
+    , description_("Toggle Layer Visibility")
+{
+    if (!layerManager_)
         throw std::invalid_argument("LayerManager cannot be null");
-    }
     
-    // Store current visibility state
     const Layer* layer = layerManager_->getLayer(layerIndex);
     if (layer) {
         previousVisibility_ = layer->isVisible();
@@ -126,7 +119,8 @@ ToggleLayerVisibilityCommand::ToggleLayerVisibilityCommand(LayerManager* layerMa
     }
 }
 
-bool ToggleLayerVisibilityCommand::execute() {
+bool ToggleLayerVisibilityCommand::execute()
+{
     if (!layerManager_) return false;
     
     const Layer* layer = layerManager_->getLayer(layerIndex_);
@@ -134,34 +128,31 @@ bool ToggleLayerVisibilityCommand::execute() {
     
     bool newVisibility = !layer->isVisible();
     bool result = layerManager_->setLayerVisibility(layerIndex_, newVisibility);
-    if (result) {
+    if (result)
         std::cout << "ToggleLayerVisibilityCommand: Set visibility to " << newVisibility << " for layer " << layerIndex_ << std::endl;
-    }
     return result;
 }
 
-bool ToggleLayerVisibilityCommand::undo() {
+bool ToggleLayerVisibilityCommand::undo()
+{
     if (!layerManager_) return false;
     
     bool result = layerManager_->setLayerVisibility(layerIndex_, previousVisibility_);
-    if (result) {
+    if (result)
         std::cout << "ToggleLayerVisibilityCommand: Restored visibility to " << previousVisibility_ << " for layer " << layerIndex_ << std::endl;
-    }
     return result;
 }
 
-// SetLayerOpacityCommand Implementation
 SetLayerOpacityCommand::SetLayerOpacityCommand(LayerManager* layerManager, size_t layerIndex, float opacity)
     : layerManager_(layerManager)
     , layerIndex_(layerIndex)
     , newOpacity_(opacity)
     , previousOpacity_(1.0f)
-    , description_("Set Layer Opacity") {
-    if (!layerManager_) {
+    , description_("Set Layer Opacity")
+{
+    if (!layerManager_)
         throw std::invalid_argument("LayerManager cannot be null");
-    }
     
-    // Store current opacity
     const Layer* layer = layerManager_->getLayer(layerIndex);
     if (layer) {
         previousOpacity_ = layer->getOpacity();
@@ -169,44 +160,42 @@ SetLayerOpacityCommand::SetLayerOpacityCommand(LayerManager* layerManager, size_
     }
 }
 
-bool SetLayerOpacityCommand::execute() {
+bool SetLayerOpacityCommand::execute()
+{
     if (!layerManager_) return false;
     
     bool result = layerManager_->setLayerOpacity(layerIndex_, newOpacity_);
-    if (result) {
+    if (result)
         std::cout << "SetLayerOpacityCommand: Set opacity to " << newOpacity_ << " for layer " << layerIndex_ << std::endl;
-    }
     return result;
 }
 
-bool SetLayerOpacityCommand::undo() {
+bool SetLayerOpacityCommand::undo()
+{
     if (!layerManager_) return false;
     
     bool result = layerManager_->setLayerOpacity(layerIndex_, previousOpacity_);
-    if (result) {
+    if (result)
         std::cout << "SetLayerOpacityCommand: Restored opacity to " << previousOpacity_ << " for layer " << layerIndex_ << std::endl;
-    }
     return result;
 }
 
-// DuplicateLayerCommand Implementation
 DuplicateLayerCommand::DuplicateLayerCommand(LayerManager* layerManager, size_t sourceLayerIndex)
     : layerManager_(layerManager)
     , sourceLayerIndex_(sourceLayerIndex)
     , createdLayerIndex_(0)
-    , description_("Duplicate Layer") {
-    if (!layerManager_) {
+    , description_("Duplicate Layer")
+{
+    if (!layerManager_)
         throw std::invalid_argument("LayerManager cannot be null");
-    }
     
-    // Update description with layer name
     const Layer* layer = layerManager_->getLayer(sourceLayerIndex);
-    if (layer) {
+    if (layer)
         description_ = "Duplicate Layer: " + layer->getName();
-    }
 }
 
-bool DuplicateLayerCommand::execute() {
+bool DuplicateLayerCommand::execute()
+{
     if (!layerManager_) return false;
     
     bool result = layerManager_->duplicateLayer(sourceLayerIndex_);
@@ -217,13 +206,13 @@ bool DuplicateLayerCommand::execute() {
     return result;
 }
 
-bool DuplicateLayerCommand::undo() {
+bool DuplicateLayerCommand::undo()
+{
     if (!layerManager_) return false;
     
     bool result = layerManager_->deleteLayer(createdLayerIndex_);
-    if (result) {
+    if (result)
         std::cout << "DuplicateLayerCommand: Undone - deleted duplicated layer at " << createdLayerIndex_ << std::endl;
-    }
     return result;
 }
 
