@@ -14,7 +14,6 @@ Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* hi
     if (!dispatcher)
         throw std::invalid_argument("EventDispatcher cannot be null");
     
-    // Subscribe to color change events
     dispatcher->subscribe<ColorChangedEvent>([this](const ColorChangedEvent& event) {
         onColorChanged(event);
     });
@@ -92,7 +91,6 @@ Rectangle Canvas::calculateImageDestRect() const
     float imageWidth = 0;
     float imageHeight = 0;
     
-    // Get dimensions from current texture
     if (currentTexture_) {
         imageWidth = (*currentTexture_)->width * zoomLevel_;
         imageHeight = (*currentTexture_)->height * zoomLevel_;
@@ -111,16 +109,12 @@ Vector2 Canvas::getImageCenter() const
 
 Image Canvas::copyDrawingImage() const
 {
-    if (!hasDrawingTexture()) {
-        // Return an empty image if no drawing texture exists
+    if (!hasDrawingTexture())
         return GenImageColor(1, 1, BLANK);
-    }
     
-    // Get the texture from the selected drawing layer and convert to image
     const DrawingLayer& layer = drawingLayers_[selectedLayerIndex_];
     Image image = LoadImageFromTexture((**layer.texture).texture);
     
-    // RenderTexture images need to be flipped vertically due to coordinate system differences
     ImageFlipVertical(&image);
     
     return image;
@@ -133,29 +127,30 @@ void Canvas::resetToBackground()
     backgroundVisible_ = true;
 }
 
-// Multi-layer management methods
-void Canvas::setSelectedLayerIndex(int index) {
+void Canvas::setSelectedLayerIndex(int index)
+{
     if (index >= -1 && index < static_cast<int>(drawingLayers_.size())) {
         selectedLayerIndex_ = index;
         std::cout << "Selected layer index: " << index << std::endl;
     }
 }
 
-const DrawingLayer* Canvas::getLayer(int index) const {
-    if (index >= 0 && index < static_cast<int>(drawingLayers_.size())) {
+const DrawingLayer* Canvas::getLayer(int index) const
+{
+    if (index >= 0 && index < static_cast<int>(drawingLayers_.size()))
         return &drawingLayers_[index];
-    }
     return nullptr;
 }
 
-DrawingLayer* Canvas::getLayer(int index) {
-    if (index >= 0 && index < static_cast<int>(drawingLayers_.size())) {
+DrawingLayer* Canvas::getLayer(int index)
+{
+    if (index >= 0 && index < static_cast<int>(drawingLayers_.size()))
         return &drawingLayers_[index];
-    }
     return nullptr;
 }
 
-int Canvas::addNewDrawingLayer(const std::string& name) {
+int Canvas::addNewDrawingLayer(const std::string& name)
+{
     if (!hasImage()) {
         std::cout << "Cannot add drawing layer: no background image loaded" << std::endl;
         return -1;
@@ -165,21 +160,20 @@ int Canvas::addNewDrawingLayer(const std::string& name) {
     drawingLayers_.emplace_back(layerName);
     int newIndex = static_cast<int>(drawingLayers_.size()) - 1;
     
-    // Initialize the texture for the new layer
     DrawingLayer& layer = drawingLayers_[newIndex];
     const int width = (*currentTexture_)->width;
     const int height = (*currentTexture_)->height;
     layer.texture = RenderTextureResource(width, height);
     layer.texture->clear(Color{0, 0, 0, 0}); // Clear with transparent
     
-    // Select the new layer
     selectedLayerIndex_ = newIndex;
     
     std::cout << "New drawing layer created: " << layerName << " (index " << newIndex << ")" << std::endl;
     return newIndex;
 }
 
-void Canvas::deleteLayer(int index) {
+void Canvas::deleteLayer(int index)
+{
     if (index >= 0 && index < static_cast<int>(drawingLayers_.size())) {
         std::string layerName = drawingLayers_[index].name;
         drawingLayers_.erase(drawingLayers_.begin() + index);
@@ -195,7 +189,8 @@ void Canvas::deleteLayer(int index) {
     }
 }
 
-void Canvas::clearLayer(int index) {
+void Canvas::clearLayer(int index)
+{
     if (index >= 0 && index < static_cast<int>(drawingLayers_.size())) {
         DrawingLayer& layer = drawingLayers_[index];
         if (layer.texture) {
@@ -205,12 +200,14 @@ void Canvas::clearLayer(int index) {
     }
 }
 
-bool Canvas::isLayerVisible(int index) const {
+bool Canvas::isLayerVisible(int index) const
+{
     const DrawingLayer* layer = getLayer(index);
     return layer ? layer->visible : false;
 }
 
-void Canvas::setLayerVisible(int index, bool visible) {
+void Canvas::setLayerVisible(int index, bool visible)
+{
     DrawingLayer* layer = getLayer(index);
     if (layer) {
         layer->visible = visible;
@@ -218,26 +215,27 @@ void Canvas::setLayerVisible(int index, bool visible) {
     }
 }
 
-const std::string& Canvas::getLayerName(int index) const {
+const std::string& Canvas::getLayerName(int index) const
+{
     static const std::string empty = "";
     const DrawingLayer* layer = getLayer(index);
     return layer ? layer->name : empty;
 }
 
-// Legacy compatibility methods
-bool Canvas::hasDrawingTexture() const {
+bool Canvas::hasDrawingTexture() const
+{
     return selectedLayerIndex_ >= 0 && selectedLayerIndex_ < static_cast<int>(drawingLayers_.size()) &&
            drawingLayers_[selectedLayerIndex_].texture.has_value();
 }
 
-void Canvas::clearDrawingLayer() {
-    if (selectedLayerIndex_ >= 0) {
+void Canvas::clearDrawingLayer()
+{
+    if (selectedLayerIndex_ >= 0)
         clearLayer(selectedLayerIndex_);
-    }
 }
 
-std::string Canvas::generateUniqueLayerName() const {
-    // Find the next available layer number
+std::string Canvas::generateUniqueLayerName() const
+{
     int nextNumber = 1;
     bool numberExists = true;
     
@@ -253,13 +251,12 @@ std::string Canvas::generateUniqueLayerName() const {
             }
         }
         
-        if (!numberExists) {
+        if (!numberExists)
             return candidateName;
-        }
         nextNumber++;
     }
     
-    // Fallback (should never reach here)
+    // Fallback
     return "Layer " + std::to_string(drawingLayers_.size() + 1);
 }
 
