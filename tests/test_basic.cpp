@@ -3,31 +3,15 @@
 #include <filesystem>
 #include <vector>
 #include <algorithm>
+#include "test_globals.hpp"
 
 // Test that basic raylib functionality works
 class BasicTest : public ::testing::Test {
 protected:
-    static bool initialized;
-    
     void SetUp() override {
-        if (!initialized) {
-            // Initialize in headless mode for testing
-            SetConfigFlags(FLAG_WINDOW_HIDDEN);
-            InitWindow(800, 600, "Test Window");
-            SetTargetFPS(60);
-            initialized = true;
-        }
-    }
-    
-    static void TearDownTestSuite() {
-        if (initialized) {
-            CloseWindow();
-            initialized = false;
-        }
+        // Raylib is already initialized by GlobalTestEnvironment
     }
 };
-
-bool BasicTest::initialized = false;
 
 // Test fixture for file system operations
 class FileSystemTest : public ::testing::Test {

@@ -67,7 +67,6 @@ if(BUILD_TESTS)
     
     target_link_libraries(EpiGimpTests PRIVATE 
         EpiGimpLib
-        gtest_main
         gtest
         raylib
         m
