@@ -222,38 +222,52 @@ void ColorPalette::updateRgbInput()
     for (int i = 0; i < 3; i++) {
         if (rgbInputActive_[i]) {
             int key = GetCharPressed();
+            bool inputChanged = false;
             
-            // Handle numeric input
             if (key >= '0' && key <= '9') {
                 int len = strlen(rgbInput_[i]);
                 if (len < 3) { // Max 3 digits for RGB (0-255)
                     rgbInput_[i][len] = (char)key;
                     rgbInput_[i][len + 1] = '\0';
+                    inputChanged = true;
                 }
             }
             
-            // Handle backspace
             if (IsKeyPressed(KEY_BACKSPACE)) {
                 int len = strlen(rgbInput_[i]);
-                if (len > 0)
+                if (len > 0) {
                     rgbInput_[i][len - 1] = '\0';
+                    inputChanged = true;
+                }
             }
             
-            // Handle enter to apply color
-            if (IsKeyPressed(KEY_ENTER)) {
-                int r = atoi(rgbInput_[0]);
-                int g = atoi(rgbInput_[1]);
-                int b = atoi(rgbInput_[2]);
+            // Update preview color in real-time when input changes
+            if (inputChanged) {
+                int r = strlen(rgbInput_[0]) > 0 ? atoi(rgbInput_[0]) : 0;
+                int g = strlen(rgbInput_[1]) > 0 ? atoi(rgbInput_[1]) : 0;
+                int b = strlen(rgbInput_[2]) > 0 ? atoi(rgbInput_[2]) : 0;
                 
                 // Clamp values to 0-255
                 r = std::clamp(r, 0, 255);
                 g = std::clamp(g, 0, 255);
                 b = std::clamp(b, 0, 255);
                 
-                // Update the color
+                // Update preview color (but don't emit event yet)
                 selectedColor_ = Color{(unsigned char)r, (unsigned char)g, (unsigned char)b, 255};
+            }
+            
+            if (IsKeyPressed(KEY_ENTER)) {
+                int r = strlen(rgbInput_[0]) > 0 ? atoi(rgbInput_[0]) : 0;
+                int g = strlen(rgbInput_[1]) > 0 ? atoi(rgbInput_[1]) : 0;
+                int b = strlen(rgbInput_[2]) > 0 ? atoi(rgbInput_[2]) : 0;
                 
-                // Update the RGB input fields to show the clamped values
+                // Clamp values to 0-255
+                r = std::clamp(r, 0, 255);
+                g = std::clamp(g, 0, 255);
+                b = std::clamp(b, 0, 255);
+                
+                // Update the color and input fields to show the clamped values
+                selectedColor_ = Color{(unsigned char)r, (unsigned char)g, (unsigned char)b, 255};
                 sprintf(rgbInput_[0], "%d", r);
                 sprintf(rgbInput_[1], "%d", g);
                 sprintf(rgbInput_[2], "%d", b);
@@ -263,7 +277,7 @@ void ColorPalette::updateRgbInput()
                     swatch->isSelected = false;
                 }
                 
-                // Emit color changed event
+                // Emit color changed event to apply the color
                 eventDispatcher_->emit<ColorChangedEvent>(ColorChangedEvent(selectedColor_));
                 
                 rgbInputActive_[i] = false;
@@ -322,7 +336,7 @@ void ColorPalette::drawRgbInput() const
     DrawText(rgbText, static_cast<int>(rgbPreviewRect_.x), static_cast<int>(rgbPreviewRect_.y + rgbPreviewRect_.height + 10), 12, WHITE);
     
     float instructionY = rgbWindow_.y + rgbWindow_.height - 60;
-    DrawText("• Click on R, G, or B fields to edit values (0-255)", static_cast<int>(rgbWindow_.x + 20), static_cast<int>(instructionY), 10, LIGHTGRAY);
+    DrawText("• Type RGB values (0-255) - preview updates in real-time", static_cast<int>(rgbWindow_.x + 20), static_cast<int>(instructionY), 10, LIGHTGRAY);
     DrawText("• Press ENTER to apply color and close", static_cast<int>(rgbWindow_.x + 20), static_cast<int>(instructionY + 15), 10, LIGHTGRAY);
     DrawText("• Press ESCAPE or click X to cancel", static_cast<int>(rgbWindow_.x + 20), static_cast<int>(instructionY + 30), 10, LIGHTGRAY);
 }
