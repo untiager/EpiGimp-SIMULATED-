@@ -34,10 +34,15 @@ private:
     int selectedIndex_;
     
     // RGB input state
-    mutable char rgbInput_[4][4];  // R, G, B text inputs (3 chars + null terminator each)
-    mutable bool rgbInputActive_[3]; // Which RGB field is being edited
-    mutable Rectangle rgbInputRects_[3]; // Input field rectangles
+    char rgbInput_[3][4];        // RGB input strings (R, G, B)
+    bool rgbInputActive_[3];     // Which RGB input field is active
+    Rectangle rgbInputRects_[3]; // Input field rectangles  
     mutable bool showRgbInput_;  // Whether to show the RGB input area
+    
+    // RGB Window properties
+    mutable Rectangle rgbWindow_;
+    mutable Rectangle rgbPreviewRect_;
+    mutable Rectangle rgbCloseButton_;
 
     void initializePalette();
 

@@ -71,11 +71,22 @@ void ColorPalette::update(float /*deltaTime*/)
     const Vector2 mousePos = GetMousePosition();
     
     Rectangle rgbToggleButton = {bounds_.x + bounds_.width - 25, bounds_.y + bounds_.height - 20, 20, 15};
-    if (CheckCollisionPointRec(mousePos, rgbToggleButton) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    
+    if (CheckCollisionPointRec(mousePos, rgbToggleButton) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         toggleRgbInput();
+        return; // Don't process anything else this frame when toggling
+    }
     
     if (showRgbInput_) {
         updateRgbInput();
+        
+        Vector2 mousePos = GetMousePosition();
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && 
+            !CheckCollisionPointRec(mousePos, rgbWindow_) &&
+            !CheckCollisionPointRec(mousePos, rgbToggleButton)) {
+            showRgbInput_ = false;
+        }
+        
         return; // Don't process swatch clicks when RGB panel is open
     }
     
@@ -164,26 +175,40 @@ void ColorPalette::toggleRgbInput()
     showRgbInput_ = !showRgbInput_;
     
     if (showRgbInput_) {
-        // Initialize RGB input fields with current color
         sprintf(rgbInput_[0], "%d", selectedColor_.r);
         sprintf(rgbInput_[1], "%d", selectedColor_.g);
         sprintf(rgbInput_[2], "%d", selectedColor_.b);
         
-        // Setup input field rectangles - make them larger and more spaced
-        float inputWidth = 45;
-        float inputHeight = 25;
-        float startX = bounds_.x + 25;
-        float startY = bounds_.y + bounds_.height - 50;
+        float windowWidth = 350;
+        float windowHeight = 200;
+        float windowX = (GetScreenWidth() - windowWidth) / 2;
+        float windowY = (GetScreenHeight() - windowHeight) / 2;
         
-        rgbInputRects_[0] = {startX, startY, inputWidth, inputHeight};          // R
-        rgbInputRects_[1] = {startX + 55, startY, inputWidth, inputHeight};     // G
-        rgbInputRects_[2] = {startX + 110, startY, inputWidth, inputHeight};    // B
+        rgbWindow_ = {windowX, windowY, windowWidth, windowHeight};
+        
+        float inputWidth = 60;
+        float inputHeight = 30;
+        float startX = windowX + 40;
+        float startY = windowY + 60;
+        
+        rgbInputRects_[0] = {startX, startY, inputWidth, inputHeight};             // R
+        rgbInputRects_[1] = {startX + 80, startY, inputWidth, inputHeight};        // G
+        rgbInputRects_[2] = {startX + 160, startY, inputWidth, inputHeight};       // B
+        
+        rgbPreviewRect_ = {windowX + 250, windowY + 40, 80, 60};
+        
+        rgbCloseButton_ = {windowX + windowWidth - 35, windowY + 5, 25, 25};
     }
 }
 
 void ColorPalette::updateRgbInput()
 {
     Vector2 mousePos = GetMousePosition();
+    
+    if (CheckCollisionPointRec(mousePos, rgbCloseButton_) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        showRgbInput_ = false;
+        return;
+    }
     
     for (int i = 0; i < 3; i++) {
         if (CheckCollisionPointRec(mousePos, rgbInputRects_[i]) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
@@ -210,9 +235,8 @@ void ColorPalette::updateRgbInput()
             // Handle backspace
             if (IsKeyPressed(KEY_BACKSPACE)) {
                 int len = strlen(rgbInput_[i]);
-                if (len > 0) {
+                if (len > 0)
                     rgbInput_[i][len - 1] = '\0';
-                }
             }
             
             // Handle enter to apply color
@@ -229,6 +253,11 @@ void ColorPalette::updateRgbInput()
                 // Update the color
                 selectedColor_ = Color{(unsigned char)r, (unsigned char)g, (unsigned char)b, 255};
                 
+                // Update the RGB input fields to show the clamped values
+                sprintf(rgbInput_[0], "%d", r);
+                sprintf(rgbInput_[1], "%d", g);
+                sprintf(rgbInput_[2], "%d", b);
+                
                 // Deselect all swatches since this is a custom color
                 for (auto& swatch : swatches_) {
                     swatch->isSelected = false;
@@ -238,37 +267,64 @@ void ColorPalette::updateRgbInput()
                 eventDispatcher_->emit<ColorChangedEvent>(ColorChangedEvent(selectedColor_));
                 
                 rgbInputActive_[i] = false;
+                showRgbInput_ = false; // Close the window after applying
             }
+            
+            if (IsKeyPressed(KEY_ESCAPE))
+                showRgbInput_ = false;
         }
     }
 }
 
 void ColorPalette::drawRgbInput() const
 {
-    Rectangle inputArea = {bounds_.x + 2, bounds_.y + bounds_.height - 55, bounds_.width - 4, 53};
-    DrawRectangleRec(inputArea, Color{40, 40, 40, 255});
-    DrawRectangleLinesEx(inputArea, 2, WHITE);
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Color{0, 0, 0, 100});
     
-    const char* labels[] = {"R:", "G:", "B:"};
+    DrawRectangleRec(rgbWindow_, Color{50, 50, 50, 255});
+    DrawRectangleLinesEx(rgbWindow_, 3, WHITE);
+    
+    DrawText("RGB Color Picker", static_cast<int>(rgbWindow_.x + 20), static_cast<int>(rgbWindow_.y + 15), 16, WHITE);
+    
+    DrawRectangleRec(rgbCloseButton_, Color{200, 50, 50, 255});
+    DrawRectangleLinesEx(rgbCloseButton_, 1, WHITE);
+    DrawText("X", static_cast<int>(rgbCloseButton_.x + 8), static_cast<int>(rgbCloseButton_.y + 5), 14, WHITE);
+    
+    const char* labels[] = {"Red", "Green", "Blue"};
+    Color labelColors[] = {Color{255, 100, 100, 255}, Color{100, 255, 100, 255}, Color{100, 100, 255, 255}};
     
     for (int i = 0; i < 3; i++) {
-        // Draw label - larger and better positioned
-        DrawText(labels[i], static_cast<int>(rgbInputRects_[i].x - 18), static_cast<int>(rgbInputRects_[i].y + 7), 12, WHITE);
+        // Draw colored label
+        DrawText(labels[i], static_cast<int>(rgbInputRects_[i].x), static_cast<int>(rgbInputRects_[i].y - 25), 14, labelColors[i]);
         
-        // Draw input field with better styling
-        Color fieldColor = rgbInputActive_[i] ? Color{120, 120, 255, 255} : Color{70, 70, 70, 255};
+        // Draw input field
+        Color fieldColor = rgbInputActive_[i] ? Color{150, 150, 255, 255} : Color{80, 80, 80, 255};
         DrawRectangleRec(rgbInputRects_[i], fieldColor);
         DrawRectangleLinesEx(rgbInputRects_[i], rgbInputActive_[i] ? 3 : 2, WHITE);
         
-        // Draw input text - larger font and better centering
-        DrawText(rgbInput_[i], static_cast<int>(rgbInputRects_[i].x + 5), static_cast<int>(rgbInputRects_[i].y + 7), 12, WHITE);
+        // Draw input text (centered)
+        Vector2 textSize = MeasureTextEx(GetFontDefault(), rgbInput_[i], 16, 1);
+        float textX = rgbInputRects_[i].x + (rgbInputRects_[i].width - textSize.x) / 2;
+        float textY = rgbInputRects_[i].y + (rgbInputRects_[i].height - textSize.y) / 2;
+        DrawText(rgbInput_[i], static_cast<int>(textX), static_cast<int>(textY), 16, WHITE);
+        
+        // Draw value label below input
+        char valueText[10];
+        sprintf(valueText, "(%d)", atoi(rgbInput_[i]));
+        DrawText(valueText, static_cast<int>(rgbInputRects_[i].x + 15), static_cast<int>(rgbInputRects_[i].y + 35), 10, LIGHTGRAY);
     }
     
-    Rectangle colorPreview = {bounds_.x + bounds_.width - 35, bounds_.y + bounds_.height - 45, 30, 25};
-    DrawRectangleRec(colorPreview, selectedColor_);
-    DrawRectangleLinesEx(colorPreview, 2, WHITE);
+    DrawRectangleRec(rgbPreviewRect_, selectedColor_);
+    DrawRectangleLinesEx(rgbPreviewRect_, 3, WHITE);
+    DrawText("Preview", static_cast<int>(rgbPreviewRect_.x + 10), static_cast<int>(rgbPreviewRect_.y - 20), 12, WHITE);
     
-    DrawText("Enter RGB values (0-255) and press ENTER", static_cast<int>(bounds_.x + 5), static_cast<int>(bounds_.y + bounds_.height - 20), 9, WHITE);
+    char rgbText[50];
+    sprintf(rgbText, "RGB(%d, %d, %d)", selectedColor_.r, selectedColor_.g, selectedColor_.b);
+    DrawText(rgbText, static_cast<int>(rgbPreviewRect_.x), static_cast<int>(rgbPreviewRect_.y + rgbPreviewRect_.height + 10), 12, WHITE);
+    
+    float instructionY = rgbWindow_.y + rgbWindow_.height - 60;
+    DrawText("• Click on R, G, or B fields to edit values (0-255)", static_cast<int>(rgbWindow_.x + 20), static_cast<int>(instructionY), 10, LIGHTGRAY);
+    DrawText("• Press ENTER to apply color and close", static_cast<int>(rgbWindow_.x + 20), static_cast<int>(instructionY + 15), 10, LIGHTGRAY);
+    DrawText("• Press ESCAPE or click X to cancel", static_cast<int>(rgbWindow_.x + 20), static_cast<int>(instructionY + 30), 10, LIGHTGRAY);
 }
 
 } // namespace EpiGimp
