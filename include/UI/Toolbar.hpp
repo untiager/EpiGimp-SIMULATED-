@@ -32,6 +32,12 @@ private:
     EventDispatcher* eventDispatcher_;
     Color selectedColor_;
     int selectedIndex_;
+    
+    // RGB input state
+    mutable char rgbInput_[4][4];  // R, G, B text inputs (3 chars + null terminator each)
+    mutable bool rgbInputActive_[3]; // Which RGB field is being edited
+    mutable Rectangle rgbInputRects_[3]; // Input field rectangles
+    mutable bool showRgbInput_;  // Whether to show the RGB input area
 
     void initializePalette();
 
@@ -43,6 +49,11 @@ public:
     Rectangle getBounds() const { return bounds_; }
     Color getSelectedColor() const { return selectedColor_; }
     void setSelectedColor(Color color);
+    
+    // RGB input methods
+    void toggleRgbInput();
+    void updateRgbInput();
+    void drawRgbInput() const;
 };
 
 class Toolbar : public IToolbar {
