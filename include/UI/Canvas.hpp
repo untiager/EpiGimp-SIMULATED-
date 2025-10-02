@@ -81,6 +81,7 @@ public:
     int addNewDrawingLayer(const std::string& name = "");
     void deleteLayer(int index);
     void clearLayer(int index);
+    void moveLayer(int fromIndex, int toIndex);  // Move layer to new position
     bool isLayerVisible(int index) const;
     void setLayerVisible(int index, bool visible);
     const std::string& getLayerName(int index) const;

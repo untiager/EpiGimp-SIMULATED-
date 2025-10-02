@@ -200,6 +200,29 @@ void Canvas::clearLayer(int index)
     }
 }
 
+void Canvas::moveLayer(int fromIndex, int toIndex)
+{
+    if (fromIndex >= 0 && fromIndex < static_cast<int>(drawingLayers_.size()) &&
+        toIndex >= 0 && toIndex < static_cast<int>(drawingLayers_.size()) &&
+        fromIndex != toIndex) {
+        
+        DrawingLayer layer = std::move(drawingLayers_[fromIndex]);
+        drawingLayers_.erase(drawingLayers_.begin() + fromIndex);
+        drawingLayers_.insert(drawingLayers_.begin() + toIndex, std::move(layer));
+        
+        // Adjust selected layer index
+        if (selectedLayerIndex_ == fromIndex) {
+            selectedLayerIndex_ = toIndex;
+        } else if (fromIndex < toIndex && selectedLayerIndex_ > fromIndex && selectedLayerIndex_ <= toIndex) {
+            selectedLayerIndex_--;
+        } else if (fromIndex > toIndex && selectedLayerIndex_ >= toIndex && selectedLayerIndex_ < fromIndex) {
+            selectedLayerIndex_++;
+        }
+        
+        std::cout << "Moved layer from index " << fromIndex << " to " << toIndex << std::endl;
+    }
+}
+
 bool Canvas::isLayerVisible(int index) const
 {
     const DrawingLayer* layer = getLayer(index);

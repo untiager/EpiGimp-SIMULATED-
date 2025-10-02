@@ -19,13 +19,17 @@ private:
     Canvas* canvas_;
     EventDispatcher* eventDispatcher_;
     
-    // UI state
     mutable bool backgroundHovered_;
     mutable std::vector<bool> layerHovered_;  // Track hover state for each layer
     mutable bool addButtonHovered_;
     mutable bool deleteButtonHovered_;
     mutable bool clearButtonHovered_;
     mutable float scrollOffset_;              // For scrolling through layers
+    
+    mutable bool isDragging_;                 // Whether a layer is being dragged
+    mutable int dragStartIndex_;              // Index of the layer being dragged
+    mutable Vector2 dragOffset_;              // Offset from mouse to layer item origin
+    mutable Vector2 dragStartPos_;            // Mouse position when drag started
     
 public:
     SimpleLayerPanel(Rectangle bounds, Canvas* canvas, EventDispatcher* dispatcher);
@@ -37,7 +41,8 @@ public:
     
 private:
     void handleInput();
-    void drawLayerItem(const char* name, bool visible, bool hovered, bool selected, Rectangle itemRect) const;
+    void handleLayerDrag();
+    void drawLayerItem(const char* name, bool visible, bool hovered, bool selected, Rectangle itemRect, int layerIndex = -1) const;
     void drawButton(const char* text, Rectangle buttonRect, bool& hovered, Color baseColor) const;
     Rectangle getAddButtonRect() const;
     Rectangle getDeleteButtonRect() const;

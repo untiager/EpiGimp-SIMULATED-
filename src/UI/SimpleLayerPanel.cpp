@@ -8,7 +8,8 @@ namespace EpiGimp {
 SimpleLayerPanel::SimpleLayerPanel(Rectangle bounds, Canvas* canvas, EventDispatcher* dispatcher)
     : bounds_(bounds), canvas_(canvas), eventDispatcher_(dispatcher),
       backgroundHovered_(false), addButtonHovered_(false), deleteButtonHovered_(false), 
-      clearButtonHovered_(false), scrollOffset_(0.0f)
+      clearButtonHovered_(false), scrollOffset_(0.0f),
+      isDragging_(false), dragStartIndex_(-1), dragOffset_{0, 0}, dragStartPos_{0, 0}
 {
     if (!canvas_)
         throw std::invalid_argument("Canvas cannot be null");
@@ -23,6 +24,7 @@ SimpleLayerPanel::SimpleLayerPanel(Rectangle bounds, Canvas* canvas, EventDispat
 void SimpleLayerPanel::update(float /*deltaTime*/)
 {
     handleInput();
+    handleLayerDrag();
 }
 
 void SimpleLayerPanel::draw() const
@@ -95,7 +97,7 @@ void SimpleLayerPanel::draw() const
             const std::string& layerName = canvas_->getLayerName(i);
             bool isHovered = i < static_cast<int>(layerHovered_.size()) ? layerHovered_[i] : false;
             
-            drawLayerItem(layerName.c_str(), isVisible, isHovered, isSelected, layerRect);
+            drawLayerItem(layerName.c_str(), isVisible, isHovered, isSelected, layerRect, i);
         }
     }
     
@@ -181,10 +183,16 @@ void SimpleLayerPanel::handleInput()
                         canvas_->setLayerVisible(i, newState);
                         std::cout << "Layer " << i << " " << (newState ? "shown" : "hidden") << std::endl;
                     } else {
-                        // Select the layer
+                        // Select the layer and start drag operation
                         canvas_->setSelectedLayerIndex(i);
                         std::cout << "Selected layer index: " << i << std::endl;
                         std::cout << "Selected layer: " << canvas_->getLayerName(i) << std::endl;
+                        
+                        // Start dragging
+                        isDragging_ = true;
+                        dragStartIndex_ = i;
+                        dragStartPos_ = mousePos;
+                        dragOffset_ = {mousePos.x - layerRect.x, mousePos.y - layerRect.y};
                     }
                     break;
                 }
@@ -214,11 +222,17 @@ void SimpleLayerPanel::handleInput()
     }
 }
 
-void SimpleLayerPanel::drawLayerItem(const char* name, bool visible, bool hovered, bool selected, Rectangle itemRect) const
+void SimpleLayerPanel::drawLayerItem(const char* name, bool visible, bool hovered, bool selected, Rectangle itemRect, int layerIndex) const
 {
+    bool isBeingDragged = (isDragging_ && layerIndex == dragStartIndex_);
+    
     Color bgColor = selected ? Color{80, 120, 80, 255} : (hovered ? Color{60, 60, 60, 255} : Color{50, 50, 50, 255});
+    
+    if (isBeingDragged)
+        bgColor = Color{100, 100, 200, 200}; // Semi-transparent blue when dragging
+    
     DrawRectangleRec(itemRect, bgColor);
-    DrawRectangleLinesEx(itemRect, 1, visible ? WHITE : GRAY);
+    DrawRectangleLinesEx(itemRect, isBeingDragged ? 2 : 1, visible ? WHITE : GRAY);
     
     float eyeX = itemRect.x + 15;
     float eyeY = itemRect.y + itemRect.height / 2;
@@ -370,6 +384,48 @@ void SimpleLayerPanel::updateLayerHoverStates()
     addButtonHovered_ = CheckCollisionPointRec(mousePos, getAddButtonRect());
     deleteButtonHovered_ = hasSelectedLayer && CheckCollisionPointRec(mousePos, getDeleteButtonRect());
     clearButtonHovered_ = hasSelectedLayer && CheckCollisionPointRec(mousePos, getClearButtonRect());
+}
+
+void SimpleLayerPanel::handleLayerDrag()
+{
+    if (isDragging_ && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        // Continue dragging - could add visual feedback here
+        // For now, just track that we're still dragging
+    }
+    
+    if (isDragging_ && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        Vector2 mousePos = GetMousePosition();
+        
+        const float titleHeight = 25;
+        const float layerHeight = 35;
+        float currentY = bounds_.y + titleHeight - scrollOffset_;
+        
+        int layerCount = canvas_->getLayerCount();
+        int targetIndex = -1;
+        
+        // Check if mouse is over any layer
+        for (int i = 0; i < layerCount; i++) {
+            Rectangle layerRect = {
+                bounds_.x + 5,
+                currentY + (i * layerHeight),
+                bounds_.width - 10,
+                30
+            };
+            
+            if (CheckCollisionPointRec(mousePos, layerRect)) {
+                targetIndex = i;
+                break;
+            }
+        }
+        
+        if (targetIndex >= 0 && targetIndex != dragStartIndex_) {
+            canvas_->moveLayer(dragStartIndex_, targetIndex);
+            std::cout << "Moved layer from " << dragStartIndex_ << " to " << targetIndex << std::endl;
+        }
+        
+        isDragging_ = false;
+        dragStartIndex_ = -1;
+    }
 }
 
 } // namespace EpiGimp
