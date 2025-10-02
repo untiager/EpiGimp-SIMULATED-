@@ -1,5 +1,5 @@
-#ifndef LAYERPANEL_HPP
-#define LAYERPANEL_HPP
+#ifndef SIMPLELAYERPANEL_HPP
+#define SIMPLELAYERPANEL_HPP
 
 #include "raylib.h"
 #include "../Core/Interfaces.hpp"
@@ -47,4 +47,4 @@ private:
 
 } // namespace EpiGimp
 
-#endif // LAYERPANEL_HPP
+#endif // SIMPLELAYERPANEL_HPP

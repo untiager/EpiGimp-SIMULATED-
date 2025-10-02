@@ -180,7 +180,9 @@ void Canvas::drawImage() const
     if (backgroundVisible_ && currentTexture_)
         DrawTexture(**currentTexture_, static_cast<int>(imageDestRect.x), static_cast<int>(imageDestRect.y), WHITE);
     
-    for (const auto& layer : drawingLayers_) {
+    // Draw layers in reverse order so that layer 0 (top of the list) appears on top visually
+    for (int i = static_cast<int>(drawingLayers_.size()) - 1; i >= 0; --i) {
+        const auto& layer = drawingLayers_[i];
         if (layer.visible && layer.texture) {
             const Texture2D& layerTex = (**layer.texture).texture;
             
