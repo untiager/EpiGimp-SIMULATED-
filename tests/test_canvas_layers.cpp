@@ -22,7 +22,8 @@ protected:
         canvas_ = std::make_unique<Canvas>(
             Rectangle{0, 0, 800.0f, 600.0f}, 
             dispatcher_.get(), 
-            historyManager_.get()
+            historyManager_.get(),
+            false  // Disable auto-create blank canvas for tests
         );
     }
     

@@ -38,6 +38,29 @@ void Canvas::loadImage(const std::string& filePath)
     std::cout << "Image loaded successfully: " << filePath << std::endl;
 }
 
+void Canvas::createBlankCanvas(int width, int height, Color backgroundColor)
+{
+    Image blankImage = GenImageColor(width, height, backgroundColor);
+    
+    currentTexture_ = TextureResource::fromImage(blankImage);
+    currentImagePath_ = ""; // No file path for blank canvas
+    
+    std::cout << "Canvas: Created blank canvas " << width << "x" << height << std::endl;
+    
+    UnloadImage(blankImage);
+    
+    if (currentTexture_)
+        initializeDrawingTexture();
+    
+    resetViewTransform();
+    std::cout << "Canvas: View transform reset to defaults" << std::endl;
+    
+    addNewDrawingLayer("Layer 1");
+    
+    eventDispatcher_->emit<ImageLoadedEvent>("blank_canvas");
+    std::cout << "Blank canvas created successfully with initial layer" << std::endl;
+}
+
 bool Canvas::saveImage(const std::string& filePath)
 {
     if (!hasImage()) {

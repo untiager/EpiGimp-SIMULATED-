@@ -39,8 +39,8 @@ void Application::draw()
     DrawLine(0, statusY, config_.windowWidth, statusY, GRAY);
     
     const std::string statusText = canvas_->hasImage() 
-        ? "Image loaded | Zoom: " + std::to_string(static_cast<int>(canvas_->getZoom() * 100)) + "%"
-        : "Ready - Load an image to get started";
+        ? "Canvas ready | Zoom: " + std::to_string(static_cast<int>(canvas_->getZoom() * 100)) + "%"
+        : "Initializing canvas...";
     
     DrawText(statusText.c_str(), 10, statusY + 5, 14, BLACK);
     

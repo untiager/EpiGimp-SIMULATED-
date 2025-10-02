@@ -4,7 +4,7 @@
 
 namespace EpiGimp {
 
-Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* historyManager)
+Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* historyManager, bool autoCreateBlankCanvas)
     : bounds_(bounds), zoomLevel_(1.0f), panOffset_{0, 0}, eventDispatcher_(dispatcher),
       historyManager_(historyManager), currentTool_(DrawingTool::None), isDrawing_(false), 
       lastMousePos_{0, 0}, drawingColor_(BLACK), // Initialize with black color
@@ -17,6 +17,9 @@ Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* hi
     dispatcher->subscribe<ColorChangedEvent>([this](const ColorChangedEvent& event) {
         onColorChanged(event);
     });
+    
+    if (autoCreateBlankCanvas)
+        createBlankCanvas(800, 600, WHITE);
     
     std::cout << "Canvas initialized with bounds: " 
               << bounds.x << ", " << bounds.y << ", " 
@@ -69,7 +72,7 @@ void Canvas::setDrawingTool(DrawingTool tool)
 
 void Canvas::drawPlaceholder() const
 {
-    const char* text = "No image loaded. Use 'Load Image' to open a file.";
+    const char* text = "Canvas ready for drawing. Select a tool to start!";
     int textWidth = MeasureText(text, 20);
     
     float centerX = bounds_.x + bounds_.width / 2 - textWidth / 2;

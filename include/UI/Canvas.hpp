@@ -48,7 +48,7 @@ private:
     static constexpr float PAN_SPEED = 2.0f;
 
 public:
-    explicit Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* historyManager = nullptr);
+    explicit Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* historyManager = nullptr, bool autoCreateBlankCanvas = true);
     ~Canvas() override = default;
 
     Canvas(const Canvas&) = delete;
@@ -61,6 +61,7 @@ public:
     Rectangle getBounds() const override { return bounds_; }
 
     void loadImage(const std::string& filePath) override;
+    void createBlankCanvas(int width = 800, int height = 600, Color backgroundColor = WHITE);
     bool saveImage(const std::string& filePath) override;
     bool hasImage() const override;
     void setZoom(float zoom) override;
