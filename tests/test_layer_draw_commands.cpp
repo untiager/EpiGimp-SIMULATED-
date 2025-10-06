@@ -46,6 +46,13 @@ protected:
         // Note: We can't easily simulate mouse input in tests,
         // so we'll test the command creation and execution directly
     }
+    
+    void drawTestStrokeWithBrush() {
+        // Simulate drawing with brush tool
+        canvas_->setDrawingTool(DrawingTool::Brush);
+        // Note: We can't easily simulate mouse input in tests,
+        // so we'll test the command creation and execution directly
+    }
 };
 
 // Test DrawCommand basic functionality
@@ -320,6 +327,73 @@ TEST_F(LayerDrawCommandTest, DrawCommandEdgeCases) {
     doubleCommand->captureBeforeState(); // Should handle gracefully
     doubleCommand->captureAfterState();
     doubleCommand->captureAfterState(); // Should handle gracefully
+}
+
+// Brush Tool Specific Tests
+TEST_F(LayerDrawCommandTest, BrushToolDrawCommand) {
+    setupTestCanvas();
+    
+    // Set brush tool
+    canvas_->setDrawingTool(DrawingTool::Brush);
+    
+    // Create draw command with brush tool
+    auto command = createDrawCommand(canvas_.get(), "Brush Draw Command");
+    
+    ASSERT_NE(command, nullptr);
+    EXPECT_EQ(command->getDescription(), "Brush Draw Command");
+    
+    // Test state capture with brush tool
+    canvas_->setSelectedLayerIndex(0);
+    EXPECT_NO_THROW(command->captureBeforeState());
+    EXPECT_NO_THROW(command->captureAfterState());
+    
+    // Test execution
+    EXPECT_TRUE(command->execute());
+    EXPECT_TRUE(command->undo());
+}
+
+TEST_F(LayerDrawCommandTest, BrushVsCrayonToolCommands) {
+    setupTestCanvas();
+    canvas_->setSelectedLayerIndex(0);
+    
+    // Test brush tool command
+    canvas_->setDrawingTool(DrawingTool::Brush);
+    auto brushCommand = createDrawCommand(canvas_.get(), "Brush Command");
+    EXPECT_NO_THROW(brushCommand->captureBeforeState());
+    EXPECT_NO_THROW(brushCommand->captureAfterState());
+    
+    // Test crayon tool command
+    canvas_->setDrawingTool(DrawingTool::Crayon);
+    auto crayonCommand = createDrawCommand(canvas_.get(), "Crayon Command");
+    EXPECT_NO_THROW(crayonCommand->captureBeforeState());
+    EXPECT_NO_THROW(crayonCommand->captureAfterState());
+    
+    // Both should execute successfully
+    EXPECT_TRUE(brushCommand->execute());
+    EXPECT_TRUE(crayonCommand->execute());
+    
+    // Both should undo successfully
+    EXPECT_TRUE(crayonCommand->undo());
+    EXPECT_TRUE(brushCommand->undo());
+}
+
+TEST_F(LayerDrawCommandTest, ToolSwitchingDuringDraw) {
+    setupTestCanvas();
+    canvas_->setSelectedLayerIndex(0);
+    
+    // Start with brush tool
+    canvas_->setDrawingTool(DrawingTool::Brush);
+    auto command = createDrawCommand(canvas_.get(), "Tool Switch Test");
+    command->captureBeforeState();
+    
+    // Switch tool during "drawing" (before capturing after state)
+    canvas_->setDrawingTool(DrawingTool::Crayon);
+    canvas_->setDrawingTool(DrawingTool::Brush);
+    
+    // Should still work fine
+    EXPECT_NO_THROW(command->captureAfterState());
+    EXPECT_TRUE(command->execute());
+    EXPECT_TRUE(command->undo());
 }
 
 } // namespace EpiGimp

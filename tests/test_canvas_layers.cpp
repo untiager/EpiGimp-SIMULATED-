@@ -287,6 +287,54 @@ TEST_F(CanvasLayerTest, DrawingTool) {
     // Note: Canvas doesn't expose current tool, so we can't directly test
     // But the call should not crash
     EXPECT_NO_THROW(canvas_->setDrawingTool(DrawingTool::None));
+    
+    // Test brush tool
+    EXPECT_NO_THROW(canvas_->setDrawingTool(DrawingTool::Brush));
+    
+    // Test switching between tools
+    EXPECT_NO_THROW(canvas_->setDrawingTool(DrawingTool::Crayon));
+    EXPECT_NO_THROW(canvas_->setDrawingTool(DrawingTool::Brush));
+    EXPECT_NO_THROW(canvas_->setDrawingTool(DrawingTool::None));
+}
+
+TEST_F(CanvasLayerTest, BrushToolFunctionality) {
+    // Load a test image to enable drawing
+    loadTestImage();
+    
+    // Create a drawing layer
+    int layerIndex = canvas_->addNewDrawingLayer("Brush Test Layer");
+    canvas_->setSelectedLayerIndex(layerIndex);
+    
+    // Set brush tool
+    EXPECT_NO_THROW(canvas_->setDrawingTool(DrawingTool::Brush));
+    
+    // Verify layer is ready for drawing
+    EXPECT_TRUE(canvas_->hasImage());
+    EXPECT_TRUE(canvas_->hasDrawingTexture());
+    EXPECT_GE(canvas_->getLayerCount(), 1);
+    
+    // Test that brush tool can be set without issues
+    canvas_->setDrawingTool(DrawingTool::Brush);
+    
+    // Switch to other tools and back to brush
+    canvas_->setDrawingTool(DrawingTool::Crayon);
+    canvas_->setDrawingTool(DrawingTool::Brush);
+    canvas_->setDrawingTool(DrawingTool::None);
+    canvas_->setDrawingTool(DrawingTool::Brush);
+}
+
+TEST_F(CanvasLayerTest, DrawingToolEnumValidation) {
+    // Test all valid enum values
+    EXPECT_NO_THROW(canvas_->setDrawingTool(DrawingTool::None));
+    EXPECT_NO_THROW(canvas_->setDrawingTool(DrawingTool::Crayon));
+    EXPECT_NO_THROW(canvas_->setDrawingTool(DrawingTool::Brush));
+    
+    // Test rapid switching between tools
+    for (int i = 0; i < 10; ++i) {
+        canvas_->setDrawingTool(DrawingTool::Crayon);
+        canvas_->setDrawingTool(DrawingTool::Brush);
+        canvas_->setDrawingTool(DrawingTool::None);
+    }
 }
 
 // Performance test
