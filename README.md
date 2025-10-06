@@ -1,11 +1,11 @@
 # EpiGimp - Modern C++ Paint Interface
 
-[!- ✅ **Comprehensive Test Suite** - 97/98 unit tests passing (99% success rate) using Google Test framework with complete layer functionality coverage
+[!- ✅ **Comprehensive Test Suite** - 111/111 unit tests passing (100% success rate) using Google Test framework with complete layer functionality coverage
 - ✅ **Layer System Testing** - Dedicated test suites for LayerManager, Canvas layer integration, and drawing command validation
 - ✅ **Global Test Environment** - Unified Raylib initialization preventing segmentation faults during test execution
 - ✅ **Performance Testing** - Layer system validated with 100+ layers and stress testing scenarios++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/std/the-standard)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/untiager/EpiGimp-SIMULATED-)
-[![Tests](https://img.shields.io/badge/tests-97%2F98%20passing-brightgreen.svg)](tests/README.md)
+[![Tests](https://img.shields.io/badge/tests-111%2F111%20passing-brightgreen.svg)](tests/README.md)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A modern, lightweight paint application built with C++17 and Raylib. EpiGimp provides a clean, intuitive interface for basic image editing operations with a focus on performance and extensibility.
@@ -23,6 +23,7 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - ✅ **Smart Layer Naming** - Intelligent layer numbering that reuses gaps when layers are deleted
 - ✅ **Individual Layer Management** - Add, delete, clear, and toggle visibility for each layer
 - ✅ **Crayon Drawing Tool** - Draw directly on selected layers with smooth strokes
+- ✅ **Brush Drawing Tool** - Larger, softer brush strokes with transparency effects
 - ✅ **Color Selector Palette** - 16 color swatches for drawing customization
 - ✅ **Undo/Redo System** - Full history support with keyboard shortcuts (Ctrl+Z/Ctrl+Y)
 - ✅ Safe in-application file browser (no system crashes!)
@@ -43,7 +44,8 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - 🆕 **Multi-Layer Rendering** - All visible layers composite correctly for display and saving
 - 🆕 **Warning-Free Build** - Fixed all compiler warnings for production-ready code
 - 🆕 **Enhanced UI Layout** - Dynamic button positioning that adapts to layer count
-- 🆕 **Comprehensive Test Suite** - 46 unit tests with 100% success rate using Google Test framework
+- 🆕 **Brush Drawing Tool** - New brush tool with larger, softer strokes and transparency effects
+- 🆕 **Comprehensive Test Suite** - 111 unit tests with 100% success rate using Google Test framework
 - 🆕 **Quality Assurance** - Complete validation of core functionality with mock objects and integration tests
 - 🆕 **Undo/Redo History System** - Complete command pattern implementation with 50-level history
 - 🆕 **AZERTY Keyboard Support** - Undo/Redo shortcuts optimized for international keyboards
@@ -59,7 +61,7 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - 🆕 **Format Conversion** - Save images in different formats than loaded
 
 **Upcoming Features**:
-- 🚧 Additional drawing tools (brush sizes, eraser)
+- 🚧 Additional drawing tools (eraser, custom brush sizes)
 - 🚧 Custom color picker (beyond preset palette)
 - 🚧 Layer reordering and advanced layer operations
 - 🚧 Filters and effects
@@ -104,7 +106,7 @@ EpiGimp follows modern C++ best practices with a clean, modular architecture:
 - **Language**: C++17
 - **Graphics**: Raylib 5.5
 - **Build System**: CMake 3.10+
-- **Testing**: Google Test framework with 97/98 unit tests (99% passing) and comprehensive layer system validation
+- **Testing**: Google Test framework with 111/111 unit tests (100% passing) and comprehensive layer system validation
 - **Architecture**: Modern C++ with smart pointers and RAII
 
 ## 📋 Requirements
@@ -159,7 +161,7 @@ make
 ./EpiGimp
 
 # Optional: Run the test suite to verify installation
-./EpiGimpTests  # Should show "97 tests PASSED, 1 test failed"
+./EpiGimpTests  # Should show "111 tests PASSED"
 ```
 
 ### 3. Optional: Install to System
@@ -176,6 +178,7 @@ sudo make install  # Installs to /usr/local/bin
 - **Undo**: `Ctrl+Z` (optimized for AZERTY keyboards)
 - **Redo**: `Ctrl+Y`
 - **Crayon Tool**: Click "Crayon" button, then click and drag to draw on images
+- **Brush Tool**: Click "Brush" button for larger, softer strokes with transparency effects
 - **Color Selection**: Click any color swatch in the toolbar to change drawing color
 - **Navigation**: 
   - Pan: Click and drag with middle mouse button or arrow keys
@@ -184,16 +187,33 @@ sudo make install  # Installs to /usr/local/bin
 - **Exit**: `Escape` key (only when no dialogs are open) or close window
 
 ### Drawing Features
-- **Crayon Tool**: Freehand drawing tool with customizable colors
+EpiGimp provides multiple drawing tools for different artistic needs:
+
+- **Crayon Tool**: Precise freehand drawing tool with customizable colors
   - Activate by clicking the "Crayon" button in the toolbar
   - Draw with left mouse button click and drag
+  - Thin, precise lines (3px width) ideal for detailed work
   - Drawings are automatically saved with the image
   - Smooth line interpolation between mouse movements
+  
+- **Brush Tool**: Soft artistic brush for broader strokes
+  - Activate by clicking the "Brush" button in the toolbar
+  - Draw with left mouse button click and drag
+  - Larger, softer strokes (8px + 12px transparency overlay) for artistic effects
+  - Layered transparency creates natural brush-like appearance
+  - Perfect for painting, shading, and artistic expression
+  
+- **Tool Switching**: Seamlessly switch between tools without losing work
+  - Click any tool button to switch instantly
+  - Each tool maintains its unique characteristics
+  - All tools work with the layer system and undo/redo functionality
+
 - **Color Palette**: Interactive color selection system
   - 16 predefined colors: Black, White, Red, Green, Blue, Yellow, Orange, Purple, Brown, Pink, Dark Gray, Maroon, Dark Green, Dark Blue, Navy, Magenta
   - Visual feedback: Selected colors have white borders, hovered colors have gray borders
   - Real-time color switching while drawing
   - Default color is black
+  - Works with all drawing tools
 
 ### Multi-Layer System
 EpiGimp features a comprehensive multi-layer drawing system that allows you to create complex compositions with independent drawing layers.
@@ -215,7 +235,7 @@ EpiGimp features a comprehensive multi-layer drawing system that allows you to c
 #### Layer Workflow
 1. **Load Image**: Start by loading a background image (automatically creates background layer)
 2. **Create Layers**: Click "Add" to create new drawing layers for different elements
-3. **Select & Draw**: Click a layer to select it, then use the crayon tool to draw on that specific layer
+3. **Select & Draw**: Click a layer to select it, then use the crayon or brush tool to draw on that specific layer
 4. **Layer Operations**: 
    - Toggle visibility to see how different layers interact
    - Delete unwanted layers completely
@@ -420,7 +440,7 @@ make && ./EpiGimp
 # 1. Load Image: Click "Load Image", navigate and select a file
 # 2. Layer Creation: Click "Add" to create multiple drawing layers (test with 5+ layers)
 # 3. Layer Selection: Click different layers to select them (visual feedback with green highlight)
-# 4. Drawing: Click "Crayon", draw different strokes on different selected layers
+# 4. Drawing: Click "Crayon" or "Brush", draw different strokes on different selected layers
 # 5. Layer Management: Test "Delete" and "Clear" buttons on various layers
 # 6. Layer Visibility: Click eye icons to toggle layer visibility on/off
 # 7. Layer Scrolling: Create many layers (10+) and test mouse wheel scrolling in layer panel

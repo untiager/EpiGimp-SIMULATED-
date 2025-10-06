@@ -22,16 +22,16 @@
 ### 🎯 Areas We Need Help
 
 #### 🔴 High Priority
-- **Enhanced Drawing Tools**: Configurable brush sizes and colors
+- **Enhanced Drawing Tools**: Configurable brush sizes and colors, additional tool types
 - **Color System**: Color picker and palette implementation  
-- **Undo/Redo**: Command pattern implementation for drawing operations
-- **Unit Tests**: Automated testing framework for drawing and file operations
+- **Layer Operations**: Advanced layer blend modes and effects
+- **Performance Optimization**: Rendering optimization for large canvases
 
 #### 🟡 Medium Priority
-- **Layers**: Layer management system for complex compositions
 - **Filters**: Basic image filters (blur, sharpen, brightness/contrast)
-- **Drawing Tools**: Eraser, different brush types, shapes
+- **Advanced Drawing Tools**: Eraser, text tool, shape tools, gradients
 - **Cross-platform**: Windows and macOS support testing
+- **Plugin System**: Framework for extensible tools and filters
 
 #### 🟢 Good First Issues
 - **UI Improvements**: Better button styles, icons, tooltips
@@ -84,8 +84,8 @@
 - [ ] No memory leaks (tested with valgrind if possible)
 - [ ] Maintains backward compatibility
 - [ ] Updates documentation if needed
-- [ ] **All existing tests pass** (`./EpiGimpTests` runs successfully)
-- [ ] **New functionality includes unit tests** (we have Google Test framework ready)
+- [ ] **All existing tests pass** (`./EpiGimpTests` runs successfully - 111/111 tests expected)
+- [ ] **New functionality includes unit tests** (we have comprehensive Google Test framework)
 
 ### 🐛 Reporting Bugs
 
