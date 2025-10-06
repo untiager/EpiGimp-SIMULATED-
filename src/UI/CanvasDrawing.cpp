@@ -43,10 +43,34 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
               << ") to (" << imageTo.x << "," << imageTo.y << ") on layer: " << layer.name << std::endl;
     
     layer.texture->beginDrawing();
-    DrawLineEx(imageFrom, imageTo, 3.0f, drawingColor_); // Use selected drawing color
+    
+    // Different tools have different characteristics
+    switch (currentTool_) {
+        case DrawingTool::Crayon:
+            DrawLineEx(imageFrom, imageTo, 3.0f, drawingColor_);
+            break;
+            
+        case DrawingTool::Brush:
+        {
+            // Brush tool: larger, softer strokes with multiple passes for smoother effect
+            DrawLineEx(imageFrom, imageTo, 8.0f, drawingColor_);
+            // Add some transparency for softer effect
+            Color softerColor = drawingColor_;
+            softerColor.a = 128; // Half transparency
+            DrawLineEx(imageFrom, imageTo, 12.0f, softerColor);
+            break;
+        }
+        
+        case DrawingTool::None:
+        default:
+            // Fallback to basic line
+            DrawLineEx(imageFrom, imageTo, 1.0f, drawingColor_);
+            break;
+    }
+    
     layer.texture->endDrawing();
     
-    std::cout << "Stroke drawn successfully" << std::endl;
+    std::cout << "Stroke drawn successfully with tool: " << static_cast<int>(currentTool_) << std::endl;
 }
 
 void Canvas::handleDrawing()

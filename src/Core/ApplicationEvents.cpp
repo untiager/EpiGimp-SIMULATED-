@@ -66,6 +66,10 @@ void Application::createComponents()
         eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Crayon);
     });
     
+    toolbar_->addButton("Brush", [this]() {
+        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Brush);
+    });
+    
     toolbar_->addButton("Clear", [this]() {
         eventDispatcher_->emit<ClearCanvasRequestEvent>();
     });

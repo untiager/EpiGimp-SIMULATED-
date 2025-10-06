@@ -66,15 +66,21 @@ void Toolbar::setSelectedTool(DrawingTool tool)
     currentTool_ = tool;
     
     for (auto& button : buttons_) {
-        // Only the "Crayon" button should be selected when Crayon tool is active
+        // Set selection based on tool type
         if (button->text == "Crayon") {
             button->isSelected = (tool == DrawingTool::Crayon);
+        } else if (button->text == "Brush") {
+            button->isSelected = (tool == DrawingTool::Brush);
         } else {
             button->isSelected = false;
         }
     }
     
-    std::cout << "Tool selected: " << (tool == DrawingTool::Crayon ? "Crayon" : "None") << std::endl;
+    std::string toolName = "None";
+    if (tool == DrawingTool::Crayon) toolName = "Crayon";
+    else if (tool == DrawingTool::Brush) toolName = "Brush";
+    
+    std::cout << "Tool selected: " << toolName << std::endl;
 }
 
 } // namespace EpiGimp
