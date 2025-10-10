@@ -7,15 +7,24 @@ namespace EpiGimp {
 Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* historyManager, bool autoCreateBlankCanvas)
     : bounds_(bounds), zoomLevel_(1.0f), panOffset_{0, 0}, eventDispatcher_(dispatcher),
       historyManager_(historyManager), currentTool_(DrawingTool::None), isDrawing_(false), 
-      lastMousePos_{0, 0}, drawingColor_(BLACK), // Initialize with black color
+      lastMousePos_{0, 0}, primaryColor_(BLACK), secondaryColor_(WHITE), drawingColor_(BLACK), // Initialize with black primary, white secondary
       backgroundVisible_(true), selectedLayerIndex_(-1) // No layer selected initially
 {
     
     if (!dispatcher)
         throw std::invalid_argument("EventDispatcher cannot be null");
     
+    // Subscribe to color events
     dispatcher->subscribe<ColorChangedEvent>([this](const ColorChangedEvent& event) {
         onColorChanged(event);
+    });
+    
+    dispatcher->subscribe<PrimaryColorChangedEvent>([this](const PrimaryColorChangedEvent& event) {
+        onPrimaryColorChanged(event);
+    });
+    
+    dispatcher->subscribe<SecondaryColorChangedEvent>([this](const SecondaryColorChangedEvent& event) {
+        onSecondaryColorChanged(event);
     });
     
     if (autoCreateBlankCanvas)

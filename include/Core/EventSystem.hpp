@@ -56,6 +56,18 @@ public:
     explicit ColorChangedEvent(Color color) : selectedColor(color) {}
 };
 
+class PrimaryColorChangedEvent : public Event {
+public:
+    Color primaryColor;
+    explicit PrimaryColorChangedEvent(Color color) : primaryColor(color) {}
+};
+
+class SecondaryColorChangedEvent : public Event {
+public:
+    Color secondaryColor;
+    explicit SecondaryColorChangedEvent(Color color) : secondaryColor(color) {}
+};
+
 class ErrorEvent : public Event {
 public:
     std::string message;

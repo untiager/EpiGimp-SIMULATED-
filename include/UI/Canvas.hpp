@@ -37,7 +37,9 @@ private:
     DrawingTool currentTool_;
     bool isDrawing_;
     Vector2 lastMousePos_;
-    Color drawingColor_;                                   // Current drawing color
+    Color primaryColor_;                                   // Primary drawing color (left-click)
+    Color secondaryColor_;                                 // Secondary drawing color (right-click)
+    Color drawingColor_;                                   // Current drawing color (deprecated, for compatibility)
     
     bool backgroundVisible_;
     int selectedLayerIndex_;                               // Currently selected layer for drawing/editing
@@ -102,7 +104,9 @@ private:
     void drawImage() const;
     void drawPlaceholder() const;
     void drawStroke(Vector2 from, Vector2 to);
-    void onColorChanged(const ColorChangedEvent& event); // Handle color change events
+    void onColorChanged(const ColorChangedEvent& event); // Handle color change events (deprecated)
+    void onPrimaryColorChanged(const PrimaryColorChangedEvent& event); // Handle primary color change
+    void onSecondaryColorChanged(const SecondaryColorChangedEvent& event); // Handle secondary color change
     Rectangle calculateImageDestRect() const;
     Vector2 getImageCenter() const;
     std::optional<TextureResource> createTextureFromFile(const std::string& filePath);

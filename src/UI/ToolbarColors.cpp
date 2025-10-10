@@ -8,8 +8,9 @@
 namespace EpiGimp {
 
 ColorPalette::ColorPalette(Rectangle bounds, EventDispatcher* dispatcher) 
-    : bounds_(bounds), eventDispatcher_(dispatcher), selectedColor_(BLACK), selectedIndex_(0),
-      showRgbInput_(false)
+    : bounds_(bounds), eventDispatcher_(dispatcher), selectedColor_(BLACK), 
+      primaryColor_(BLACK), secondaryColor_(WHITE), selectedIndex_(0), 
+      primaryIndex_(0), secondaryIndex_(1), showRgbInput_(false)
 {
     if (!dispatcher)
         throw std::invalid_argument("EventDispatcher cannot be null");
@@ -96,27 +97,41 @@ void ColorPalette::update(float /*deltaTime*/)
         // Check hover
         swatch.isHovered = CheckCollisionPointRec(mousePos, swatch.bounds);
         
-        // Check click
+        // Check left click (primary color)
         if (swatch.isHovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            // Deselect all swatches
-            for (auto& otherSwatch : swatches_) {
-                otherSwatch->isSelected = false;
-            }
+            primaryColor_ = swatch.color;
+            primaryIndex_ = static_cast<int>(i);
+            selectedColor_ = primaryColor_; // For backward compatibility
+            selectedIndex_ = primaryIndex_;
             
-            // Select this swatch
-            swatch.isSelected = true;
-            selectedColor_ = swatch.color;
-            selectedIndex_ = static_cast<int>(i);
-            
-            // Update RGB input fields to reflect selected color
+            // Update RGB input fields to reflect primary color
             if (showRgbInput_) {
-                sprintf(rgbInput_[0], "%d", selectedColor_.r);
-                sprintf(rgbInput_[1], "%d", selectedColor_.g);  
-                sprintf(rgbInput_[2], "%d", selectedColor_.b);
+                sprintf(rgbInput_[0], "%d", primaryColor_.r);
+                sprintf(rgbInput_[1], "%d", primaryColor_.g);  
+                sprintf(rgbInput_[2], "%d", primaryColor_.b);
             }
             
-            // Emit color changed event
-            eventDispatcher_->emit<ColorChangedEvent>(ColorChangedEvent(selectedColor_));
+            // Emit primary color changed event
+            eventDispatcher_->emit<PrimaryColorChangedEvent>(PrimaryColorChangedEvent(primaryColor_));
+            // Keep old event for backward compatibility
+            eventDispatcher_->emit<ColorChangedEvent>(ColorChangedEvent(primaryColor_));
+            
+            std::cout << "Primary color selected: RGB(" << static_cast<int>(primaryColor_.r) 
+                      << "," << static_cast<int>(primaryColor_.g) 
+                      << "," << static_cast<int>(primaryColor_.b) << ")" << std::endl;
+        }
+        
+        // Check right click (secondary color)
+        if (swatch.isHovered && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+            secondaryColor_ = swatch.color;
+            secondaryIndex_ = static_cast<int>(i);
+            
+            // Emit secondary color changed event
+            eventDispatcher_->emit<SecondaryColorChangedEvent>(SecondaryColorChangedEvent(secondaryColor_));
+            
+            std::cout << "Secondary color selected: RGB(" << static_cast<int>(secondaryColor_.r) 
+                      << "," << static_cast<int>(secondaryColor_.g) 
+                      << "," << static_cast<int>(secondaryColor_.b) << ")" << std::endl;
         }
     }
 }
@@ -126,15 +141,22 @@ void ColorPalette::draw() const
     DrawRectangleRec(bounds_, LIGHTGRAY);
     DrawRectangleLinesEx(bounds_, 1, DARKGRAY);
     
-    for (const auto& swatch : swatches_) {
+    // Draw color swatches
+    for (size_t i = 0; i < swatches_.size(); ++i) {
+        const auto& swatch = swatches_[i];
         DrawRectangleRec(swatch->bounds, swatch->color);
         
-        // Draw border - thicker if selected, different color if hovered
+        // Draw border - different styles for primary/secondary colors
         Color borderColor = BLACK;
         float borderThickness = 1.0f;
         
-        if (swatch->isSelected) {
-            borderColor = WHITE;
+        if (i == primaryIndex_) {
+            // Primary color: thick blue border
+            borderColor = BLUE;
+            borderThickness = 3.0f;
+        } else if (i == secondaryIndex_) {
+            // Secondary color: thick orange border
+            borderColor = ORANGE;
             borderThickness = 3.0f;
         } else if (swatch->isHovered) {
             borderColor = GRAY;
@@ -142,7 +164,41 @@ void ColorPalette::draw() const
         }
         
         DrawRectangleLinesEx(swatch->bounds, borderThickness, borderColor);
+        
+        // Add small corner indicators for primary/secondary
+        if (i == primaryIndex_) {
+            // Primary indicator: small 'P' in top-left corner
+            DrawText("P", static_cast<int>(swatch->bounds.x + 2), static_cast<int>(swatch->bounds.y + 1), 8, WHITE);
+        }
+        if (i == secondaryIndex_) {
+            // Secondary indicator: small 'S' in top-right corner
+            DrawText("S", static_cast<int>(swatch->bounds.x + swatch->bounds.width - 10), static_cast<int>(swatch->bounds.y + 1), 8, WHITE);
+        }
     }
+    
+    // Draw prominent primary/secondary color display
+    // Position it to the far left to avoid overlapping with color swatches
+    const float colorDisplaySize = 30.0f;
+    const float colorDisplayX = bounds_.x - 150; // Move well to the left of the palette
+    const float colorDisplayY = bounds_.y + bounds_.height - colorDisplaySize - 25;
+    
+    // Draw secondary color (behind, offset)
+    Rectangle secondaryRect = {colorDisplayX + 8, colorDisplayY + 8, colorDisplaySize, colorDisplaySize};
+    DrawRectangleRec(secondaryRect, secondaryColor_);
+    DrawRectangleLinesEx(secondaryRect, 2.0f, ORANGE);
+    
+    // Draw primary color (in front)
+    Rectangle primaryRect = {colorDisplayX, colorDisplayY, colorDisplaySize, colorDisplaySize};
+    DrawRectangleRec(primaryRect, primaryColor_);
+    DrawRectangleLinesEx(primaryRect, 2.0f, BLUE);
+    
+    // Add labels
+    DrawText("L", static_cast<int>(primaryRect.x + 2), static_cast<int>(primaryRect.y + 2), 12, WHITE);
+    DrawText("R", static_cast<int>(secondaryRect.x + secondaryRect.width - 12), static_cast<int>(secondaryRect.y + 2), 12, WHITE);
+    
+    // Draw instructions
+    DrawText("L-Click: Primary", static_cast<int>(colorDisplayX + colorDisplaySize + 15), static_cast<int>(colorDisplayY), 8, BLACK);
+    DrawText("R-Click: Secondary", static_cast<int>(colorDisplayX + colorDisplaySize + 15), static_cast<int>(colorDisplayY + 10), 8, BLACK);
     
     Rectangle rgbToggleButton = {bounds_.x + bounds_.width - 25, bounds_.y + bounds_.height - 20, 20, 15};
     DrawRectangleRec(rgbToggleButton, showRgbInput_ ? BLUE : DARKGRAY);
@@ -156,17 +212,52 @@ void ColorPalette::draw() const
 void ColorPalette::setSelectedColor(Color color)
 {
     selectedColor_ = color;
+    primaryColor_ = color; // Update primary color for backward compatibility
     
     for (size_t i = 0; i < swatches_.size(); ++i) {
-        swatches_[i]->isSelected = (ColorToInt(swatches_[i]->color) == ColorToInt(color));
-        if (swatches_[i]->isSelected)
-            selectedIndex_ = static_cast<int>(i);
+        if (ColorToInt(swatches_[i]->color) == ColorToInt(color)) {
+            primaryIndex_ = static_cast<int>(i);
+            selectedIndex_ = primaryIndex_;
+            break;
+        }
     }
     
     if (showRgbInput_) {
         sprintf(rgbInput_[0], "%d", selectedColor_.r);
         sprintf(rgbInput_[1], "%d", selectedColor_.g);
         sprintf(rgbInput_[2], "%d", selectedColor_.b);
+    }
+}
+
+void ColorPalette::setPrimaryColor(Color color)
+{
+    primaryColor_ = color;
+    selectedColor_ = color; // Update selected color for backward compatibility
+    
+    for (size_t i = 0; i < swatches_.size(); ++i) {
+        if (ColorToInt(swatches_[i]->color) == ColorToInt(color)) {
+            primaryIndex_ = static_cast<int>(i);
+            selectedIndex_ = primaryIndex_;
+            break;
+        }
+    }
+    
+    if (showRgbInput_) {
+        sprintf(rgbInput_[0], "%d", primaryColor_.r);
+        sprintf(rgbInput_[1], "%d", primaryColor_.g);
+        sprintf(rgbInput_[2], "%d", primaryColor_.b);
+    }
+}
+
+void ColorPalette::setSecondaryColor(Color color)
+{
+    secondaryColor_ = color;
+    
+    for (size_t i = 0; i < swatches_.size(); ++i) {
+        if (ColorToInt(swatches_[i]->color) == ColorToInt(color)) {
+            secondaryIndex_ = static_cast<int>(i);
+            break;
+        }
     }
 }
 
@@ -268,16 +359,17 @@ void ColorPalette::updateRgbInput()
                 
                 // Update the color and input fields to show the clamped values
                 selectedColor_ = Color{(unsigned char)r, (unsigned char)g, (unsigned char)b, 255};
+                primaryColor_ = selectedColor_; // Also update primary color
                 sprintf(rgbInput_[0], "%d", r);
                 sprintf(rgbInput_[1], "%d", g);
                 sprintf(rgbInput_[2], "%d", b);
                 
-                // Deselect all swatches since this is a custom color
-                for (auto& swatch : swatches_) {
-                    swatch->isSelected = false;
-                }
+                // Reset palette selection indices since this is a custom color
+                primaryIndex_ = -1;
+                selectedIndex_ = -1;
                 
-                // Emit color changed event to apply the color
+                // Emit color changed events to apply the color
+                eventDispatcher_->emit<PrimaryColorChangedEvent>(PrimaryColorChangedEvent(primaryColor_));
                 eventDispatcher_->emit<ColorChangedEvent>(ColorChangedEvent(selectedColor_));
                 
                 rgbInputActive_[i] = false;

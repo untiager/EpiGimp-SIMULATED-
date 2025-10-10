@@ -84,37 +84,72 @@ void Canvas::handleDrawing()
     if (!CheckCollisionPointRec(mousePos, imageRect))
         return;
     
-    static bool isDrawing = false;
+    static bool isDrawingLeft = false;
+    static bool isDrawingRight = false;
     static Vector2 lastMousePos = {0, 0};
     static std::unique_ptr<DrawCommand> currentDrawCommand = nullptr;
+    static Color currentStrokeColor = BLACK;
     
+    // Handle left mouse button (primary color)
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        std::cout << "Mouse pressed at (" << mousePos.x << "," << mousePos.y << "), tool=" << static_cast<int>(currentTool_) 
-                  << ", over image=" << (CheckCollisionPointRec(mousePos, imageRect) ? "YES" : "NO") << std::endl;
+        std::cout << "Left mouse pressed at (" << mousePos.x << "," << mousePos.y << "), tool=" << static_cast<int>(currentTool_) 
+                  << ", primary color=RGB(" << static_cast<int>(primaryColor_.r) << "," 
+                  << static_cast<int>(primaryColor_.g) << "," << static_cast<int>(primaryColor_.b) << ")" << std::endl;
         if (currentTool_ != DrawingTool::None) {
-            isDrawing = true;
+            isDrawingLeft = true;
             lastMousePos = mousePos;
+            currentStrokeColor = primaryColor_;
             
             // Create a new draw command if history manager is available
             if (historyManager_) {
-                currentDrawCommand = createDrawCommand(this, "Draw stroke");
-                std::cout << "Started drawing stroke, captured before state" << std::endl;
+                currentDrawCommand = createDrawCommand(this, "Primary Color Stroke");
+                std::cout << "Started primary color stroke, captured before state" << std::endl;
             }
         } else {
             std::cout << "Drawing tool is NONE - cannot draw" << std::endl;
         }
     }
     
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && isDrawing) {
+    // Handle right mouse button (secondary color)
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+        std::cout << "Right mouse pressed at (" << mousePos.x << "," << mousePos.y << "), tool=" << static_cast<int>(currentTool_) 
+                  << ", secondary color=RGB(" << static_cast<int>(secondaryColor_.r) << "," 
+                  << static_cast<int>(secondaryColor_.g) << "," << static_cast<int>(secondaryColor_.b) << ")" << std::endl;
         if (currentTool_ != DrawingTool::None) {
-            std::cout << "Drawing from (" << lastMousePos.x << "," << lastMousePos.y << ") to (" << mousePos.x << "," << mousePos.y << ")" << std::endl;
+            isDrawingRight = true;
+            lastMousePos = mousePos;
+            currentStrokeColor = secondaryColor_;
+            
+            // Create a new draw command if history manager is available
+            if (historyManager_) {
+                currentDrawCommand = createDrawCommand(this, "Secondary Color Stroke");
+                std::cout << "Started secondary color stroke, captured before state" << std::endl;
+            }
+        } else {
+            std::cout << "Drawing tool is NONE - cannot draw" << std::endl;
+        }
+    }
+    
+    // Handle drawing while mouse is held down
+    if ((IsMouseButtonDown(MOUSE_BUTTON_LEFT) && isDrawingLeft) || 
+        (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && isDrawingRight)) {
+        if (currentTool_ != DrawingTool::None) {
+            std::cout << "Drawing from (" << lastMousePos.x << "," << lastMousePos.y << ") to (" << mousePos.x << "," << mousePos.y << ")" 
+                      << " with color RGB(" << static_cast<int>(currentStrokeColor.r) << "," 
+                      << static_cast<int>(currentStrokeColor.g) << "," << static_cast<int>(currentStrokeColor.b) << ")" << std::endl;
+            // Temporarily set drawing color for the stroke
+            Color originalColor = drawingColor_;
+            drawingColor_ = currentStrokeColor;
             drawStroke(lastMousePos, mousePos);
+            drawingColor_ = originalColor; // Restore original color
             lastMousePos = mousePos;
         }
     }
     
-    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-        if (isDrawing && currentDrawCommand && historyManager_) {
+    // Handle mouse button release
+    if ((IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && isDrawingLeft) || 
+        (IsMouseButtonReleased(MOUSE_BUTTON_RIGHT) && isDrawingRight)) {
+        if ((isDrawingLeft || isDrawingRight) && currentDrawCommand && historyManager_) {
             std::cout << "Mouse released, capturing after state" << std::endl;
             // Capture the after state and execute the command
             currentDrawCommand->captureAfterState();
@@ -127,18 +162,42 @@ void Canvas::handleDrawing()
             
             currentDrawCommand = nullptr;
         }
-        isDrawing = false;
+        isDrawingLeft = false;
+        isDrawingRight = false;
     }
 }
 
 void Canvas::onColorChanged(const ColorChangedEvent& event)
 {
+    // Keep for backward compatibility - set as primary color
+    primaryColor_ = event.selectedColor;
     drawingColor_ = event.selectedColor;
     std::cout << "Canvas: Drawing color changed to RGB(" 
               << static_cast<int>(drawingColor_.r) << ", "
               << static_cast<int>(drawingColor_.g) << ", "
               << static_cast<int>(drawingColor_.b) << ", "
               << static_cast<int>(drawingColor_.a) << ")" << std::endl;
+}
+
+void Canvas::onPrimaryColorChanged(const PrimaryColorChangedEvent& event)
+{
+    primaryColor_ = event.primaryColor;
+    drawingColor_ = primaryColor_; // Update drawing color for compatibility
+    std::cout << "Canvas: Primary color changed to RGB(" 
+              << static_cast<int>(primaryColor_.r) << ", "
+              << static_cast<int>(primaryColor_.g) << ", "
+              << static_cast<int>(primaryColor_.b) << ", "
+              << static_cast<int>(primaryColor_.a) << ")" << std::endl;
+}
+
+void Canvas::onSecondaryColorChanged(const SecondaryColorChangedEvent& event)
+{
+    secondaryColor_ = event.secondaryColor;
+    std::cout << "Canvas: Secondary color changed to RGB(" 
+              << static_cast<int>(secondaryColor_.r) << ", "
+              << static_cast<int>(secondaryColor_.g) << ", "
+              << static_cast<int>(secondaryColor_.b) << ", "
+              << static_cast<int>(secondaryColor_.a) << ")" << std::endl;
 }
 
 } // namespace EpiGimp

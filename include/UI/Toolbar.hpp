@@ -30,8 +30,12 @@ private:
     Rectangle bounds_;
     std::vector<std::unique_ptr<ColorSwatch>> swatches_;
     EventDispatcher* eventDispatcher_;
-    Color selectedColor_;
+    Color selectedColor_;        // For backward compatibility
+    Color primaryColor_;         // Primary color (left-click)
+    Color secondaryColor_;       // Secondary color (right-click)
     int selectedIndex_;
+    int primaryIndex_;           // Index of primary color
+    int secondaryIndex_;         // Index of secondary color
     
     // RGB input state
     char rgbInput_[3][4];        // RGB input strings (R, G, B)
@@ -53,7 +57,11 @@ public:
     void draw() const;
     Rectangle getBounds() const { return bounds_; }
     Color getSelectedColor() const { return selectedColor_; }
+    Color getPrimaryColor() const { return primaryColor_; }
+    Color getSecondaryColor() const { return secondaryColor_; }
     void setSelectedColor(Color color);
+    void setPrimaryColor(Color color);
+    void setSecondaryColor(Color color);
     
     // RGB input methods
     void toggleRgbInput();
