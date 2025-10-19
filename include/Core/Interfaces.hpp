@@ -15,7 +15,8 @@ class ImageResource;
 enum class DrawingTool {
     None,
     Crayon,
-    Brush
+    Brush,
+    Select
 };
 
 class IUIComponent {

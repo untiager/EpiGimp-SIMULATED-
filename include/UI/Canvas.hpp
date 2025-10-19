@@ -41,6 +41,14 @@ private:
     Color secondaryColor_;                                 // Secondary drawing color (right-click)
     Color drawingColor_;                                   // Current drawing color (deprecated, for compatibility)
     
+    // Selection state
+    bool isSelecting_;                                     // True when actively making a selection
+    bool hasSelection_;                                    // True when a selection exists
+    Vector2 selectionStart_;                               // Selection start point (screen coordinates)
+    Vector2 selectionEnd_;                                 // Selection end point (screen coordinates)
+    Rectangle selectionRect_;                              // Current selection rectangle (image coordinates)
+    float selectionAnimTime_;                              // For marching ants animation
+    
     bool backgroundVisible_;
     int selectedLayerIndex_;                               // Currently selected layer for drawing/editing
     
@@ -95,14 +103,22 @@ public:
     
     Image copyDrawingImage() const;  // Copy selected layer
     void initializeDrawingTexture(); // Initialize selected layer texture
+    
+    // Selection methods
+    bool hasSelection() const { return hasSelection_; }
+    Rectangle getSelectionRect() const { return selectionRect_; }
+    void clearSelection();
+    void selectAll();
 
 private:
     void handleInput();
     void handleZoom();
     void handlePanning();
     void handleDrawing();  // New method for drawing input
+    void handleSelection(); // New method for selection input
     void drawImage() const;
     void drawPlaceholder() const;
+    void drawSelection() const; // Draw selection rectangle with marching ants
     void drawStroke(Vector2 from, Vector2 to);
     void onColorChanged(const ColorChangedEvent& event); // Handle color change events (deprecated)
     void onPrimaryColorChanged(const PrimaryColorChangedEvent& event); // Handle primary color change
@@ -112,6 +128,11 @@ private:
     std::optional<TextureResource> createTextureFromFile(const std::string& filePath);
     void resetViewTransform();
     std::string generateUniqueLayerName() const; // Generate unique layer name
+    Vector2 screenToImageCoords(Vector2 screenPos) const; // Convert screen coords to image coords
+    Vector2 imageToScreenCoords(Vector2 imagePos) const;  // Convert image coords to screen coords
+    Rectangle normalizeRect(Vector2 start, Vector2 end) const; // Create normalized rectangle from two points
+    void drawMarchingAnts(Rectangle rect, Color color, float dashLength, float offset) const; // Draw marching ants effect
+    void drawDashedLine(Vector2 start, Vector2 end, Color color, float dashLength, float offset) const; // Draw dashed line
 };
 
 } // namespace EpiGimp

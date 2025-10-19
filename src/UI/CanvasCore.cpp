@@ -1,6 +1,7 @@
 //Canvas core functionality
 #include "../../include/UI/Canvas.hpp"
 #include <iostream>
+#include <cmath>
 
 namespace EpiGimp {
 
@@ -8,6 +9,8 @@ Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* hi
     : bounds_(bounds), zoomLevel_(1.0f), panOffset_{0, 0}, eventDispatcher_(dispatcher),
       historyManager_(historyManager), currentTool_(DrawingTool::None), isDrawing_(false), 
       lastMousePos_{0, 0}, primaryColor_(BLACK), secondaryColor_(WHITE), drawingColor_(BLACK), // Initialize with black primary, white secondary
+      isSelecting_(false), hasSelection_(false), selectionStart_{0, 0}, selectionEnd_{0, 0}, 
+      selectionRect_{0, 0, 0, 0}, selectionAnimTime_(0.0f),
       backgroundVisible_(true), selectedLayerIndex_(-1) // No layer selected initially
 {
     
@@ -35,10 +38,17 @@ Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* hi
               << bounds.width << ", " << bounds.height << std::endl;
 }
 
-void Canvas::update(float /*deltaTime*/)
+void Canvas::update(float deltaTime)
 {
     handleInput();
     handleDrawing();
+    handleSelection();
+    
+    // Update selection animation
+    selectionAnimTime_ += deltaTime * 2.0f; // Speed up animation
+    if (selectionAnimTime_ > 2.0f * PI) {
+        selectionAnimTime_ = 0.0f;
+    }
 }
 
 void Canvas::draw() const
@@ -53,6 +63,11 @@ void Canvas::draw() const
         drawImage();
     } else {
         drawPlaceholder();
+    }
+    
+    // Draw selection if active
+    if (hasSelection_ || isSelecting_) {
+        drawSelection();
     }
     
     EndScissorMode();
@@ -293,6 +308,58 @@ std::string Canvas::generateUniqueLayerName() const
     
     // Fallback
     return "Layer " + std::to_string(drawingLayers_.size() + 1);
+}
+
+void Canvas::clearSelection()
+{
+    hasSelection_ = false;
+    isSelecting_ = false;
+    selectionRect_ = Rectangle{0, 0, 0, 0};
+    std::cout << "Selection cleared" << std::endl;
+}
+
+void Canvas::selectAll()
+{
+    if (!hasImage()) return;
+    
+    hasSelection_ = true;
+    isSelecting_ = false;
+    selectionRect_ = Rectangle{0, 0, static_cast<float>((*currentTexture_)->width), static_cast<float>((*currentTexture_)->height)};
+    std::cout << "Selected all (" << selectionRect_.width << "x" << selectionRect_.height << ")" << std::endl;
+}
+
+Vector2 Canvas::screenToImageCoords(Vector2 screenPos) const
+{
+    if (!hasImage()) return Vector2{0, 0};
+    
+    const Rectangle imageRect = calculateImageDestRect();
+    
+    return Vector2{
+        (screenPos.x - imageRect.x) / imageRect.width * (*currentTexture_)->width,
+        (screenPos.y - imageRect.y) / imageRect.height * (*currentTexture_)->height
+    };
+}
+
+Vector2 Canvas::imageToScreenCoords(Vector2 imagePos) const
+{
+    if (!hasImage()) return Vector2{0, 0};
+    
+    const Rectangle imageRect = calculateImageDestRect();
+    
+    return Vector2{
+        imageRect.x + (imagePos.x / (*currentTexture_)->width) * imageRect.width,
+        imageRect.y + (imagePos.y / (*currentTexture_)->height) * imageRect.height
+    };
+}
+
+Rectangle Canvas::normalizeRect(Vector2 start, Vector2 end) const
+{
+    const float x = std::min(start.x, end.x);
+    const float y = std::min(start.y, end.y);
+    const float width = std::abs(end.x - start.x);
+    const float height = std::abs(end.y - start.y);
+    
+    return Rectangle{x, y, width, height};
 }
 
 } // namespace EpiGimp

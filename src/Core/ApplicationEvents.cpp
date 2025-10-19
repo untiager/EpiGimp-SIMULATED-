@@ -70,6 +70,10 @@ void Application::createComponents()
         eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Brush);
     });
     
+    toolbar_->addButton("Select", [this]() {
+        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Select);
+    });
+    
     toolbar_->addButton("Clear", [this]() {
         eventDispatcher_->emit<ClearCanvasRequestEvent>();
     });

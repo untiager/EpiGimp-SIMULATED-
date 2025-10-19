@@ -61,6 +61,10 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
             break;
         }
         
+        case DrawingTool::Select:
+            // Selection tool doesn't draw strokes, return early
+            return;
+        
         case DrawingTool::None:
         default:
             // Fallback to basic line
@@ -76,6 +80,9 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
 void Canvas::handleDrawing()
 {
     if (!hasImage()) return;
+    
+    // Skip drawing logic for selection tool
+    if (currentTool_ == DrawingTool::Select) return;
     
     const Vector2 mousePos = GetMousePosition();
     
