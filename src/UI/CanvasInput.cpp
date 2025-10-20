@@ -72,34 +72,40 @@ void Canvas::handleZoom()
     if (wheel != 0.0f) {
         const Vector2 mousePos = GetMousePosition();
         if (CheckCollisionPointRec(mousePos, bounds_)) {
-            // Store mouse position relative to image before zoom
-            Rectangle imageRect = calculateImageDestRect();
-            Vector2 mouseInImage = {
-                (mousePos.x - imageRect.x) / imageRect.width,
-                (mousePos.y - imageRect.y) / imageRect.height
+            // Get current image rect before zoom
+            Rectangle oldImageRect = calculateImageDestRect();
+            
+            // Calculate mouse position relative to the current image center
+            Vector2 imageCenterOld = {
+                oldImageRect.x + oldImageRect.width / 2,
+                oldImageRect.y + oldImageRect.height / 2
             };
             
-            // Calculate new zoom with better scaling
-            const float zoomFactor = wheel > 0 ? 1.2f : (1.0f / 1.2f);
-            const float newZoom = zoomLevel_ * zoomFactor;
+            Vector2 mouseFromCenter = {
+                mousePos.x - imageCenterOld.x,
+                mousePos.y - imageCenterOld.y
+            };
             
             // Apply zoom
-            setZoom(newZoom);
+            const float zoomFactor = wheel > 0 ? 1.2f : (1.0f / 1.2f);
+            setZoom(zoomLevel_ * zoomFactor);
             
-            // Adjust pan to keep mouse position fixed
-            if (mouseInImage.x >= 0 && mouseInImage.x <= 1 && 
-                mouseInImage.y >= 0 && mouseInImage.y <= 1) {
-                
-                Rectangle newImageRect = calculateImageDestRect();
-                Vector2 newMouseInImage = {
-                    newImageRect.x + mouseInImage.x * newImageRect.width,
-                    newImageRect.y + mouseInImage.y * newImageRect.height
-                };
-                
-                // Adjust pan offset to keep mouse position consistent
-                panOffset_.x += mousePos.x - newMouseInImage.x;
-                panOffset_.y += mousePos.y - newMouseInImage.y;
-            }
+            // Get new image rect after zoom
+            Rectangle newImageRect = calculateImageDestRect();
+            Vector2 imageCenterNew = {
+                newImageRect.x + newImageRect.width / 2,
+                newImageRect.y + newImageRect.height / 2
+            };
+            
+            // Calculate where the mouse should be relative to the new image center
+            Vector2 targetMousePos = {
+                imageCenterNew.x + mouseFromCenter.x * zoomFactor,
+                imageCenterNew.y + mouseFromCenter.y * zoomFactor
+            };
+            
+            // Adjust pan offset to keep mouse position fixed
+            panOffset_.x += mousePos.x - targetMousePos.x;
+            panOffset_.y += mousePos.y - targetMousePos.y;
         }
     }
 }

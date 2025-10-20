@@ -58,7 +58,8 @@ void Canvas::update(float deltaTime)
 
 void Canvas::draw() const
 {
-    DrawRectangleRec(bounds_, WHITE);
+    // Use a light gray background to distinguish from white drawing area
+    DrawRectangleRec(bounds_, Color{240, 240, 240, 255}); // Light gray background
     DrawRectangleLinesEx(bounds_, 1, DARKGRAY);
     
     BeginScissorMode(static_cast<int>(bounds_.x), static_cast<int>(bounds_.y), 
