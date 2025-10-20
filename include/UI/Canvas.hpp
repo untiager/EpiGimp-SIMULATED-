@@ -21,6 +21,19 @@ struct DrawingLayer {
     DrawingLayer(const std::string& layerName) : visible(true), name(layerName) {}
 };
 
+// Resize handle constants for selection resizing
+enum class ResizeHandle {
+    None = -1,
+    TopLeft = 0,
+    TopRight = 1, 
+    BottomLeft = 2,
+    BottomRight = 3,
+    Top = 4,
+    Right = 5,
+    Bottom = 6,
+    Left = 7
+};
+
 class HistoryManager;
 
 class Canvas : public ICanvas {
@@ -48,6 +61,19 @@ private:
     Vector2 selectionEnd_;                                 // Selection end point (screen coordinates)
     Rectangle selectionRect_;                              // Current selection rectangle (image coordinates)
     float selectionAnimTime_;                              // For marching ants animation
+    
+    // Selection resize state
+    bool isResizingSelection_;                             // True when actively resizing selection
+    ResizeHandle resizeHandle_;                            // Which resize handle is being dragged
+    Vector2 resizeStartPos_;                               // Mouse position when resize started
+    Rectangle resizeStartRect_;                            // Selection rectangle when resize started
+    
+    // Content transform state
+    bool isTransformMode_;                                 // True when in content transform mode
+    bool isTransformingContent_;                           // True when actively transforming content
+    std::optional<RenderTextureResource> selectionContent_;   // Extracted content from selection
+    Rectangle contentOriginalRect_;                        // Original bounds of the extracted content
+    Rectangle contentTransformRect_;                       // Current transformed bounds
     
     bool backgroundVisible_;
     int selectedLayerIndex_;                               // Currently selected layer for drawing/editing
@@ -124,6 +150,21 @@ private:
     void drawPlaceholder() const;
     void drawSelection() const; // Draw selection rectangle with marching ants
     void drawStroke(Vector2 from, Vector2 to);
+    
+    // Selection resize helpers
+    ResizeHandle getResizeHandleAt(Vector2 mousePos) const; // Get resize handle under mouse position
+    Rectangle getResizeHandleRect(ResizeHandle handle) const; // Get rectangle for a resize handle
+    void drawResizeHandles() const; // Draw resize handles on selection
+    void updateSelectionResize(Vector2 mousePos); // Update selection size during resize
+    
+    // Content transform methods
+    void enterTransformMode(); // Extract selection content and enter transform mode
+    void exitTransformMode(); // Apply transformation and exit transform mode
+    void extractSelectionContent(); // Extract pixels from selection into temporary texture
+    void applyTransformedContent(); // Apply transformed content back to layer
+    void updateContentTransform(Vector2 mousePos); // Update content transformation during resize
+    void drawTransformPreview() const; // Draw preview of transformed content
+    
     void onColorChanged(const ColorChangedEvent& event); // Handle color change events (deprecated)
     void onPrimaryColorChanged(const PrimaryColorChangedEvent& event); // Handle primary color change
     void onSecondaryColorChanged(const SecondaryColorChangedEvent& event); // Handle secondary color change

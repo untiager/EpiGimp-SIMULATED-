@@ -14,6 +14,8 @@ Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* hi
       lastMousePos_{0, 0}, primaryColor_(BLACK), secondaryColor_(WHITE), drawingColor_(BLACK), // Initialize with black primary, white secondary
       isSelecting_(false), hasSelection_(false), selectionStart_{0, 0}, selectionEnd_{0, 0}, 
       selectionRect_{0, 0, 0, 0}, selectionAnimTime_(0.0f),
+      isResizingSelection_(false), resizeHandle_(ResizeHandle::None), resizeStartPos_{0, 0}, resizeStartRect_{0, 0, 0, 0},
+      isTransformMode_(false), isTransformingContent_(false), contentOriginalRect_{0, 0, 0, 0}, contentTransformRect_{0, 0, 0, 0},
       backgroundVisible_(true), selectedLayerIndex_(-1) // No layer selected initially
 {
     
@@ -317,6 +319,8 @@ void Canvas::clearSelection()
 {
     hasSelection_ = false;
     isSelecting_ = false;
+    isResizingSelection_ = false;
+    resizeHandle_ = ResizeHandle::None;
     selectionRect_ = Rectangle{0, 0, 0, 0};
     std::cout << "Selection cleared" << std::endl;
 }

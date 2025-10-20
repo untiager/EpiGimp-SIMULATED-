@@ -36,6 +36,17 @@ void Canvas::handleGlobalKeyboard()
             clearSelection();
         }
     }
+    
+    // T key to toggle transform mode
+    if (IsKeyPressed(KEY_T)) {
+        if (hasSelection_ && currentTool_ == DrawingTool::Select) {
+            if (isTransformMode_) {
+                exitTransformMode();
+            } else {
+                enterTransformMode();
+            }
+        }
+    }
 }
 
 void Canvas::handleZoom()
