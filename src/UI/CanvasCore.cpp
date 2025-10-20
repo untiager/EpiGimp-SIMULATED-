@@ -76,6 +76,9 @@ void Canvas::draw() const
     }
     
     EndScissorMode();
+    
+    // Draw zoom indicator outside scissor mode
+    drawZoomIndicator();
 }
 
 bool Canvas::hasImage() const
@@ -433,6 +436,40 @@ void Canvas::deleteSelectionInternal()
 void Canvas::deleteSelectionWithCommand()
 {
     deleteSelection(); // Use the main deleteSelection method which handles commands properly
+}
+
+void Canvas::drawZoomIndicator() const
+{
+    // Draw zoom indicator in the bottom-right corner of the canvas
+    const float indicatorWidth = 80.0f;
+    const float indicatorHeight = 25.0f;
+    const float margin = 10.0f;
+    
+    Rectangle indicatorRect = {
+        bounds_.x + bounds_.width - indicatorWidth - margin,
+        bounds_.y + bounds_.height - indicatorHeight - margin,
+        indicatorWidth,
+        indicatorHeight
+    };
+    
+    // Background with semi-transparent black
+    DrawRectangleRec(indicatorRect, Color{0, 0, 0, 150});
+    DrawRectangleLinesEx(indicatorRect, 1.0f, LIGHTGRAY);
+    
+    // Format zoom percentage
+    char zoomText[16];
+    int zoomPercent = static_cast<int>(zoomLevel_ * 100);
+    snprintf(zoomText, sizeof(zoomText), "%d%%", zoomPercent);
+    
+    // Calculate text position (centered)
+    Vector2 textSize = MeasureTextEx(GetFontDefault(), zoomText, 12, 1);
+    Vector2 textPos = {
+        indicatorRect.x + (indicatorRect.width - textSize.x) / 2,
+        indicatorRect.y + (indicatorRect.height - textSize.y) / 2
+    };
+    
+    // Draw text
+    DrawTextEx(GetFontDefault(), zoomText, textPos, 12, 1, WHITE);
 }
 
 } // namespace EpiGimp

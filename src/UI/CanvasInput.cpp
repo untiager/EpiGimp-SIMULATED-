@@ -47,6 +47,23 @@ void Canvas::handleGlobalKeyboard()
             }
         }
     }
+    
+    // Zoom keyboard shortcuts
+    if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) {
+        // Ctrl+0: Fit to screen / Reset zoom
+        if (IsKeyPressed(KEY_ZERO) || IsKeyPressed(KEY_KP_0)) {
+            setZoom(1.0f);
+            panOffset_ = {0, 0};
+        }
+        // Ctrl++: Zoom in
+        else if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_EQUAL)) {
+            setZoom(zoomLevel_ * 1.2f);
+        }
+        // Ctrl+-: Zoom out  
+        else if (IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_MINUS)) {
+            setZoom(zoomLevel_ / 1.2f);
+        }
+    }
 }
 
 void Canvas::handleZoom()
@@ -55,8 +72,34 @@ void Canvas::handleZoom()
     if (wheel != 0.0f) {
         const Vector2 mousePos = GetMousePosition();
         if (CheckCollisionPointRec(mousePos, bounds_)) {
-            const float newZoom = zoomLevel_ + wheel * ZOOM_STEP;
+            // Store mouse position relative to image before zoom
+            Rectangle imageRect = calculateImageDestRect();
+            Vector2 mouseInImage = {
+                (mousePos.x - imageRect.x) / imageRect.width,
+                (mousePos.y - imageRect.y) / imageRect.height
+            };
+            
+            // Calculate new zoom with better scaling
+            const float zoomFactor = wheel > 0 ? 1.2f : (1.0f / 1.2f);
+            const float newZoom = zoomLevel_ * zoomFactor;
+            
+            // Apply zoom
             setZoom(newZoom);
+            
+            // Adjust pan to keep mouse position fixed
+            if (mouseInImage.x >= 0 && mouseInImage.x <= 1 && 
+                mouseInImage.y >= 0 && mouseInImage.y <= 1) {
+                
+                Rectangle newImageRect = calculateImageDestRect();
+                Vector2 newMouseInImage = {
+                    newImageRect.x + mouseInImage.x * newImageRect.width,
+                    newImageRect.y + mouseInImage.y * newImageRect.height
+                };
+                
+                // Adjust pan offset to keep mouse position consistent
+                panOffset_.x += mousePos.x - newMouseInImage.x;
+                panOffset_.y += mousePos.y - newMouseInImage.y;
+            }
         }
     }
 }

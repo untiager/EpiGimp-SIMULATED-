@@ -152,6 +152,7 @@ private:
     void drawImage() const;
     void drawPlaceholder() const;
     void drawSelection() const; // Draw selection rectangle with marching ants
+    void drawZoomIndicator() const; // Draw zoom level indicator
     void drawStroke(Vector2 from, Vector2 to);
     
     // Selection resize helpers
