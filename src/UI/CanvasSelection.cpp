@@ -27,6 +27,7 @@ void Canvas::handleSelection()
                     resizeHandle_ = handle;
                     resizeStartPos_ = mousePos;
                     resizeStartRect_ = contentTransformRect_;
+                    lastMousePos_ = mousePos; // Initialize last mouse position
                     std::cout << "Started transforming content with handle " << static_cast<int>(handle) << std::endl;
                 } else {
                     // Start resizing selection
@@ -34,6 +35,7 @@ void Canvas::handleSelection()
                     resizeHandle_ = handle;
                     resizeStartPos_ = mousePos;
                     resizeStartRect_ = selectionRect_;
+                    lastMousePos_ = mousePos; // Initialize last mouse position
                     std::cout << "Started resizing selection with handle " << static_cast<int>(handle) << std::endl;
                 }
                 return;
@@ -200,11 +202,15 @@ ResizeHandle Canvas::getResizeHandleAt(Vector2 mousePos) const
     if (!hasSelection_) return ResizeHandle::None;
     
     const float handleSize = 8.0f; // Size of resize handles in pixels
+    
+    // Use the appropriate rectangle based on transform mode
+    Rectangle targetRect = isTransformMode_ ? contentTransformRect_ : selectionRect_;
+    
     const Rectangle selectionScreenRect = {
-        imageToScreenCoords({selectionRect_.x, selectionRect_.y}).x,
-        imageToScreenCoords({selectionRect_.x, selectionRect_.y}).y,
-        selectionRect_.width * zoomLevel_,
-        selectionRect_.height * zoomLevel_
+        imageToScreenCoords({targetRect.x, targetRect.y}).x,
+        imageToScreenCoords({targetRect.x, targetRect.y}).y,
+        targetRect.width * zoomLevel_,
+        targetRect.height * zoomLevel_
     };
     
     // Define handle positions
@@ -245,11 +251,15 @@ Rectangle Canvas::getResizeHandleRect(ResizeHandle handle) const
     if (!hasSelection_) return {0, 0, 0, 0};
     
     const float handleSize = 8.0f;
+    
+    // Use the appropriate rectangle based on transform mode
+    Rectangle targetRect = isTransformMode_ ? contentTransformRect_ : selectionRect_;
+    
     const Rectangle selectionScreenRect = {
-        imageToScreenCoords({selectionRect_.x, selectionRect_.y}).x,
-        imageToScreenCoords({selectionRect_.x, selectionRect_.y}).y,
-        selectionRect_.width * zoomLevel_,
-        selectionRect_.height * zoomLevel_
+        imageToScreenCoords({targetRect.x, targetRect.y}).x,
+        imageToScreenCoords({targetRect.x, targetRect.y}).y,
+        targetRect.width * zoomLevel_,
+        targetRect.height * zoomLevel_
     };
     
     Vector2 handlePos = {0, 0};

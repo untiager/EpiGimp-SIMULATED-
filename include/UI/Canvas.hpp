@@ -138,6 +138,9 @@ public:
     void deleteSelection(); // Delete pixels within the current selection
     void deleteSelectionInternal(); // Internal delete without command
     void deleteSelectionWithCommand(); // Delete with command pattern (for undo/redo)
+    
+    // Transform preview
+    void drawTransformPreview(Rectangle imageDestRect) const;
 
 private:
     void handleInput();

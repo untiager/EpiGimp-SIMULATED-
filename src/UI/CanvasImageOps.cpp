@@ -209,10 +209,32 @@ void Canvas::drawImage() const
         if (layer.visible && layer.texture) {
             const Texture2D& layerTex = (**layer.texture).texture;
             
-            // Source rectangle with negative height to flip Y-axis for RenderTexture coordinate system
-            Rectangle sourceRect = {0, 0, static_cast<float>(layerTex.width), static_cast<float>(-layerTex.height)};
-            
-            DrawTexturePro(layerTex, sourceRect, imageDestRect, Vector2{0, 0}, 0.0f, WHITE);
+            // Check if this is the selected layer and we're in transform mode with content being transformed
+            if (i == selectedLayerIndex_ && isTransformMode_ && selectionContent_.has_value() && isTransformingContent_) {
+                // For the selected layer in transform mode, we need to draw it with the original selection area masked out
+                // First, draw the layer normally
+                Rectangle sourceRect = {0, 0, static_cast<float>(layerTex.width), static_cast<float>(-layerTex.height)};
+                DrawTexturePro(layerTex, sourceRect, imageDestRect, Vector2{0, 0}, 0.0f, WHITE);
+                
+                // Mask out the original selection area by drawing a rectangle
+                const float scaleX = imageDestRect.width / (currentTexture_ ? (*currentTexture_)->width : 800.0f);
+                const float scaleY = imageDestRect.height / (currentTexture_ ? (*currentTexture_)->height : 600.0f);
+                
+                Rectangle maskRect;
+                maskRect.x = imageDestRect.x + (contentOriginalRect_.x * scaleX);
+                maskRect.y = imageDestRect.y + (contentOriginalRect_.y * scaleY);
+                maskRect.width = contentOriginalRect_.width * scaleX;
+                maskRect.height = contentOriginalRect_.height * scaleY;
+                
+                DrawRectangleRec(maskRect, BLANK); // Clear the original area
+                
+                // Then draw the transformed content preview
+                drawTransformPreview(imageDestRect);
+            } else {
+                // Draw layer normally
+                Rectangle sourceRect = {0, 0, static_cast<float>(layerTex.width), static_cast<float>(-layerTex.height)};
+                DrawTexturePro(layerTex, sourceRect, imageDestRect, Vector2{0, 0}, 0.0f, WHITE);
+            }
         }
     }
 }
