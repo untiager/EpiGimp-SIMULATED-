@@ -80,8 +80,8 @@ void Application::createComponents()
     
     // Create canvas (below toolbar, right of layer panel)
     const Rectangle canvasBounds = {
-        200, static_cast<float>(toolbar_->getHeight()), // Leave space for layer panel
-        static_cast<float>(config_.windowWidth - 200), // Reduced width for layer panel
+        330, static_cast<float>(toolbar_->getHeight()), // Leave space for layer panel
+        static_cast<float>(config_.windowWidth - 330), // Reduced width for layer panel
         static_cast<float>(config_.windowHeight - toolbar_->getHeight() - 25) // Leave space for status bar
     };
     canvas_ = std::make_unique<Canvas>(canvasBounds, eventDispatcher_.get(), historyManager_.get());
@@ -90,7 +90,7 @@ void Application::createComponents()
     const Rectangle layerPanelBounds = {
         0,
         static_cast<float>(toolbar_->getHeight()),
-        200,
+        330,
         static_cast<float>(config_.windowHeight - toolbar_->getHeight() - 25)
     };
     layerPanel_ = std::make_unique<SimpleLayerPanel>(layerPanelBounds, 

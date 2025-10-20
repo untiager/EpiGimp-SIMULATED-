@@ -24,6 +24,8 @@ private:
     mutable bool addButtonHovered_;
     mutable bool deleteButtonHovered_;
     mutable bool clearButtonHovered_;
+    mutable bool flipButtonHovered_;
+    mutable bool flipHButtonHovered_;
     mutable float scrollOffset_;              // For scrolling through layers
     
     mutable bool isDragging_;                 // Whether a layer is being dragged
@@ -47,6 +49,8 @@ private:
     Rectangle getAddButtonRect() const;
     Rectangle getDeleteButtonRect() const;
     Rectangle getClearButtonRect() const;
+    Rectangle getFlipButtonRect() const;
+    Rectangle getFlipHButtonRect() const;
     void updateLayerHoverStates();
 };
 

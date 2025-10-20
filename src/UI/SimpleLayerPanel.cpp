@@ -8,7 +8,7 @@ namespace EpiGimp {
 SimpleLayerPanel::SimpleLayerPanel(Rectangle bounds, Canvas* canvas, EventDispatcher* dispatcher)
     : bounds_(bounds), canvas_(canvas), eventDispatcher_(dispatcher),
       backgroundHovered_(false), addButtonHovered_(false), deleteButtonHovered_(false), 
-      clearButtonHovered_(false), scrollOffset_(0.0f),
+      clearButtonHovered_(false), flipButtonHovered_(false), flipHButtonHovered_(false), scrollOffset_(0.0f),
       isDragging_(false), dragStartIndex_(-1), dragOffset_{0, 0}, dragStartPos_{0, 0}
 {
     if (!canvas_)
@@ -120,6 +120,8 @@ void SimpleLayerPanel::draw() const
     Rectangle addButtonRect = getAddButtonRect();
     Rectangle deleteButtonRect = getDeleteButtonRect();
     Rectangle clearButtonRect = getClearButtonRect();
+    Rectangle flipButtonRect = getFlipButtonRect();
+    Rectangle flipHButtonRect = getFlipHButtonRect();
     
     bool hasSelectedLayer = selectedLayer >= 0;
     
@@ -128,6 +130,10 @@ void SimpleLayerPanel::draw() const
                hasSelectedLayer ? Color{120, 0, 0, 255} : Color{60, 0, 0, 128});
     drawButton("Clear", clearButtonRect, clearButtonHovered_, 
                hasSelectedLayer ? Color{80, 80, 0, 255} : Color{40, 40, 0, 128});
+    drawButton("Flip V", flipButtonRect, flipButtonHovered_, 
+               hasSelectedLayer ? Color{0, 80, 120, 255} : Color{0, 40, 60, 128});
+    drawButton("Flip H", flipHButtonRect, flipHButtonHovered_, 
+               hasSelectedLayer ? Color{120, 0, 80, 255} : Color{60, 0, 40, 128});
     
     DrawText("Click eye to toggle", 
              static_cast<int>(bounds_.x + 10), 
@@ -217,6 +223,20 @@ void SimpleLayerPanel::handleInput()
             if (selectedLayer >= 0) {
                 canvas_->clearLayer(selectedLayer);
                 std::cout << "Cleared layer: " << canvas_->getLayerName(selectedLayer) << std::endl;
+            }
+        }
+        if (flipButtonHovered_) {
+            int selectedLayer = canvas_->getSelectedLayerIndex();
+            if (selectedLayer >= 0) {
+                canvas_->flipLayerVertical(selectedLayer);
+                std::cout << "Flipped layer vertically: " << canvas_->getLayerName(selectedLayer) << std::endl;
+            }
+        }
+        if (flipHButtonHovered_) {
+            int selectedLayer = canvas_->getSelectedLayerIndex();
+            if (selectedLayer >= 0) {
+                canvas_->flipLayerHorizontal(selectedLayer);
+                std::cout << "Flipped layer horizontally: " << canvas_->getLayerName(selectedLayer) << std::endl;
             }
         }
     }
@@ -324,6 +344,40 @@ Rectangle SimpleLayerPanel::getClearButtonRect() const
     };
 }
 
+Rectangle SimpleLayerPanel::getFlipButtonRect() const
+{
+    int layerCount = canvas_->getLayerCount();
+    float buttonsY = bounds_.y + 35 + (layerCount * 35) + 40; // After layers + background + margin
+    
+    float maxY = bounds_.y + bounds_.height - 80; // Leave space for instructions
+    if (buttonsY > maxY)
+        buttonsY = maxY;
+    
+    return Rectangle{
+        bounds_.x + 200,
+        buttonsY,
+        55,
+        25
+    };
+}
+
+Rectangle SimpleLayerPanel::getFlipHButtonRect() const
+{
+    int layerCount = canvas_->getLayerCount();
+    float buttonsY = bounds_.y + 35 + (layerCount * 35) + 40; // After layers + background + margin
+    
+    float maxY = bounds_.y + bounds_.height - 80; // Leave space for instructions
+    if (buttonsY > maxY)
+        buttonsY = maxY;
+    
+    return Rectangle{
+        bounds_.x + 265,
+        buttonsY,
+        55,
+        25
+    };
+}
+
 void SimpleLayerPanel::updateLayerHoverStates()
 {
     Vector2 mousePos = GetMousePosition();
@@ -384,6 +438,8 @@ void SimpleLayerPanel::updateLayerHoverStates()
     addButtonHovered_ = CheckCollisionPointRec(mousePos, getAddButtonRect());
     deleteButtonHovered_ = hasSelectedLayer && CheckCollisionPointRec(mousePos, getDeleteButtonRect());
     clearButtonHovered_ = hasSelectedLayer && CheckCollisionPointRec(mousePos, getClearButtonRect());
+    flipButtonHovered_ = hasSelectedLayer && CheckCollisionPointRec(mousePos, getFlipButtonRect());
+    flipHButtonHovered_ = hasSelectedLayer && CheckCollisionPointRec(mousePos, getFlipHButtonRect());
 }
 
 void SimpleLayerPanel::handleLayerDrag()

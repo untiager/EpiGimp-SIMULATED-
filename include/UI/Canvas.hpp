@@ -16,9 +16,11 @@ namespace EpiGimp {
 struct DrawingLayer {
     std::optional<RenderTextureResource> texture;
     bool visible;
+    bool flippedVertical;
+    bool flippedHorizontal;
     std::string name;
     
-    DrawingLayer(const std::string& layerName) : visible(true), name(layerName) {}
+    DrawingLayer(const std::string& layerName) : visible(true), flippedVertical(false), flippedHorizontal(false), name(layerName) {}
 };
 
 // Resize handle constants for selection resizing
@@ -119,6 +121,8 @@ public:
     void deleteLayer(int index);
     void clearLayer(int index);
     void moveLayer(int fromIndex, int toIndex);  // Move layer to new position
+    void flipLayerVertical(int index = -1);  // Flip layer vertically (Y axis), -1 for current layer
+    void flipLayerHorizontal(int index = -1);  // Flip layer horizontally (X axis), -1 for current layer
     bool isLayerVisible(int index) const;
     void setLayerVisible(int index, bool visible);
     const std::string& getLayerName(int index) const;

@@ -45,6 +45,7 @@ public:
     virtual void setPan(Vector2 offset) = 0;
     virtual Vector2 getPan() const = 0;
     virtual void setDrawingTool(DrawingTool tool) = 0;
+    virtual void flipLayerVertical(int index = -1) = 0;
 };
 
 class IFileManager {

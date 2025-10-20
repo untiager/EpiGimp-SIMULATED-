@@ -231,12 +231,64 @@ void Canvas::drawImage() const
                 // Then draw the transformed content preview
                 drawTransformPreview(imageDestRect);
             } else {
-                // Draw layer normally
-                Rectangle sourceRect = {0, 0, static_cast<float>(layerTex.width), static_cast<float>(-layerTex.height)};
+                // Draw layer normally or flipped based on layer state
+                float sourceHeight = layer.flippedVertical ? 
+                    static_cast<float>(layerTex.height) :   // Positive height for flipped
+                    static_cast<float>(-layerTex.height);   // Negative height for normal
+                float sourceWidth = layer.flippedHorizontal ?
+                    static_cast<float>(-layerTex.width) :   // Negative width for flipped
+                    static_cast<float>(layerTex.width);     // Positive width for normal
+                Rectangle sourceRect = {0, 0, sourceWidth, sourceHeight};
                 DrawTexturePro(layerTex, sourceRect, imageDestRect, Vector2{0, 0}, 0.0f, WHITE);
             }
         }
     }
+}
+
+void Canvas::flipLayerVertical(int index)
+{
+    // Use current layer if index is -1
+    int layerIndex = (index == -1) ? selectedLayerIndex_ : index;
+    
+    if (layerIndex < 0 || layerIndex >= static_cast<int>(drawingLayers_.size())) {
+        std::cout << "Cannot flip layer: invalid layer index " << layerIndex << std::endl;
+        return;
+    }
+    
+    DrawingLayer& layer = drawingLayers_[layerIndex];
+    if (!layer.texture) {
+        std::cout << "Cannot flip layer: layer has no texture" << std::endl;
+        return;
+    }
+    
+    // Toggle the flip state
+    layer.flippedVertical = !layer.flippedVertical;
+    
+    std::cout << "Flipped layer vertically: " << layer.name << " (index " << layerIndex 
+              << ") - now " << (layer.flippedVertical ? "flipped" : "normal") << std::endl;
+}
+
+void Canvas::flipLayerHorizontal(int index)
+{
+    // Use current layer if index is -1
+    int layerIndex = (index == -1) ? selectedLayerIndex_ : index;
+    
+    if (layerIndex < 0 || layerIndex >= static_cast<int>(drawingLayers_.size())) {
+        std::cout << "Cannot flip layer: invalid layer index " << layerIndex << std::endl;
+        return;
+    }
+    
+    DrawingLayer& layer = drawingLayers_[layerIndex];
+    if (!layer.texture) {
+        std::cout << "Cannot flip layer: layer has no texture" << std::endl;
+        return;
+    }
+    
+    // Toggle the flip state
+    layer.flippedHorizontal = !layer.flippedHorizontal;
+    
+    std::cout << "Flipped layer horizontally: " << layer.name << " (index " << layerIndex 
+              << ") - now " << (layer.flippedHorizontal ? "flipped" : "normal") << std::endl;
 }
 
 } // namespace EpiGimp
