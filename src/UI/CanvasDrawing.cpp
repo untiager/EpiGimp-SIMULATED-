@@ -29,14 +29,42 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
     
     const Rectangle imageRect = calculateImageDestRect();
     
+    // Convert screen coordinates to texture coordinates (0-1 range first)
+    float normalizedFromX = (from.x - imageRect.x) / imageRect.width;
+    float normalizedFromY = (from.y - imageRect.y) / imageRect.height;
+    float normalizedToX = (to.x - imageRect.x) / imageRect.width;
+    float normalizedToY = (to.y - imageRect.y) / imageRect.height;
+    
+    // Apply inverse flip transformations to match user expectation
+    // When canvas is flipped visually, we need to "unflip" the input coordinates
+    if (canvasFlippedHorizontal_) {
+        normalizedFromX = 1.0f - normalizedFromX;
+        normalizedToX = 1.0f - normalizedToX;
+    }
+    if (canvasFlippedVertical_) {
+        normalizedFromY = 1.0f - normalizedFromY;
+        normalizedToY = 1.0f - normalizedToY;
+    }
+    
+    // Apply layer-specific flip transformations as well
+    if (layer.flippedHorizontal) {
+        normalizedFromX = 1.0f - normalizedFromX;
+        normalizedToX = 1.0f - normalizedToX;
+    }
+    if (layer.flippedVertical) {
+        normalizedFromY = 1.0f - normalizedFromY;
+        normalizedToY = 1.0f - normalizedToY;
+    }
+    
+    // Convert normalized coordinates to texture pixel coordinates
     const Vector2 imageFrom = {
-        (from.x - imageRect.x) / imageRect.width * (*currentTexture_)->width,
-        (from.y - imageRect.y) / imageRect.height * (*currentTexture_)->height
+        normalizedFromX * (*currentTexture_)->width,
+        normalizedFromY * (*currentTexture_)->height
     };
     
     const Vector2 imageTo = {
-        (to.x - imageRect.x) / imageRect.width * (*currentTexture_)->width,
-        (to.y - imageRect.y) / imageRect.height * (*currentTexture_)->height
+        normalizedToX * (*currentTexture_)->width,
+        normalizedToY * (*currentTexture_)->height
     };
     
     std::cout << "Drawing stroke from (" << imageFrom.x << "," << imageFrom.y 

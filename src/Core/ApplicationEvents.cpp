@@ -78,6 +78,18 @@ void Application::createComponents()
         eventDispatcher_->emit<ClearCanvasRequestEvent>();
     });
     
+    toolbar_->addButton("All V", [this]() {
+        if (canvas_) {
+            static_cast<Canvas*>(canvas_.get())->flipCanvasVertical();
+        }
+    });
+    
+    toolbar_->addButton("All H", [this]() {
+        if (canvas_) {
+            static_cast<Canvas*>(canvas_.get())->flipCanvasHorizontal();
+        }
+    });
+    
     // Create canvas (below toolbar, right of layer panel)
     const Rectangle canvasBounds = {
         330, static_cast<float>(toolbar_->getHeight()), // Leave space for layer panel

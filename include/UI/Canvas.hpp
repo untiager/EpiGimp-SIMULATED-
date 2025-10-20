@@ -78,6 +78,8 @@ private:
     Rectangle contentTransformRect_;                       // Current transformed bounds
     
     bool backgroundVisible_;
+    bool canvasFlippedVertical_;                          // Global vertical flip state for entire canvas
+    bool canvasFlippedHorizontal_;                        // Global horizontal flip state for entire canvas
     int selectedLayerIndex_;                               // Currently selected layer for drawing/editing
     
     static constexpr float MIN_ZOOM = 0.1f;
@@ -123,6 +125,8 @@ public:
     void moveLayer(int fromIndex, int toIndex);  // Move layer to new position
     void flipLayerVertical(int index = -1);  // Flip layer vertically (Y axis), -1 for current layer
     void flipLayerHorizontal(int index = -1);  // Flip layer horizontally (X axis), -1 for current layer
+    void flipCanvasVertical();  // Flip entire canvas/drawing vertically
+    void flipCanvasHorizontal();  // Flip entire canvas/drawing horizontally
     bool isLayerVisible(int index) const;
     void setLayerVisible(int index, bool visible);
     const std::string& getLayerName(int index) const;

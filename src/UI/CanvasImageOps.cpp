@@ -200,8 +200,9 @@ void Canvas::drawImage() const
                   << imageDestRect.width << "," << imageDestRect.height << ")" << std::endl;
     }
     
-    if (backgroundVisible_ && currentTexture_)
+    if (backgroundVisible_ && currentTexture_) {
         DrawTexture(**currentTexture_, static_cast<int>(imageDestRect.x), static_cast<int>(imageDestRect.y), WHITE);
+    }
     
     // Draw layers in reverse order so that layer 0 (top of the list) appears on top visually
     for (int i = static_cast<int>(drawingLayers_.size()) - 1; i >= 0; --i) {
@@ -231,14 +232,19 @@ void Canvas::drawImage() const
                 // Then draw the transformed content preview
                 drawTransformPreview(imageDestRect);
             } else {
-                // Draw layer normally or flipped based on layer state
-                float sourceHeight = layer.flippedVertical ? 
+                // Calculate flip effects for visual display only
+                float layerSourceHeight = layer.flippedVertical ? 
                     static_cast<float>(layerTex.height) :   // Positive height for flipped
                     static_cast<float>(-layerTex.height);   // Negative height for normal
-                float sourceWidth = layer.flippedHorizontal ?
+                float layerSourceWidth = layer.flippedHorizontal ?
                     static_cast<float>(-layerTex.width) :   // Negative width for flipped
                     static_cast<float>(layerTex.width);     // Positive width for normal
-                Rectangle sourceRect = {0, 0, sourceWidth, sourceHeight};
+                
+                // Apply global canvas flip to the visual rendering only
+                float globalFlippedWidth = canvasFlippedHorizontal_ ? -layerSourceWidth : layerSourceWidth;
+                float globalFlippedHeight = canvasFlippedVertical_ ? -layerSourceHeight : layerSourceHeight;
+                
+                Rectangle sourceRect = {0, 0, globalFlippedWidth, globalFlippedHeight};
                 DrawTexturePro(layerTex, sourceRect, imageDestRect, Vector2{0, 0}, 0.0f, WHITE);
             }
         }
@@ -289,6 +295,24 @@ void Canvas::flipLayerHorizontal(int index)
     
     std::cout << "Flipped layer horizontally: " << layer.name << " (index " << layerIndex 
               << ") - now " << (layer.flippedHorizontal ? "flipped" : "normal") << std::endl;
+}
+
+void Canvas::flipCanvasVertical()
+{
+    // Toggle the global vertical flip state
+    canvasFlippedVertical_ = !canvasFlippedVertical_;
+    
+    std::cout << "Flipped entire canvas vertically - now " 
+              << (canvasFlippedVertical_ ? "flipped" : "normal") << std::endl;
+}
+
+void Canvas::flipCanvasHorizontal()
+{
+    // Toggle the global horizontal flip state
+    canvasFlippedHorizontal_ = !canvasFlippedHorizontal_;
+    
+    std::cout << "Flipped entire canvas horizontally - now " 
+              << (canvasFlippedHorizontal_ ? "flipped" : "normal") << std::endl;
 }
 
 } // namespace EpiGimp

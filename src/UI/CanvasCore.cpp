@@ -16,7 +16,8 @@ Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* hi
       selectionRect_{0, 0, 0, 0}, selectionAnimTime_(0.0f),
       isResizingSelection_(false), resizeHandle_(ResizeHandle::None), resizeStartPos_{0, 0}, resizeStartRect_{0, 0, 0, 0},
       isTransformMode_(false), isTransformingContent_(false), contentOriginalRect_{0, 0, 0, 0}, contentTransformRect_{0, 0, 0, 0},
-      backgroundVisible_(true), selectedLayerIndex_(-1) // No layer selected initially
+      backgroundVisible_(true), canvasFlippedVertical_(false), canvasFlippedHorizontal_(false), 
+      selectedLayerIndex_(-1) // No layer selected initially
 {
     
     if (!dispatcher)
