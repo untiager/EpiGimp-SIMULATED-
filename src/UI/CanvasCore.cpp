@@ -1,5 +1,8 @@
 //Canvas core functionality
 #include "../../include/UI/Canvas.hpp"
+#include "../../include/Commands/DeleteSelectionCommand.hpp"
+#include "../../include/Core/HistoryManager.hpp"
+#include "rlgl.h"  // For low-level OpenGL blend functions
 #include <iostream>
 #include <cmath>
 
@@ -360,6 +363,72 @@ Rectangle Canvas::normalizeRect(Vector2 start, Vector2 end) const
     const float height = std::abs(end.y - start.y);
     
     return Rectangle{x, y, width, height};
+}
+
+void Canvas::deleteSelection()
+{
+    if (!hasSelection_ || !hasDrawingTexture()) {
+        std::cout << "Cannot delete: no selection or no drawing texture" << std::endl;
+        return;
+    }
+    
+    DrawingLayer& layer = drawingLayers_[selectedLayerIndex_];
+    if (!layer.visible) {
+        std::cout << "Cannot delete: layer is not visible" << std::endl;
+        return;
+    }
+    
+    // Use command pattern for undo/redo support if history manager is available
+    if (historyManager_) {
+        // Create and execute the delete selection command
+        auto command = createDeleteSelectionCommand(this, "Delete Selection");
+        if (command && historyManager_->executeCommand(std::move(command))) {
+            std::cout << "Delete selection completed and added to history" << std::endl;
+        } else {
+            std::cout << "Failed to execute delete selection command" << std::endl;
+        }
+    } else {
+        // Fallback: direct deletion without history
+        deleteSelectionInternal();
+    }
+}
+
+void Canvas::deleteSelectionInternal()
+{
+    if (!hasSelection_ || !hasDrawingTexture()) {
+        return;
+    }
+    
+    DrawingLayer& layer = drawingLayers_[selectedLayerIndex_];
+    if (!layer.visible) {
+        return;
+    }
+    
+    // Clear the selection area by drawing a transparent rectangle with proper clearing
+    layer.texture->beginDrawing();
+    
+    // Use scissor test to limit clearing to the selection area
+    BeginScissorMode((int)selectionRect_.x, (int)selectionRect_.y, 
+                     (int)selectionRect_.width, (int)selectionRect_.height);
+    
+    // Clear the background to transparent in the scissored area
+    ClearBackground(Color{0, 0, 0, 0});
+    
+    EndScissorMode();
+    
+    layer.texture->endDrawing();
+    
+    std::cout << "Deleted selection area: (" << selectionRect_.x << "," << selectionRect_.y 
+              << ") " << selectionRect_.width << "x" << selectionRect_.height 
+              << " on layer: " << layer.name << std::endl;
+    
+    // Clear the selection after deletion
+    clearSelection();
+}
+
+void Canvas::deleteSelectionWithCommand()
+{
+    deleteSelection(); // Use the main deleteSelection method which handles commands properly
 }
 
 } // namespace EpiGimp

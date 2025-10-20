@@ -49,21 +49,8 @@ void Canvas::handleSelection()
                       << ") " << selectionRect_.width << "x" << selectionRect_.height << std::endl;
         } else {
             hasSelection_ = false;
-            std::cout << "Selection too small, cleared" << std::endl;
+            std::cout << "Selection too small, ignored" << std::endl;
         }
-    }
-    
-    // Handle keyboard shortcuts
-    if (IsKeyPressed(KEY_A) && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))) {
-        selectAll();
-    }
-    
-    if (IsKeyPressed(KEY_D) && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))) {
-        clearSelection();
-    }
-    
-    if (IsKeyPressed(KEY_ESCAPE)) {
-        clearSelection();
     }
 }
 

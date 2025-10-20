@@ -109,11 +109,15 @@ public:
     Rectangle getSelectionRect() const { return selectionRect_; }
     void clearSelection();
     void selectAll();
+    void deleteSelection(); // Delete pixels within the current selection
+    void deleteSelectionInternal(); // Internal delete without command
+    void deleteSelectionWithCommand(); // Delete with command pattern (for undo/redo)
 
 private:
     void handleInput();
     void handleZoom();
     void handlePanning();
+    void handleGlobalKeyboard(); // Handle global keyboard shortcuts
     void handleDrawing();  // New method for drawing input
     void handleSelection(); // New method for selection input
     void drawImage() const;

@@ -8,6 +8,34 @@ void Canvas::handleInput()
 {
     handleZoom();
     handlePanning();
+    handleGlobalKeyboard();
+}
+
+void Canvas::handleGlobalKeyboard()
+{
+    // Handle global keyboard shortcuts that work regardless of current tool
+    
+    // Delete/Backspace for deleting selection
+    if (IsKeyPressed(KEY_DELETE) || IsKeyPressed(KEY_BACKSPACE)) {
+        if (hasSelection_) {
+            deleteSelectionWithCommand();
+        }
+    }
+    
+    // Ctrl+A for select all (only if using selection tool)
+    if (IsKeyPressed(KEY_A) && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))) {
+        if (currentTool_ == DrawingTool::Select) {
+            selectAll();
+        }
+    }
+    
+    // Ctrl+D or Escape for deselect
+    if ((IsKeyPressed(KEY_D) && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))) || 
+        IsKeyPressed(KEY_ESCAPE)) {
+        if (hasSelection_) {
+            clearSelection();
+        }
+    }
 }
 
 void Canvas::handleZoom()
