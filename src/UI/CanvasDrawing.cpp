@@ -34,9 +34,7 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
     float normalizedFromY = (from.y - imageRect.y) / imageRect.height;
     float normalizedToX = (to.x - imageRect.x) / imageRect.width;
     float normalizedToY = (to.y - imageRect.y) / imageRect.height;
-    
-    // Apply inverse flip transformations to match user expectation
-    // When canvas is flipped visually, we need to "unflip" the input coordinates
+
     if (canvasFlippedHorizontal_) {
         normalizedFromX = 1.0f - normalizedFromX;
         normalizedToX = 1.0f - normalizedToX;
@@ -72,32 +70,57 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
     
     layer.texture->beginDrawing();
     
-    // Different tools have different characteristics
-    switch (currentTool_) {
-        case DrawingTool::Crayon:
-            DrawLineEx(imageFrom, imageTo, 3.0f, drawingColor_);
-            break;
+    // Calculate mirrored positions if mirror mode is enabled
+    Vector2 mirroredFrom = imageFrom;
+    Vector2 mirroredTo = imageTo;
+    
+    if (mirrorModeEnabled_) {
+        // Mirror horizontally across the center of the canvas
+        const float centerX = (*currentTexture_)->width / 2.0f;
+        mirroredFrom.x = 2.0f * centerX - imageFrom.x;
+        mirroredTo.x = 2.0f * centerX - imageTo.x;
+        
+        std::cout << "Mirror mode enabled - also drawing from (" << mirroredFrom.x << "," << mirroredFrom.y 
+                  << ") to (" << mirroredTo.x << "," << mirroredTo.y << ")" << std::endl;
+    }
+    
+    // Lambda function to draw a stroke (used for both original and mirrored)
+    auto drawSingleStroke = [&](const Vector2& from, const Vector2& to) {
+        switch (currentTool_) {
+            case DrawingTool::Crayon:
+            case DrawingTool::Mirror:
+                DrawLineEx(from, to, 3.0f, drawingColor_);
+                break;
+                
+            case DrawingTool::Brush:
+            {
+                // Brush tool: larger, softer strokes with multiple passes for smoother effect
+                DrawLineEx(from, to, 8.0f, drawingColor_);
+                // Add some transparency for softer effect
+                Color softerColor = drawingColor_;
+                softerColor.a = 128; // Half transparency
+                DrawLineEx(from, to, 12.0f, softerColor);
+                break;
+            }
             
-        case DrawingTool::Brush:
-        {
-            // Brush tool: larger, softer strokes with multiple passes for smoother effect
-            DrawLineEx(imageFrom, imageTo, 8.0f, drawingColor_);
-            // Add some transparency for softer effect
-            Color softerColor = drawingColor_;
-            softerColor.a = 128; // Half transparency
-            DrawLineEx(imageFrom, imageTo, 12.0f, softerColor);
-            break;
+            case DrawingTool::Select:
+                // Selection tool doesn't draw strokes
+                break;
+            
+            case DrawingTool::None:
+            default:
+                // Fallback to basic line
+                DrawLineEx(from, to, 1.0f, drawingColor_);
+                break;
         }
-        
-        case DrawingTool::Select:
-            // Selection tool doesn't draw strokes, return early
-            return;
-        
-        case DrawingTool::None:
-        default:
-            // Fallback to basic line
-            DrawLineEx(imageFrom, imageTo, 1.0f, drawingColor_);
-            break;
+    };
+    
+    // Draw the original stroke
+    drawSingleStroke(imageFrom, imageTo);
+    
+    // Draw the mirrored stroke if mirror mode is enabled
+    if (mirrorModeEnabled_) {
+        drawSingleStroke(mirroredFrom, mirroredTo);
     }
     
     layer.texture->endDrawing();
@@ -111,6 +134,11 @@ void Canvas::handleDrawing()
     
     // Skip drawing logic for selection tool
     if (currentTool_ == DrawingTool::Select) return;
+    
+    // Mirror tool automatically enables mirror mode
+    if (currentTool_ == DrawingTool::Mirror) {
+        mirrorModeEnabled_ = true;
+    }
     
     const Vector2 mousePos = GetMousePosition();
     

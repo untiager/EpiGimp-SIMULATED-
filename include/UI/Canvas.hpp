@@ -10,6 +10,7 @@
 #include "../Core/Interfaces.hpp"
 #include "../Core/RaylibWrappers.hpp"
 #include "../Core/EventSystem.hpp"
+#include "../Commands/FlipSelectionCommands.hpp"
 
 namespace EpiGimp {
 
@@ -55,6 +56,7 @@ private:
     Color primaryColor_;                                   // Primary drawing color (left-click)
     Color secondaryColor_;                                 // Secondary drawing color (right-click)
     Color drawingColor_;                                   // Current drawing color (deprecated, for compatibility)
+    bool mirrorModeEnabled_;                               // Enable horizontal mirror drawing
     
     // Selection state
     bool isSelecting_;                                     // True when actively making a selection
@@ -146,6 +148,13 @@ public:
     void deleteSelection(); // Delete pixels within the current selection
     void deleteSelectionInternal(); // Internal delete without command
     void deleteSelectionWithCommand(); // Delete with command pattern (for undo/redo)
+    void flipSelectionVertical(); // Flip selected content vertically
+    void flipSelectionHorizontal(); // Flip selected content horizontally
+    
+    // Mirror mode
+    bool isMirrorModeEnabled() const { return mirrorModeEnabled_; }
+    void setMirrorMode(bool enabled) { mirrorModeEnabled_ = enabled; }
+    void toggleMirrorMode() { mirrorModeEnabled_ = !mirrorModeEnabled_; }
     
     // Transform preview
     void drawTransformPreview(Rectangle imageDestRect) const;

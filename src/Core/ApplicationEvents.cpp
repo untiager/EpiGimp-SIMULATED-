@@ -74,19 +74,23 @@ void Application::createComponents()
         eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Select);
     });
     
+    toolbar_->addButton("Mirror", [this]() {
+        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Mirror);
+    });
+    
     toolbar_->addButton("Clear", [this]() {
         eventDispatcher_->emit<ClearCanvasRequestEvent>();
     });
     
     toolbar_->addButton("All V", [this]() {
         if (canvas_) {
-            static_cast<Canvas*>(canvas_.get())->flipCanvasVertical();
+            static_cast<Canvas*>(canvas_.get())->flipSelectionVertical();
         }
     });
     
     toolbar_->addButton("All H", [this]() {
         if (canvas_) {
-            static_cast<Canvas*>(canvas_.get())->flipCanvasHorizontal();
+            static_cast<Canvas*>(canvas_.get())->flipSelectionHorizontal();
         }
     });
     

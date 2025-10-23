@@ -71,6 +71,10 @@ void Toolbar::setSelectedTool(DrawingTool tool)
             button->isSelected = (tool == DrawingTool::Crayon);
         } else if (button->text == "Brush") {
             button->isSelected = (tool == DrawingTool::Brush);
+        } else if (button->text == "Select") {
+            button->isSelected = (tool == DrawingTool::Select);
+        } else if (button->text == "Mirror") {
+            button->isSelected = (tool == DrawingTool::Mirror);
         } else {
             button->isSelected = false;
         }
@@ -79,6 +83,8 @@ void Toolbar::setSelectedTool(DrawingTool tool)
     std::string toolName = "None";
     if (tool == DrawingTool::Crayon) toolName = "Crayon";
     else if (tool == DrawingTool::Brush) toolName = "Brush";
+    else if (tool == DrawingTool::Select) toolName = "Select";
+    else if (tool == DrawingTool::Mirror) toolName = "Mirror";
     
     std::cout << "Tool selected: " << toolName << std::endl;
 }

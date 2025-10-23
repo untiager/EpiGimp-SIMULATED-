@@ -1,6 +1,7 @@
 //Canvas core functionality
 #include "../../include/UI/Canvas.hpp"
 #include "../../include/Commands/DeleteSelectionCommand.hpp"
+#include "../../include/Commands/FlipSelectionCommands.hpp"
 #include "../../include/Core/HistoryManager.hpp"
 #include "rlgl.h"  // For low-level OpenGL blend functions
 #include <iostream>
@@ -12,6 +13,7 @@ Canvas::Canvas(Rectangle bounds, EventDispatcher* dispatcher, HistoryManager* hi
     : bounds_(bounds), zoomLevel_(1.0f), panOffset_{0, 0}, eventDispatcher_(dispatcher),
       historyManager_(historyManager), currentTool_(DrawingTool::None), isDrawing_(false), 
       lastMousePos_{0, 0}, primaryColor_(BLACK), secondaryColor_(WHITE), drawingColor_(BLACK), // Initialize with black primary, white secondary
+      mirrorModeEnabled_(false),
       isSelecting_(false), hasSelection_(false), selectionStart_{0, 0}, selectionEnd_{0, 0}, 
       selectionRect_{0, 0, 0, 0}, selectionAnimTime_(0.0f),
       isResizingSelection_(false), resizeHandle_(ResizeHandle::None), resizeStartPos_{0, 0}, resizeStartRect_{0, 0, 0, 0},
@@ -75,6 +77,15 @@ void Canvas::draw() const
     // Draw selection if active
     if (hasSelection_ || isSelecting_) {
         drawSelection();
+    }
+    
+    // Draw mirror mode indicator line
+    if (mirrorModeEnabled_ && hasImage()) {
+        const Rectangle imageRect = calculateImageDestRect();
+        const float centerX = imageRect.x + imageRect.width / 2.0f;
+        DrawLine(static_cast<int>(centerX), static_cast<int>(imageRect.y), 
+                 static_cast<int>(centerX), static_cast<int>(imageRect.y + imageRect.height),
+                 Color{255, 0, 0, 128}); // Semi-transparent red line
     }
     
     EndScissorMode();
@@ -438,6 +449,30 @@ void Canvas::deleteSelectionInternal()
 void Canvas::deleteSelectionWithCommand()
 {
     deleteSelection(); // Use the main deleteSelection method which handles commands properly
+}
+
+void Canvas::flipSelectionVertical()
+{
+    if (!hasSelection_ || !hasDrawingTexture() || !historyManager_) {
+        return;
+    }
+    
+    auto command = createFlipSelectionVerticalCommand(this);
+    historyManager_->executeCommand(std::move(command));
+    
+    std::cout << "Executed vertical flip command with history support" << std::endl;
+}
+
+void Canvas::flipSelectionHorizontal()
+{
+    if (!hasSelection_ || !hasDrawingTexture() || !historyManager_) {
+        return;
+    }
+    
+    auto command = createFlipSelectionHorizontalCommand(this);
+    historyManager_->executeCommand(std::move(command));
+    
+    std::cout << "Executed horizontal flip command with history support" << std::endl;
 }
 
 void Canvas::drawZoomIndicator() const

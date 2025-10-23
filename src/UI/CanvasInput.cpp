@@ -48,6 +48,26 @@ void Canvas::handleGlobalKeyboard()
         }
     }
     
+    // V key to flip selection vertically
+    if (IsKeyPressed(KEY_V)) {
+        if (hasSelection_ && currentTool_ == DrawingTool::Select) {
+            flipSelectionVertical();
+        }
+    }
+    
+    // H key to flip selection horizontally
+    if (IsKeyPressed(KEY_H)) {
+        if (hasSelection_ && currentTool_ == DrawingTool::Select) {
+            flipSelectionHorizontal();
+        }
+    }
+    
+    // M key to toggle mirror mode
+    if (IsKeyPressed(KEY_M)) {
+        toggleMirrorMode();
+        std::cout << "Mirror mode " << (mirrorModeEnabled_ ? "enabled" : "disabled") << std::endl;
+    }
+    
     // Zoom keyboard shortcuts
     if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) {
         // Ctrl+0: Fit to screen / Reset zoom
