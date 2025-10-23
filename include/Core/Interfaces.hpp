@@ -17,7 +17,8 @@ enum class DrawingTool {
     Crayon,
     Brush,
     Select,
-    Mirror
+    Mirror,
+    Eyedropper
 };
 
 class IUIComponent {

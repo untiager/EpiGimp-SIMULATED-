@@ -20,6 +20,29 @@ ColorPalette::ColorPalette(Rectangle bounds, EventDispatcher* dispatcher)
     strcpy(rgbInput_[2], "0");   // B
     rgbInputActive_[0] = rgbInputActive_[1] = rgbInputActive_[2] = false;
     
+    // Subscribe to color change events (e.g., from eyedropper)
+    dispatcher->subscribe<PrimaryColorChangedEvent>([this](const PrimaryColorChangedEvent& event) {
+        primaryColor_ = event.primaryColor;
+        // Update RGB input if showing
+        if (showRgbInput_) {
+            sprintf(rgbInput_[0], "%d", primaryColor_.r);
+            sprintf(rgbInput_[1], "%d", primaryColor_.g);  
+            sprintf(rgbInput_[2], "%d", primaryColor_.b);
+        }
+        std::cout << "ColorPalette: Primary color updated to RGB(" 
+                  << static_cast<int>(primaryColor_.r) << "," 
+                  << static_cast<int>(primaryColor_.g) << "," 
+                  << static_cast<int>(primaryColor_.b) << ")" << std::endl;
+    });
+    
+    dispatcher->subscribe<SecondaryColorChangedEvent>([this](const SecondaryColorChangedEvent& event) {
+        secondaryColor_ = event.secondaryColor;
+        std::cout << "ColorPalette: Secondary color updated to RGB(" 
+                  << static_cast<int>(secondaryColor_.r) << "," 
+                  << static_cast<int>(secondaryColor_.g) << "," 
+                  << static_cast<int>(secondaryColor_.b) << ")" << std::endl;
+    });
+    
     initializePalette();
 }
 

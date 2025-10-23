@@ -315,4 +315,93 @@ void Canvas::flipCanvasHorizontal()
               << (canvasFlippedHorizontal_ ? "flipped" : "normal") << std::endl;
 }
 
+Color Canvas::pickColorAtScreenPosition(Vector2 screenPos) const
+{
+    if (!hasImage()) {
+        return BLACK; // Default color if no image
+    }
+    
+    // Convert screen position to image coordinates
+    Vector2 imagePos = screenToImageCoords(screenPos);
+    
+    // Get the image rectangle to check bounds
+    const Rectangle imageRect = calculateImageDestRect();
+    
+    // Check if the position is within the image bounds
+    if (!CheckCollisionPointRec(screenPos, imageRect)) {
+        std::cout << "Eyedropper: Position outside image bounds" << std::endl;
+        return BLACK;
+    }
+    
+    // Clamp image coordinates to valid range
+    int imageWidth = currentTexture_ ? (*currentTexture_)->width : 0;
+    int imageHeight = currentTexture_ ? (*currentTexture_)->height : 0;
+    
+    int pixelX = static_cast<int>(imagePos.x);
+    int pixelY = static_cast<int>(imagePos.y);
+    
+    // Clamp to valid pixel coordinates
+    pixelX = std::max(0, std::min(pixelX, imageWidth - 1));
+    pixelY = std::max(0, std::min(pixelY, imageHeight - 1));
+    
+    std::cout << "Eyedropper: Picking color at image coords (" << pixelX << "," << pixelY << ")" << std::endl;
+    
+    // Create a composite image from all visible layers
+    Image compositeImage;
+    bool hasComposite = false;
+    
+    // Start with background if visible
+    if (backgroundVisible_ && currentTexture_) {
+        compositeImage = LoadImageFromTexture(**currentTexture_);
+        hasComposite = true;
+        std::cout << "Eyedropper: Loaded background texture" << std::endl;
+    }
+    
+    // Blend all visible drawing layers on top
+    for (int i = static_cast<int>(drawingLayers_.size()) - 1; i >= 0; --i) {
+        const auto& layer = drawingLayers_[i];
+        if (layer.visible && layer.texture) {
+            Image layerImage = LoadImageFromTexture((**layer.texture).texture);
+            ImageFlipVertical(&layerImage); // Fix texture orientation
+            
+            if (!hasComposite) {
+                // First visible layer becomes the base
+                compositeImage = layerImage;
+                hasComposite = true;
+                std::cout << "Eyedropper: Using layer " << i << " as base" << std::endl;
+            } else {
+                // Blend this layer onto the composite
+                for (int y = 0; y < compositeImage.height && y < layerImage.height; y++) {
+                    for (int x = 0; x < compositeImage.width && x < layerImage.width; x++) {
+                        Color layerPixel = GetImageColor(layerImage, x, y);
+                        if (layerPixel.a > 0) { // If layer pixel is not transparent
+                            ImageDrawPixel(&compositeImage, x, y, layerPixel);
+                        }
+                    }
+                }
+                UnloadImage(layerImage);
+            }
+        }
+    }
+    
+    if (!hasComposite) {
+        std::cout << "Eyedropper: No visible layers to sample from" << std::endl;
+        return BLACK;
+    }
+    
+    // Get the color at the specified pixel
+    Color pickedColor = GetImageColor(compositeImage, pixelX, pixelY);
+    
+    std::cout << "Eyedropper: Picked color RGB(" 
+              << static_cast<int>(pickedColor.r) << "," 
+              << static_cast<int>(pickedColor.g) << "," 
+              << static_cast<int>(pickedColor.b) << "," 
+              << static_cast<int>(pickedColor.a) << ")" << std::endl;
+    
+    // Clean up
+    UnloadImage(compositeImage);
+    
+    return pickedColor;
+}
+
 } // namespace EpiGimp

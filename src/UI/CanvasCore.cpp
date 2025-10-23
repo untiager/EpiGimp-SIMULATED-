@@ -90,6 +90,39 @@ void Canvas::draw() const
     
     EndScissorMode();
     
+    // Draw eyedropper color preview (outside scissor mode so it can extend beyond canvas)
+    if (currentTool_ == DrawingTool::Eyedropper && hasImage()) {
+        const Vector2 mousePos = GetMousePosition();
+        const Rectangle imageRect = calculateImageDestRect();
+        
+        if (CheckCollisionPointRec(mousePos, imageRect)) {
+            // Pick the color at current mouse position
+            Color previewColor = pickColorAtScreenPosition(mousePos);
+            
+            // Draw color preview box near cursor
+            const float previewSize = 40.0f;
+            const float offset = 20.0f;
+            Rectangle previewRect = {
+                mousePos.x + offset,
+                mousePos.y + offset,
+                previewSize,
+                previewSize
+            };
+            
+            // Draw the preview with border
+            DrawRectangleRec(previewRect, previewColor);
+            DrawRectangleLinesEx(previewRect, 2.0f, BLACK);
+            
+            // Draw RGB values below the preview
+            char rgbText[32];
+            sprintf(rgbText, "R:%d G:%d B:%d", previewColor.r, previewColor.g, previewColor.b);
+            DrawText(rgbText, 
+                    static_cast<int>(previewRect.x), 
+                    static_cast<int>(previewRect.y + previewRect.height + 5),
+                    10, BLACK);
+        }
+    }
+    
     // Draw zoom indicator outside scissor mode
     drawZoomIndicator();
 }

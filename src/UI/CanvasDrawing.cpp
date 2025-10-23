@@ -132,8 +132,8 @@ void Canvas::handleDrawing()
 {
     if (!hasImage()) return;
     
-    // Skip drawing logic for selection tool
-    if (currentTool_ == DrawingTool::Select) return;
+    // Skip drawing logic for selection tool and eyedropper tool
+    if (currentTool_ == DrawingTool::Select || currentTool_ == DrawingTool::Eyedropper) return;
     
     // Mirror tool automatically enables mirror mode
     if (currentTool_ == DrawingTool::Mirror) {

@@ -9,6 +9,7 @@ void Canvas::handleInput()
     handleZoom();
     handlePanning();
     handleGlobalKeyboard();
+    handleEyedropper();
 }
 
 void Canvas::handleGlobalKeyboard()
@@ -66,6 +67,14 @@ void Canvas::handleGlobalKeyboard()
     if (IsKeyPressed(KEY_M)) {
         toggleMirrorMode();
         std::cout << "Mirror mode " << (mirrorModeEnabled_ ? "enabled" : "disabled") << std::endl;
+    }
+    
+    // I key to select eyedropper tool
+    if (IsKeyPressed(KEY_I)) {
+        if (eventDispatcher_) {
+            eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Eyedropper);
+            std::cout << "Eyedropper tool selected" << std::endl;
+        }
     }
     
     // Zoom keyboard shortcuts
@@ -142,6 +151,48 @@ void Canvas::handlePanning()
     if (IsKeyDown(KEY_RIGHT)) panOffset_.x -= PAN_SPEED;
     if (IsKeyDown(KEY_UP)) panOffset_.y += PAN_SPEED;
     if (IsKeyDown(KEY_DOWN)) panOffset_.y -= PAN_SPEED;
+}
+
+void Canvas::handleEyedropper()
+{
+    if (!hasImage()) return;
+    
+    // Only handle input when eyedropper tool is active
+    if (currentTool_ != DrawingTool::Eyedropper) return;
+    
+    const Vector2 mousePos = GetMousePosition();
+    const Rectangle imageRect = calculateImageDestRect();
+    
+    // Check if mouse is over the image
+    if (!CheckCollisionPointRec(mousePos, imageRect)) return;
+    
+    // Left click: Pick color and set as primary color
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        Color pickedColor = pickColorAtScreenPosition(mousePos);
+        
+        // Emit event to update primary color
+        if (eventDispatcher_) {
+            eventDispatcher_->emit<PrimaryColorChangedEvent>(pickedColor);
+            std::cout << "Eyedropper: Set primary color to RGB(" 
+                      << static_cast<int>(pickedColor.r) << "," 
+                      << static_cast<int>(pickedColor.g) << "," 
+                      << static_cast<int>(pickedColor.b) << ")" << std::endl;
+        }
+    }
+    
+    // Right click: Pick color and set as secondary color
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+        Color pickedColor = pickColorAtScreenPosition(mousePos);
+        
+        // Emit event to update secondary color
+        if (eventDispatcher_) {
+            eventDispatcher_->emit<SecondaryColorChangedEvent>(pickedColor);
+            std::cout << "Eyedropper: Set secondary color to RGB(" 
+                      << static_cast<int>(pickedColor.r) << "," 
+                      << static_cast<int>(pickedColor.g) << "," 
+                      << static_cast<int>(pickedColor.b) << ")" << std::endl;
+        }
+    }
 }
 
 } // namespace EpiGimp

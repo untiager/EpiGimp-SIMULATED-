@@ -78,6 +78,10 @@ void Application::createComponents()
         eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Mirror);
     });
     
+    toolbar_->addButton("Eyedropper", [this]() {
+        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Eyedropper);
+    });
+    
     toolbar_->addButton("Clear", [this]() {
         eventDispatcher_->emit<ClearCanvasRequestEvent>();
     });

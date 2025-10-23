@@ -156,6 +156,9 @@ public:
     void setMirrorMode(bool enabled) { mirrorModeEnabled_ = enabled; }
     void toggleMirrorMode() { mirrorModeEnabled_ = !mirrorModeEnabled_; }
     
+    // Color picking / Eyedropper
+    Color pickColorAtScreenPosition(Vector2 screenPos) const;
+    
     // Transform preview
     void drawTransformPreview(Rectangle imageDestRect) const;
 
@@ -166,6 +169,7 @@ private:
     void handleGlobalKeyboard(); // Handle global keyboard shortcuts
     void handleDrawing();  // New method for drawing input
     void handleSelection(); // New method for selection input
+    void handleEyedropper(); // Handle eyedropper/color picker input
     void drawImage() const;
     void drawPlaceholder() const;
     void drawSelection() const; // Draw selection rectangle with marching ants
