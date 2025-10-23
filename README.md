@@ -24,7 +24,11 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - ✅ **Individual Layer Management** - Add, delete, clear, and toggle visibility for each layer
 - ✅ **Crayon Drawing Tool** - Draw directly on selected layers with smooth strokes
 - ✅ **Brush Drawing Tool** - Larger, softer brush strokes with transparency effects
-- ✅ **Color Selector Palette** - 16 color swatches for drawing customization
+- ✅ **Mirror Drawing Tool** - Symmetrical drawing with automatic horizontal mirroring
+- ✅ **Eyedropper Tool** - Pick colors from anywhere on the canvas with live preview
+- ✅ **Dual Color System** - Separate primary (left-click) and secondary (right-click) colors
+- ✅ **Color Selector Palette** - 16 color swatches with visual indicators for primary/secondary colors
+- ✅ **Live Color Preview** - Real-time color preview when using eyedropper tool
 - ✅ **Undo/Redo System** - Full history support with keyboard shortcuts (Ctrl+Z/Ctrl+Y)
 - ✅ Safe in-application file browser (no system crashes!)
 - ✅ Load Image functionality (PNG, JPG, BMP, TGA formats)
@@ -36,6 +40,13 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - ✅ Robust error handling and user feedback system
 
 **Recent Updates**:
+- 🆕 **Mirror Drawing Tool** - Symmetrical drawing with automatic horizontal mirroring across canvas center
+- 🆕 **Eyedropper/Color Picker Tool** - Sample colors from any pixel on the canvas
+- 🆕 **Live Color Preview** - Real-time color preview with RGB values when hovering with eyedropper
+- 🆕 **Dual Color System** - Primary (left-click) and secondary (right-click) color support
+- 🆕 **Auto-Updating Color Indicators** - Color palette updates instantly when colors are picked
+- 🆕 **Visual Mirror Indicator** - Red vertical line shows the mirror axis when mirror mode is active
+- 🆕 **Keyboard Shortcuts** - Press M to toggle mirror mode, I to select eyedropper tool
 - 🆕 **Multi-Layer Drawing System** - Complete layer management with unlimited drawing layers
 - 🆕 **Scrollable Layer Panel** - Navigate many layers with mouse wheel scrolling and dynamic UI
 - 🆕 **Smart Layer Naming** - Intelligent layer numbering that reuses gaps (no duplicate "Layer 9" issues)
@@ -61,10 +72,13 @@ A modern, lightweight paint application built with C++17 and Raylib. EpiGimp pro
 - 🆕 **Format Conversion** - Save images in different formats than loaded
 
 **Upcoming Features**:
+- 🚧 Selection tool improvements (flip, rotate selection content)
 - 🚧 Additional drawing tools (eraser, custom brush sizes)
-- 🚧 Custom color picker (beyond preset palette)
+- 🚧 Vertical mirror mode (mirror top/bottom)
 - 🚧 Layer reordering and advanced layer operations
 - 🚧 Filters and effects
+- 🚧 RGB color picker dialog
+- 🚧 Custom brush size controls
 
 ## 🛠️ Technical Architecture
 
@@ -179,7 +193,12 @@ sudo make install  # Installs to /usr/local/bin
 - **Redo**: `Ctrl+Y`
 - **Crayon Tool**: Click "Crayon" button, then click and drag to draw on images
 - **Brush Tool**: Click "Brush" button for larger, softer strokes with transparency effects
-- **Color Selection**: Click any color swatch in the toolbar to change drawing color
+- **Mirror Tool**: Click "Mirror" button or press `M` to toggle symmetrical drawing mode
+- **Eyedropper Tool**: Click "Eyedropper" button or press `I` to sample colors from canvas
+- **Color Selection**: 
+  - Left-click any color swatch to set primary color
+  - Right-click any color swatch to set secondary color
+  - Use eyedropper tool to pick colors directly from your artwork
 - **Navigation**: 
   - Pan: Click and drag with middle mouse button or arrow keys
   - Zoom: Mouse wheel over image area
@@ -208,12 +227,39 @@ EpiGimp provides multiple drawing tools for different artistic needs:
   - Each tool maintains its unique characteristics
   - All tools work with the layer system and undo/redo functionality
 
+- **Dual Color System**: Separate primary and secondary colors
+  - **Primary Color** (Blue border, "L" indicator): Used with left mouse button
+  - **Secondary Color** (Orange border, "R" indicator): Used with right mouse button  
+  - Large color display squares show both colors prominently
+  - Instructions displayed: "L-Click: Primary", "R-Click: Secondary"
+
 - **Color Palette**: Interactive color selection system
   - 16 predefined colors: Black, White, Red, Green, Blue, Yellow, Orange, Purple, Brown, Pink, Dark Gray, Maroon, Dark Green, Dark Blue, Navy, Magenta
-  - Visual feedback: Selected colors have white borders, hovered colors have gray borders
+  - Left-click on swatch: Set as primary color (blue border)
+  - Right-click on swatch: Set as secondary color (orange border)
+  - Visual indicators show which swatches are currently selected
   - Real-time color switching while drawing
-  - Default color is black
   - Works with all drawing tools
+  
+- **Mirror Drawing Tool**: Symmetrical artwork creation
+  - Activate by clicking "Mirror" button or pressing `M` key
+  - Automatically enables horizontal mirroring mode
+  - Red vertical line shows mirror axis in center of canvas
+  - Draw on one side, automatically mirrored to the other side
+  - Perfect for creating symmetrical designs, logos, and characters
+  - Works with both Crayon and Brush tools
+  - Toggle on/off at any time with `M` key
+  
+- **Eyedropper/Color Picker Tool**: Sample colors from your artwork
+  - Activate by clicking "Eyedropper" button or pressing `I` key
+  - **Live Preview**: Hover over canvas to see color preview box
+  - Preview shows 40x40 pixel square with exact color
+  - RGB values displayed below preview (R:### G:### B:###)
+  - **Left-click**: Pick color as primary color
+  - **Right-click**: Pick color as secondary color
+  - **Instant Updates**: Color palette indicators update immediately
+  - Samples from all visible layers combined
+  - Perfect for matching existing colors in your artwork
 
 ### Multi-Layer System
 EpiGimp features a comprehensive multi-layer drawing system that allows you to create complex compositions with independent drawing layers.
