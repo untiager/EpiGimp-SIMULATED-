@@ -79,12 +79,12 @@ void Application::createComponents()
     toolbar->addMenuItemToLastDropdown("Clear Canvas", [this]() {
         eventDispatcher_->emit<ClearCanvasRequestEvent>();
     });
-    toolbar->addMenuItemToLastDropdown("Flip All Vertical", [this]() {
+    toolbar->addMenuItemToLastDropdown("Flip All V", [this]() {
         if (canvas_) {
             static_cast<Canvas*>(canvas_.get())->flipSelectionVertical();
         }
     });
-    toolbar->addMenuItemToLastDropdown("Flip All Horizontal", [this]() {
+    toolbar->addMenuItemToLastDropdown("Flip All H", [this]() {
         if (canvas_) {
             static_cast<Canvas*>(canvas_.get())->flipSelectionHorizontal();
         }

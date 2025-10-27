@@ -114,6 +114,7 @@ private:
     static constexpr int BUTTON_MARGIN = 10;
     static constexpr int FONT_SIZE = 16;
     static constexpr int MENU_ITEM_HEIGHT = 30;
+    static constexpr float DROPDOWN_CLOSE_COOLDOWN = 0.4f; // Cooldown time in seconds (400ms)
 
     Rectangle bounds_;
     std::vector<std::unique_ptr<DropdownMenu>> dropdownMenus_;
@@ -121,6 +122,8 @@ private:
     EventDispatcher* eventDispatcher_;
     std::unique_ptr<ColorPalette> colorPalette_;
     DrawingTool currentTool_;
+    float dropdownCloseCooldown_; // Timer to prevent click-through after dropdown closes
+    bool consumedClickThisFrame_; // Track if toolbar consumed a click this frame
     
 public:
     explicit Toolbar(Rectangle bounds, EventDispatcher* dispatcher);
@@ -140,11 +143,14 @@ public:
     
     // Tool selection
     void setSelectedTool(DrawingTool tool);
+    
+    // Check if toolbar consumed a click this frame (to prevent click-through to other UI)
+    bool consumedClickThisFrame() const { return consumedClickThisFrame_; }
 
 private:
-    void updateButton(Button& button) const;
+    void updateButton(Button& button);
     void drawButton(const Button& button) const;
-    void updateDropdownMenu(DropdownMenu& menu) const;
+    void updateDropdownMenu(DropdownMenu& menu);
     void drawDropdownMenu(const DropdownMenu& menu) const;
     Rectangle calculateNextButtonBounds() const;
     Rectangle calculateNextDropdownBounds() const;

@@ -1,5 +1,6 @@
 //Application update and draw loops
 #include "../../include/Core/Application.hpp"
+#include "../../include/UI/Toolbar.hpp"
 #include "../../include/UI/SimpleLayerPanel.hpp"
 #include "../../include/Utils/Implementations.hpp"
 #include <iostream>
@@ -23,8 +24,14 @@ void Application::update(float deltaTime)
     
     if (!simpleFileManager->isShowingDialog()) {
         if (toolbar_) toolbar_->update(deltaTime);
-        if (canvas_) canvas_->update(deltaTime);
-        if (layerPanel_) layerPanel_->update(deltaTime);
+        
+        // Check if toolbar consumed a click - if so, skip other UI updates this frame
+        bool toolbarConsumedClick = toolbar_ && static_cast<Toolbar*>(toolbar_.get())->consumedClickThisFrame();
+        
+        if (!toolbarConsumedClick) {
+            if (canvas_) canvas_->update(deltaTime);
+            if (layerPanel_) layerPanel_->update(deltaTime);
+        }
     }
 }
     

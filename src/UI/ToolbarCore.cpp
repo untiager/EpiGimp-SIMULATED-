@@ -5,7 +5,7 @@
 namespace EpiGimp {
 
 Toolbar::Toolbar(Rectangle bounds, EventDispatcher* dispatcher) 
-    : bounds_(bounds), eventDispatcher_(dispatcher), currentTool_(DrawingTool::None)
+    : bounds_(bounds), eventDispatcher_(dispatcher), currentTool_(DrawingTool::None), dropdownCloseCooldown_(0.0f), consumedClickThisFrame_(false)
 {
     
     if (!dispatcher)
@@ -31,13 +31,68 @@ Toolbar::Toolbar(Rectangle bounds, EventDispatcher* dispatcher)
 
 void Toolbar::update(float deltaTime)
 {
+    // Reset click consumption flag at start of frame
+    consumedClickThisFrame_ = false;
+    
+    // Decrease cooldown timer
+    if (dropdownCloseCooldown_ > 0.0f) {
+        dropdownCloseCooldown_ -= deltaTime;
+        if (dropdownCloseCooldown_ < 0.0f) {
+            dropdownCloseCooldown_ = 0.0f;
+        }
+    }
+    
+    // Track if any dropdown consumed a click this frame
+    bool dropdownConsumedClick = false;
+    
     // Update dropdown menus first (they have priority)
     for (auto& menu : dropdownMenus_) {
+        // Check if this dropdown will consume the click
+        const Vector2 mousePos = GetMousePosition();
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            // Check if clicking on dropdown button
+            if (CheckCollisionPointRec(mousePos, menu->bounds)) {
+                dropdownConsumedClick = true;
+                consumedClickThisFrame_ = true;
+            }
+            // Check if clicking on any menu item
+            if (menu->isOpen) {
+                for (const auto& item : menu->items) {
+                    if (CheckCollisionPointRec(mousePos, item->bounds)) {
+                        dropdownConsumedClick = true;
+                        consumedClickThisFrame_ = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
         updateDropdownMenu(*menu);
     }
     
-    for (auto& button : buttons_) {
-        updateButton(*button);
+    // Check if any dropdown is open
+    bool anyDropdownOpen = false;
+    for (const auto& menu : dropdownMenus_) {
+        if (menu->isOpen) {
+            anyDropdownOpen = true;
+            break;
+        }
+    }
+    
+    // Only update buttons if:
+    // - No dropdown is open
+    // - Cooldown has expired
+    // - No dropdown consumed a click this frame
+    if (!anyDropdownOpen && dropdownCloseCooldown_ <= 0.0f && !dropdownConsumedClick) {
+        for (auto& button : buttons_) {
+            updateButton(*button);
+        }
+    } else {
+        // Clear hover and pressed states when dropdowns are open or consumed click
+        for (auto& button : buttons_) {
+            button->isHovered = false;
+            button->isPressed = false;
+        }
     }
     
     if (colorPalette_)
@@ -132,7 +187,7 @@ void Toolbar::addMenuItemToLastDropdown(const std::string& text, std::function<v
     std::cout << "Added menu item: " << text << " to " << lastMenu->label << std::endl;
 }
 
-void Toolbar::updateDropdownMenu(DropdownMenu& menu) const
+void Toolbar::updateDropdownMenu(DropdownMenu& menu)
 {
     const Vector2 mousePos = GetMousePosition();
     
@@ -161,6 +216,7 @@ void Toolbar::updateDropdownMenu(DropdownMenu& menu) const
         }
         if (!clickedOnItem) {
             menu.isOpen = false;
+            dropdownCloseCooldown_ = DROPDOWN_CLOSE_COOLDOWN; // Set cooldown when closing
         }
     }
     
@@ -170,10 +226,18 @@ void Toolbar::updateDropdownMenu(DropdownMenu& menu) const
             item->isHovered = CheckCollisionPointRec(mousePos, item->bounds);
             
             if (item->isHovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                std::cout << "Menu item clicked: " << item->text << " - setting cooldown FIRST" << std::endl;
+                
+                // Set cooldown BEFORE executing callback to prevent any race conditions
+                dropdownCloseCooldown_ = DROPDOWN_CLOSE_COOLDOWN;
+                menu.isOpen = false;
+                
+                std::cout << "Cooldown set to: " << dropdownCloseCooldown_ << " before callback" << std::endl;
+                
+                // Now execute the callback
                 if (item->onClick) {
                     item->onClick();
                 }
-                menu.isOpen = false;
             }
         }
     }

@@ -4,18 +4,29 @@
 
 namespace EpiGimp {
 
-void Toolbar::updateButton(Button& button) const
+void Toolbar::updateButton(Button& button)
 {
+    // Don't update button at all during cooldown
+    if (dropdownCloseCooldown_ > 0.0f) {
+        button.isPressed = false;
+        button.isHovered = false;
+        return;
+    }
+    
     const Vector2 mousePos = GetMousePosition();
     
     button.isHovered = CheckCollisionPointRec(mousePos, button.bounds);
     
-    if (button.isHovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    if (button.isHovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        std::cout << "Button pressed: " << button.text << " (cooldown: " << dropdownCloseCooldown_ << ")" << std::endl;
         button.isPressed = true;
+    }
     
     if (button.isPressed && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-        if (button.isHovered && button.onClick)
+        if (button.isHovered && button.onClick) {
+            std::cout << "Button clicked: " << button.text << std::endl;
             button.onClick();
+        }
         button.isPressed = false;
     }
     
