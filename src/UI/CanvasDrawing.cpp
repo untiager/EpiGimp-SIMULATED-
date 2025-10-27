@@ -144,6 +144,34 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
                 break;
             }
             
+            case DrawingTool::Ink:
+            {
+                // Ink tool: variable thickness based on drawing speed (calligraphy effect)
+                // Calculate distance/speed
+                float distance = sqrtf((to.x - from.x) * (to.x - from.x) + (to.y - from.y) * (to.y - from.y));
+                
+                // Variable thickness based on speed: slower = thicker, faster = thinner
+                const float minThickness = 1.0f;
+                const float maxThickness = 8.0f;
+                const float speedThreshold = 20.0f; // Distance threshold for thickness variation
+                
+                // Calculate thickness: inversely proportional to speed
+                float thickness = maxThickness - (distance / speedThreshold) * (maxThickness - minThickness);
+                thickness = fmaxf(minThickness, fminf(maxThickness, thickness));
+                
+                // Draw main line with calculated thickness
+                DrawLineEx(from, to, thickness, drawingColor_);
+                
+                // Add a darker edge for ink effect
+                Color edgeColor = drawingColor_;
+                edgeColor.r = static_cast<unsigned char>(edgeColor.r * 0.7f);
+                edgeColor.g = static_cast<unsigned char>(edgeColor.g * 0.7f);
+                edgeColor.b = static_cast<unsigned char>(edgeColor.b * 0.7f);
+                DrawLineEx(from, to, thickness * 0.5f, edgeColor);
+                
+                break;
+            }
+            
             case DrawingTool::Select:
                 // Selection tool doesn't draw strokes
                 break;

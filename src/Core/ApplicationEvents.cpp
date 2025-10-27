@@ -74,6 +74,10 @@ void Application::createComponents()
         eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Airbrush);
     });
     
+    toolbar_->addButton("Ink", [this]() {
+        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Ink);
+    });
+    
     toolbar_->addButton("Select", [this]() {
         eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Select);
     });
