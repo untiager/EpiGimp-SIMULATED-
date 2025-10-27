@@ -53,15 +53,44 @@ void Application::createComponents()
     const Rectangle toolbarBounds = {0, 0, static_cast<float>(config_.windowWidth), 60};
     toolbar_ = std::make_unique<Toolbar>(toolbarBounds, eventDispatcher_.get());
     
-    // Add toolbar buttons
-    toolbar_->addButton("Load Image", [this]() {
+    // Cast to Toolbar to access dropdown menu methods
+    auto* toolbar = static_cast<Toolbar*>(toolbar_.get());
+    
+    // Add File dropdown menu
+    toolbar->addDropdownMenu("File");
+    toolbar->addMenuItemToLastDropdown("Load Image", [this]() {
         eventDispatcher_->emit<LoadImageRequestEvent>();
     });
-    
-    toolbar_->addButton("Save Image", [this]() {
+    toolbar->addMenuItemToLastDropdown("Save Image", [this]() {
         eventDispatcher_->emit<ImageSaveRequestEvent>("");
     });
     
+    // Add Advanced Tools dropdown menu
+    toolbar->addDropdownMenu("Advanced");
+    toolbar->addMenuItemToLastDropdown("Select", [this]() {
+        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Select);
+    });
+    toolbar->addMenuItemToLastDropdown("Mirror", [this]() {
+        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Mirror);
+    });
+    toolbar->addMenuItemToLastDropdown("Eyedropper", [this]() {
+        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Eyedropper);
+    });
+    toolbar->addMenuItemToLastDropdown("Clear Canvas", [this]() {
+        eventDispatcher_->emit<ClearCanvasRequestEvent>();
+    });
+    toolbar->addMenuItemToLastDropdown("Flip All Vertical", [this]() {
+        if (canvas_) {
+            static_cast<Canvas*>(canvas_.get())->flipSelectionVertical();
+        }
+    });
+    toolbar->addMenuItemToLastDropdown("Flip All Horizontal", [this]() {
+        if (canvas_) {
+            static_cast<Canvas*>(canvas_.get())->flipSelectionHorizontal();
+        }
+    });
+    
+    // Add basic tool buttons (most commonly used)
     toolbar_->addButton("Crayon", [this]() {
         eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Crayon);
     });
@@ -76,34 +105,6 @@ void Application::createComponents()
     
     toolbar_->addButton("Ink", [this]() {
         eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Ink);
-    });
-    
-    toolbar_->addButton("Select", [this]() {
-        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Select);
-    });
-    
-    toolbar_->addButton("Mirror", [this]() {
-        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Mirror);
-    });
-    
-    toolbar_->addButton("Eyedropper", [this]() {
-        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Eyedropper);
-    });
-    
-    toolbar_->addButton("Clear", [this]() {
-        eventDispatcher_->emit<ClearCanvasRequestEvent>();
-    });
-    
-    toolbar_->addButton("All V", [this]() {
-        if (canvas_) {
-            static_cast<Canvas*>(canvas_.get())->flipSelectionVertical();
-        }
-    });
-    
-    toolbar_->addButton("All H", [this]() {
-        if (canvas_) {
-            static_cast<Canvas*>(canvas_.get())->flipSelectionHorizontal();
-        }
     });
     
     // Create canvas (below toolbar, right of layer panel)

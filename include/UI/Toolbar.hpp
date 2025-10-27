@@ -71,6 +71,26 @@ public:
 
 class Toolbar : public IToolbar {
 private:
+    struct MenuItem {
+        std::string text;
+        std::function<void()> onClick;
+        Rectangle bounds;
+        bool isHovered = false;
+        
+        MenuItem(std::string itemText, std::function<void()> callback)
+            : text(std::move(itemText)), onClick(std::move(callback)) {}
+    };
+    
+    struct DropdownMenu {
+        std::string label;
+        Rectangle bounds;
+        std::vector<std::unique_ptr<MenuItem>> items;
+        bool isOpen = false;
+        bool isHovered = false;
+        
+        DropdownMenu(std::string menuLabel) : label(std::move(menuLabel)) {}
+    };
+    
     struct Button {
         Rectangle bounds;
         std::string text;
@@ -93,8 +113,10 @@ private:
     static constexpr int BUTTON_HEIGHT = 40;
     static constexpr int BUTTON_MARGIN = 10;
     static constexpr int FONT_SIZE = 16;
+    static constexpr int MENU_ITEM_HEIGHT = 30;
 
     Rectangle bounds_;
+    std::vector<std::unique_ptr<DropdownMenu>> dropdownMenus_;
     std::vector<std::unique_ptr<Button>> buttons_;
     EventDispatcher* eventDispatcher_;
     std::unique_ptr<ColorPalette> colorPalette_;
@@ -112,13 +134,20 @@ public:
     void addButton(const std::string& text, std::function<void()> onClick) override;
     int getHeight() const override { return static_cast<int>(bounds_.height); }
     
+    // Dropdown menu support
+    void addDropdownMenu(const std::string& label);
+    void addMenuItemToLastDropdown(const std::string& text, std::function<void()> onClick);
+    
     // Tool selection
     void setSelectedTool(DrawingTool tool);
 
 private:
     void updateButton(Button& button) const;
     void drawButton(const Button& button) const;
+    void updateDropdownMenu(DropdownMenu& menu) const;
+    void drawDropdownMenu(const DropdownMenu& menu) const;
     Rectangle calculateNextButtonBounds() const;
+    Rectangle calculateNextDropdownBounds() const;
 };
 
 } // namespace EpiGimp
