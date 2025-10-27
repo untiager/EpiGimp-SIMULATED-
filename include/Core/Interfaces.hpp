@@ -19,6 +19,7 @@ enum class DrawingTool {
     Airbrush,
     Ink,
     Blur,
+    Burn,
     Select,
     Mirror,
     Eyedropper

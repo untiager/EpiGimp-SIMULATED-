@@ -179,6 +179,13 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
                 break;
             }
             
+            case DrawingTool::Burn:
+            {
+                // Burn tool needs special handling - it modifies existing pixels
+                // Don't draw anything here, actual burn will be applied after endDrawing()
+                break;
+            }
+            
             case DrawingTool::Select:
                 // Selection tool doesn't draw strokes
                 break;
@@ -204,6 +211,11 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
     // Apply blur effect if using blur tool
     if (currentTool_ == DrawingTool::Blur) {
         applyBlurToLayer(layer, imageFrom, imageTo);
+    }
+    
+    // Apply burn effect if using burn tool
+    if (currentTool_ == DrawingTool::Burn) {
+        applyBurnToLayer(layer, imageFrom, imageTo);
     }
     
     std::cout << "Stroke drawn successfully with tool: " << static_cast<int>(currentTool_) << std::endl;
@@ -425,6 +437,77 @@ void Canvas::applyBlurToLayer(DrawingLayer& layer, Vector2 from, Vector2 to)
     UpdateTexture((**layer.texture).texture, layerImage.data);
     
     UnloadImage(originalImage);
+    UnloadImage(layerImage);
+}
+
+void Canvas::applyBurnToLayer(DrawingLayer& layer, Vector2 from, Vector2 to)
+{
+    const float burnRadius = 15.0f; // Radius of burn brush
+    const float burnAmount = 15.0f; // How much to darken per pass (0-255 scale)
+    
+    // Load the layer texture as an image
+    Image layerImage = LoadImageFromTexture((**layer.texture).texture);
+    
+    std::cout << "Burn from (" << from.x << "," << from.y << ") to (" << to.x << "," << to.y << ")" << std::endl;
+    
+    // Flip Y coordinates (same as blur tool)
+    Vector2 flippedFrom = { from.x, layerImage.height - from.y };
+    Vector2 flippedTo = { to.x, layerImage.height - to.y };
+    
+    // Calculate distance for interpolation
+    float distance = sqrtf((flippedTo.x - flippedFrom.x) * (flippedTo.x - flippedFrom.x) + (flippedTo.y - flippedFrom.y) * (flippedTo.y - flippedFrom.y));
+    int steps = static_cast<int>(distance / 2.0f) + 1;
+    
+    for (int step = 0; step <= steps; ++step) {
+        float t = steps > 0 ? static_cast<float>(step) / static_cast<float>(steps) : 0.0f;
+        Vector2 pos = {
+            flippedFrom.x + (flippedTo.x - flippedFrom.x) * t,
+            flippedFrom.y + (flippedTo.y - flippedFrom.y) * t
+        };
+        
+        int centerX = static_cast<int>(pos.x);
+        int centerY = static_cast<int>(pos.y);
+        int radius = static_cast<int>(burnRadius);
+        
+        // Apply burn in circular brush area
+        for (int dy = -radius; dy <= radius; dy++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                // Calculate distance from center for soft brush falloff
+                float dist = sqrtf(static_cast<float>(dx * dx + dy * dy));
+                if (dist > burnRadius) continue;
+                
+                int px = centerX + dx;
+                int py = centerY + dy;
+                
+                if (px < 0 || py < 0 || px >= layerImage.width || py >= layerImage.height) continue;
+                
+                // Get current pixel color
+                Color currentColor = GetImageColor(layerImage, px, py);
+                
+                // Skip fully transparent pixels
+                if (currentColor.a == 0) continue;
+                
+                // Calculate falloff based on distance from center (softer edges)
+                float falloff = 1.0f - (dist / burnRadius);
+                float effectiveBurn = burnAmount * falloff;
+                
+                // Darken the pixel by subtracting from RGB values
+                // This allows gradual darkening with multiple passes
+                Color darkenedColor = {
+                    static_cast<unsigned char>(currentColor.r > effectiveBurn ? currentColor.r - effectiveBurn : 0),
+                    static_cast<unsigned char>(currentColor.g > effectiveBurn ? currentColor.g - effectiveBurn : 0),
+                    static_cast<unsigned char>(currentColor.b > effectiveBurn ? currentColor.b - effectiveBurn : 0),
+                    currentColor.a // Keep alpha unchanged
+                };
+                
+                ImageDrawPixel(&layerImage, px, py, darkenedColor);
+            }
+        }
+    }
+    
+    // Update the layer texture
+    UpdateTexture((**layer.texture).texture, layerImage.data);
+    
     UnloadImage(layerImage);
 }
 

@@ -176,6 +176,7 @@ private:
     void drawZoomIndicator() const; // Draw zoom level indicator
     void drawStroke(Vector2 from, Vector2 to);
     void applyBlurToLayer(DrawingLayer& layer, Vector2 from, Vector2 to); // Apply blur effect to layer texture
+    void applyBurnToLayer(DrawingLayer& layer, Vector2 from, Vector2 to); // Apply burn effect to darken pixels
     
     // Selection resize helpers
     ResizeHandle getResizeHandleAt(Vector2 mousePos) const; // Get resize handle under mouse position
