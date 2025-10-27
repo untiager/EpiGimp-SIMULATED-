@@ -25,7 +25,7 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
 {
     if (!hasDrawingTexture()) return;
     
-    const DrawingLayer& layer = drawingLayers_[selectedLayerIndex_];
+    DrawingLayer& layer = drawingLayers_[selectedLayerIndex_];
     if (!layer.visible) return;
     
     const Rectangle imageRect = calculateImageDestRect();
@@ -172,6 +172,13 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
                 break;
             }
             
+            case DrawingTool::Blur:
+            {
+                // Blur tool needs special handling - it modifies existing pixels
+                // Don't draw anything here, actual blur will be applied after endDrawing()
+                break;
+            }
+            
             case DrawingTool::Select:
                 // Selection tool doesn't draw strokes
                 break;
@@ -193,6 +200,11 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
     }
     
     layer.texture->endDrawing();
+    
+    // Apply blur effect if using blur tool
+    if (currentTool_ == DrawingTool::Blur) {
+        applyBlurToLayer(layer, imageFrom, imageTo);
+    }
     
     std::cout << "Stroke drawn successfully with tool: " << static_cast<int>(currentTool_) << std::endl;
 }
@@ -330,6 +342,90 @@ void Canvas::onSecondaryColorChanged(const SecondaryColorChangedEvent& event)
               << static_cast<int>(secondaryColor_.g) << ", "
               << static_cast<int>(secondaryColor_.b) << ", "
               << static_cast<int>(secondaryColor_.a) << ")" << std::endl;
+}
+
+void Canvas::applyBlurToLayer(DrawingLayer& layer, Vector2 from, Vector2 to)
+{
+    const float blurRadius = 10.0f;
+    const int blurKernelSize = 2;
+    
+    // Load the layer texture as an image
+    Image layerImage = LoadImageFromTexture((**layer.texture).texture);
+    Image originalImage = ImageCopy(layerImage);
+    
+    std::cout << "Blur from (" << from.x << "," << from.y << ") to (" << to.x << "," << to.y << ")" << std::endl;
+    std::cout << "Image size: " << layerImage.width << "x" << layerImage.height << std::endl;
+    
+    // Raylib textures are flipped vertically when loaded as images
+    // We need to flip the Y coordinates
+    Vector2 flippedFrom = { from.x, layerImage.height - from.y };
+    Vector2 flippedTo = { to.x, layerImage.height - to.y };
+    
+    std::cout << "Flipped from (" << flippedFrom.x << "," << flippedFrom.y << ") to (" << flippedTo.x << "," << flippedTo.y << ")" << std::endl;
+    
+    // Calculate distance for interpolation
+    float distance = sqrtf((flippedTo.x - flippedFrom.x) * (flippedTo.x - flippedFrom.x) + (flippedTo.y - flippedFrom.y) * (flippedTo.y - flippedFrom.y));
+    int steps = static_cast<int>(distance / 2.0f) + 1;
+    
+    for (int step = 0; step <= steps; ++step) {
+        float t = steps > 0 ? static_cast<float>(step) / static_cast<float>(steps) : 0.0f;
+        Vector2 pos = {
+            flippedFrom.x + (flippedTo.x - flippedFrom.x) * t,
+            flippedFrom.y + (flippedTo.y - flippedFrom.y) * t
+        };
+        
+        int centerX = static_cast<int>(pos.x);
+        int centerY = static_cast<int>(pos.y);
+        int radius = static_cast<int>(blurRadius);
+        
+        // Apply blur in circular brush area
+        for (int dy = -radius; dy <= radius; dy++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                if (dx * dx + dy * dy > radius * radius) continue;
+                
+                int px = centerX + dx;
+                int py = centerY + dy;
+                
+                if (px < 0 || py < 0 || px >= originalImage.width || py >= originalImage.height) continue;
+                
+                // Average surrounding pixels
+                int sumR = 0, sumG = 0, sumB = 0, sumA = 0;
+                int count = 0;
+                
+                for (int ky = -blurKernelSize; ky <= blurKernelSize; ky++) {
+                    for (int kx = -blurKernelSize; kx <= blurKernelSize; kx++) {
+                        int sx = px + kx;
+                        int sy = py + ky;
+                        
+                        if (sx >= 0 && sy >= 0 && sx < originalImage.width && sy < originalImage.height) {
+                            Color c = GetImageColor(originalImage, sx, sy);
+                            sumR += c.r;
+                            sumG += c.g;
+                            sumB += c.b;
+                            sumA += c.a;
+                            count++;
+                        }
+                    }
+                }
+                
+                if (count > 0) {
+                    Color blurredColor = {
+                        static_cast<unsigned char>(sumR / count),
+                        static_cast<unsigned char>(sumG / count),
+                        static_cast<unsigned char>(sumB / count),
+                        static_cast<unsigned char>(sumA / count)
+                    };
+                    ImageDrawPixel(&layerImage, px, py, blurredColor);
+                }
+            }
+        }
+    }
+    
+    // Update the layer texture
+    UpdateTexture((**layer.texture).texture, layerImage.data);
+    
+    UnloadImage(originalImage);
+    UnloadImage(layerImage);
 }
 
 } // namespace EpiGimp

@@ -76,6 +76,9 @@ void Application::createComponents()
     toolbar->addMenuItemToLastDropdown("Eyedropper", [this]() {
         eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Eyedropper);
     });
+    toolbar->addMenuItemToLastDropdown("Blur", [this]() {
+        eventDispatcher_->emit<ToolSelectedEvent>(DrawingTool::Blur);
+    });
     toolbar->addMenuItemToLastDropdown("Clear Canvas", [this]() {
         eventDispatcher_->emit<ClearCanvasRequestEvent>();
     });
