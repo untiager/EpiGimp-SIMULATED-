@@ -16,6 +16,7 @@ enum class DrawingTool {
     None,
     Crayon,
     Brush,
+    Airbrush,
     Select,
     Mirror,
     Eyedropper

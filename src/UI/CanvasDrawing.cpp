@@ -3,6 +3,7 @@
 #include "../../include/Commands/DrawCommand.hpp"
 #include "../../include/Core/HistoryManager.hpp"
 #include <iostream>
+#include <cmath>
 
 namespace EpiGimp {
 
@@ -100,6 +101,46 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
                 Color softerColor = drawingColor_;
                 softerColor.a = 128; // Half transparency
                 DrawLineEx(from, to, 12.0f, softerColor);
+                break;
+            }
+            
+            case DrawingTool::Airbrush:
+            {
+                // Airbrush tool: spray pattern with random particles
+                const float sprayRadius = 15.0f;
+                const int particleCount = 20; // Number of particles per stroke segment
+                
+                // Calculate distance between from and to points
+                float distance = sqrtf((to.x - from.x) * (to.x - from.x) + (to.y - from.y) * (to.y - from.y));
+                
+                // Interpolate along the line and spray particles
+                int steps = static_cast<int>(distance / 2.0f) + 1;
+                for (int step = 0; step <= steps; ++step) {
+                    float t = steps > 0 ? static_cast<float>(step) / static_cast<float>(steps) : 0.0f;
+                    Vector2 pos = {
+                        from.x + (to.x - from.x) * t,
+                        from.y + (to.y - from.y) * t
+                    };
+                    
+                    // Spray particles around the position
+                    for (int i = 0; i < particleCount; ++i) {
+                        // Random angle and distance for spray effect
+                        float angle = static_cast<float>(GetRandomValue(0, 360)) * DEG2RAD;
+                        float dist = static_cast<float>(GetRandomValue(0, static_cast<int>(sprayRadius * 100))) / 100.0f;
+                        
+                        Vector2 particlePos = {
+                            pos.x + cosf(angle) * dist,
+                            pos.y + sinf(angle) * dist
+                        };
+                        
+                        // Draw particle with some transparency based on distance from center
+                        Color particleColor = drawingColor_;
+                        float distRatio = dist / sprayRadius;
+                        particleColor.a = static_cast<unsigned char>(drawingColor_.a * (1.0f - distRatio * 0.5f));
+                        
+                        DrawCircle(static_cast<int>(particlePos.x), static_cast<int>(particlePos.y), 1.0f, particleColor);
+                    }
+                }
                 break;
             }
             

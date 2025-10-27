@@ -173,11 +173,11 @@ void ColorPalette::draw() const
         Color borderColor = BLACK;
         float borderThickness = 1.0f;
         
-        if (i == primaryIndex_) {
+        if (static_cast<int>(i) == primaryIndex_) {
             // Primary color: thick blue border
             borderColor = BLUE;
             borderThickness = 3.0f;
-        } else if (i == secondaryIndex_) {
+        } else if (static_cast<int>(i) == secondaryIndex_) {
             // Secondary color: thick orange border
             borderColor = ORANGE;
             borderThickness = 3.0f;
@@ -189,11 +189,11 @@ void ColorPalette::draw() const
         DrawRectangleLinesEx(swatch->bounds, borderThickness, borderColor);
         
         // Add small corner indicators for primary/secondary
-        if (i == primaryIndex_) {
+        if (static_cast<int>(i) == primaryIndex_) {
             // Primary indicator: small 'P' in top-left corner
             DrawText("P", static_cast<int>(swatch->bounds.x + 2), static_cast<int>(swatch->bounds.y + 1), 8, WHITE);
         }
-        if (i == secondaryIndex_) {
+        if (static_cast<int>(i) == secondaryIndex_) {
             // Secondary indicator: small 'S' in top-right corner
             DrawText("S", static_cast<int>(swatch->bounds.x + swatch->bounds.width - 10), static_cast<int>(swatch->bounds.y + 1), 8, WHITE);
         }
