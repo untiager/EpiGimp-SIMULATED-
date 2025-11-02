@@ -20,6 +20,7 @@ enum class DrawingTool {
     Ink,
     Blur,
     Burn,
+    Dodge,
     Select,
     Mirror,
     Eyedropper

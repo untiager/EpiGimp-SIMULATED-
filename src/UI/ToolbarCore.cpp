@@ -150,6 +150,8 @@ void Toolbar::setSelectedTool(DrawingTool tool)
             button->isSelected = (tool == DrawingTool::Blur);
         } else if (button->text == "Burn") {
             button->isSelected = (tool == DrawingTool::Burn);
+        } else if (button->text == "Dodge") {
+            button->isSelected = (tool == DrawingTool::Dodge);
         } else {
             button->isSelected = false;
         }
@@ -165,6 +167,7 @@ void Toolbar::setSelectedTool(DrawingTool tool)
     else if (tool == DrawingTool::Eyedropper) toolName = "Eyedropper";
     else if (tool == DrawingTool::Blur) toolName = "Blur";
     else if (tool == DrawingTool::Burn) toolName = "Burn";
+    else if (tool == DrawingTool::Dodge) toolName = "Dodge";
     
     std::cout << "Tool selected: " << toolName << std::endl;
 }

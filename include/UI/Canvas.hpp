@@ -177,6 +177,7 @@ private:
     void drawStroke(Vector2 from, Vector2 to);
     void applyBlurToLayer(DrawingLayer& layer, Vector2 from, Vector2 to); // Apply blur effect to layer texture
     void applyBurnToLayer(DrawingLayer& layer, Vector2 from, Vector2 to); // Apply burn effect to darken pixels
+    void applyDodgeToLayer(DrawingLayer& layer, Vector2 from, Vector2 to); // Apply dodge effect to lighten pixels
     
     // Selection resize helpers
     ResizeHandle getResizeHandleAt(Vector2 mousePos) const; // Get resize handle under mouse position

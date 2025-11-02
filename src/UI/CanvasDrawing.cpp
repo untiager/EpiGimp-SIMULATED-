@@ -186,6 +186,13 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
                 break;
             }
             
+            case DrawingTool::Dodge:
+            {
+                // Dodge tool needs special handling - it modifies existing pixels
+                // Don't draw anything here, actual dodge will be applied after endDrawing()
+                break;
+            }
+            
             case DrawingTool::Select:
                 // Selection tool doesn't draw strokes
                 break;
@@ -216,6 +223,11 @@ void Canvas::drawStroke(Vector2 from, Vector2 to)
     // Apply burn effect if using burn tool
     if (currentTool_ == DrawingTool::Burn) {
         applyBurnToLayer(layer, imageFrom, imageTo);
+    }
+    
+    // Apply dodge effect if using dodge tool
+    if (currentTool_ == DrawingTool::Dodge) {
+        applyDodgeToLayer(layer, imageFrom, imageTo);
     }
     
     std::cout << "Stroke drawn successfully with tool: " << static_cast<int>(currentTool_) << std::endl;
@@ -501,6 +513,77 @@ void Canvas::applyBurnToLayer(DrawingLayer& layer, Vector2 from, Vector2 to)
                 };
                 
                 ImageDrawPixel(&layerImage, px, py, darkenedColor);
+            }
+        }
+    }
+    
+    // Update the layer texture
+    UpdateTexture((**layer.texture).texture, layerImage.data);
+    
+    UnloadImage(layerImage);
+}
+
+void Canvas::applyDodgeToLayer(DrawingLayer& layer, Vector2 from, Vector2 to)
+{
+    const float dodgeRadius = 15.0f; // Radius of dodge brush
+    const float dodgeAmount = 15.0f; // How much to lighten per pass (0-255 scale)
+    
+    // Load the layer texture as an image
+    Image layerImage = LoadImageFromTexture((**layer.texture).texture);
+    
+    std::cout << "Dodge from (" << from.x << "," << from.y << ") to (" << to.x << "," << to.y << ")" << std::endl;
+    
+    // Flip Y coordinates (same as blur/burn tool)
+    Vector2 flippedFrom = { from.x, layerImage.height - from.y };
+    Vector2 flippedTo = { to.x, layerImage.height - to.y };
+    
+    // Calculate distance for interpolation
+    float distance = sqrtf((flippedTo.x - flippedFrom.x) * (flippedTo.x - flippedFrom.x) + (flippedTo.y - flippedFrom.y) * (flippedTo.y - flippedFrom.y));
+    int steps = static_cast<int>(distance / 2.0f) + 1;
+    
+    for (int step = 0; step <= steps; ++step) {
+        float t = steps > 0 ? static_cast<float>(step) / static_cast<float>(steps) : 0.0f;
+        Vector2 pos = {
+            flippedFrom.x + (flippedTo.x - flippedFrom.x) * t,
+            flippedFrom.y + (flippedTo.y - flippedFrom.y) * t
+        };
+        
+        int centerX = static_cast<int>(pos.x);
+        int centerY = static_cast<int>(pos.y);
+        int radius = static_cast<int>(dodgeRadius);
+        
+        // Apply dodge in circular brush area
+        for (int dy = -radius; dy <= radius; dy++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                // Calculate distance from center for soft brush falloff
+                float dist = sqrtf(static_cast<float>(dx * dx + dy * dy));
+                if (dist > dodgeRadius) continue;
+                
+                int px = centerX + dx;
+                int py = centerY + dy;
+                
+                if (px < 0 || py < 0 || px >= layerImage.width || py >= layerImage.height) continue;
+                
+                // Get current pixel color
+                Color currentColor = GetImageColor(layerImage, px, py);
+                
+                // Skip fully transparent pixels
+                if (currentColor.a == 0) continue;
+                
+                // Calculate falloff based on distance from center (softer edges)
+                float falloff = 1.0f - (dist / dodgeRadius);
+                float effectiveDodge = dodgeAmount * falloff;
+                
+                // Lighten the pixel by adding to RGB values
+                // This allows gradual lightening with multiple passes
+                Color lightenedColor = {
+                    static_cast<unsigned char>(currentColor.r + effectiveDodge > 255 ? 255 : currentColor.r + effectiveDodge),
+                    static_cast<unsigned char>(currentColor.g + effectiveDodge > 255 ? 255 : currentColor.g + effectiveDodge),
+                    static_cast<unsigned char>(currentColor.b + effectiveDodge > 255 ? 255 : currentColor.b + effectiveDodge),
+                    currentColor.a // Keep alpha unchanged
+                };
+                
+                ImageDrawPixel(&layerImage, px, py, lightenedColor);
             }
         }
     }
