@@ -4,6 +4,9 @@ A comprehensive unit test suite for the EpiGimp paint application using Google T
 
 ## Quick Start
 
+
+
+
 ### Prerequisites
 - CMake 3.10+
 - C++17 compatible compiler
